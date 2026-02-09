@@ -16,6 +16,25 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  late Future<List<LeagueModel>> _leaguesFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLeagues();
+  }
+
+  void _loadLeagues() {
+    _leaguesFuture = context.read<LeaguesRepository>().getLeagues();
+  }
+
+  Future<void> _refreshLeagues() async {
+    setState(() {
+      _loadLeagues();
+    });
+    await _leaguesFuture;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -42,39 +61,57 @@ class _HomePageState extends State<HomePage> {
         icon: const Icon(Icons.sports_soccer),
       ),
       body: FutureBuilder<List<LeagueModel>>(
-        future: context.read<LeaguesRepository>().getLeagues(),
+        future: _leaguesFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: LoadingWidget());
           }
 
           if (snapshot.hasError) {
-            return Center(
-              child: Text('Erro ao carregar ligas: ${snapshot.error}'),
+            return RefreshIndicator(
+              onRefresh: _refreshLeagues,
+              child: ListView(
+                children: [
+                  SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.7,
+                    child: Center(
+                      child: Text('Erro ao carregar ligas: ${snapshot.error}'),
+                    ),
+                  ),
+                ],
+              ),
             );
           }
 
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+            return RefreshIndicator(
+              onRefresh: _refreshLeagues,
+              child: ListView(
                 children: [
-                  const Icon(Icons.groups_outlined,
-                      size: 64, color: Colors.grey),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Você ainda não participa de nenhuma liga.',
-                    style: TextStyle(fontSize: 16, color: Colors.grey),
-                  ),
-                  const SizedBox(height: 8),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                            builder: (context) => const CompetitionsPage()),
-                      );
-                    },
-                    child: const Text('Explorar competições'),
+                  SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.7,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.groups_outlined,
+                            size: 64, color: Colors.grey),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Você ainda não participa de nenhuma liga.',
+                          style: TextStyle(fontSize: 16, color: Colors.grey),
+                        ),
+                        const SizedBox(height: 8),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                  builder: (context) => const CompetitionsPage()),
+                            );
+                          },
+                          child: const Text('Explorar competições'),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -83,48 +120,51 @@ class _HomePageState extends State<HomePage> {
 
           final leagues = snapshot.data!;
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(8),
-            itemCount: leagues.length,
-            itemBuilder: (context, index) {
-              final league = leagues[index];
-              return Card(
-                child: ListTile(
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                          builder: (context) =>
-                              LeagueDetailsPage(leagueId: league.id)),
-                    );
-                  },
-                  leading: CircleAvatar(
-                    backgroundImage: league.avatar != null
-                        ? NetworkImage(league.avatar!)
-                        : null,
-                    child: league.avatar == null
-                        ? Text(league.name[0].toUpperCase())
-                        : null,
+          return RefreshIndicator(
+            onRefresh: _refreshLeagues,
+            child: ListView.builder(
+              padding: const EdgeInsets.all(8),
+              itemCount: leagues.length,
+              itemBuilder: (context, index) {
+                final league = leagues[index];
+                return Card(
+                  child: ListTile(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                            builder: (context) =>
+                                LeagueDetailsPage(leagueId: league.id)),
+                      );
+                    },
+                    leading: CircleAvatar(
+                      backgroundImage: league.avatar != null
+                          ? NetworkImage(league.avatar!)
+                          : null,
+                      child: league.avatar == null
+                          ? Text(league.name[0].toUpperCase())
+                          : null,
+                    ),
+                    title: Text(
+                      league.name,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(league.competition.name),
+                        Text('Criado por: ${league.owner.name}'),
+                        Text('${league.membersCount} participantes'),
+                      ],
+                    ),
+                    trailing: Text(
+                      '${league.myPoints} pts',
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
                   ),
-                  title: Text(
-                    league.name,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(league.competition.name),
-                      Text('Criado por: ${league.owner.name}'),
-                      Text('${league.membersCount} participantes'),
-                    ],
-                  ),
-                  trailing: Text(
-                    '${league.myPoints} pts',
-                    style: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           );
         },
       ),

@@ -45,6 +45,21 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
     _rulesFuture = repo.getRules();
   }
 
+  Future<void> _refreshData() async {
+    final repo = context.read<LeaguesRepository>();
+    final authRepo = context.read<AuthRepository>();
+    setState(() {
+      _detailsFuture = repo.getLeagueDetails(widget.leagueId);
+      _rankingDataFuture = Future.wait([
+        repo.getLeagueRanking(widget.leagueId),
+        authRepo.getUserId(),
+      ]);
+      _rulesFuture = repo.getRules();
+    });
+    // Aguarda o carregamento para parar o indicador de refresh
+    await Future.wait([_detailsFuture, _rankingDataFuture, _rulesFuture]);
+  }
+
   String _formatDate(String utcDate) {
     final dateTime = DateTime.parse(utcDate).toLocal();
     final day = dateTime.day.toString().padLeft(2, '0');
@@ -125,7 +140,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
             future: Future.wait([_detailsFuture, _userIdFuture]),
             builder: (context, snapshot) {
               if (!snapshot.hasData) return const SizedBox();
-              
+
               final league = snapshot.data![0] as LeagueDetailsModel;
               final userId = snapshot.data![1] as String;
 
@@ -137,12 +152,15 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
                   onPressed: () async {
                     final result = await Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (context) => EditLeaguePage(leagueId: league.id),
+                        builder: (context) =>
+                            EditLeaguePage(leagueId: league.id),
                       ),
                     );
                     if (result == true) {
                       setState(() {
-                        _detailsFuture = context.read<LeaguesRepository>().getLeagueDetails(widget.leagueId);
+                        _detailsFuture = context
+                            .read<LeaguesRepository>()
+                            .getLeagueDetails(widget.leagueId);
                       });
                     }
                   },
@@ -199,38 +217,44 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
 
                 return DefaultTabController(
                   length: 5,
-                  child: NestedScrollView(
-                    headerSliverBuilder: (context, innerBoxIsScrolled) {
-                      return [
-                        SliverToBoxAdapter(child: _buildLeagueHeader(league)),
-                        SliverPersistentHeader(
-                          delegate: _SliverAppBarDelegate(
-                            TabBar(
-                              labelColor: Colors.white,
-                              unselectedLabelColor: Colors.white70,
-                              indicatorColor: Colors.white,
-                              isScrollable: true,
-                              tabs: const [
-                                Tab(text: 'Ranking'),
-                                Tab(text: 'Palpitar'),
-                                Tab(text: 'Ativos'),
-                                Tab(text: 'Histórico'),
-                                Tab(text: 'Regras'),
-                              ],
-                            ),
-                          ),
-                          pinned: true,
-                        ),
-                      ];
+                  child: RefreshIndicator(
+                    onRefresh: _refreshData,
+                    notificationPredicate: (notification) {
+                      return notification.depth == 2;
                     },
-                    body: TabBarView(
-                      children: [
-                        _buildRankingTab(),
-                        _buildMatchesTab(league.competition.id),
-                        _buildActivePredictionsTab(league.competition.id),
-                        _buildHistoryPredictionsTab(league.competition.id),
-                        _buildRulesTab(),
-                      ],
+                    child: NestedScrollView(
+                      headerSliverBuilder: (context, innerBoxIsScrolled) {
+                        return [
+                          SliverToBoxAdapter(child: _buildLeagueHeader(league)),
+                          SliverPersistentHeader(
+                            delegate: _SliverAppBarDelegate(
+                              TabBar(
+                                labelColor: Colors.white,
+                                unselectedLabelColor: Colors.white70,
+                                indicatorColor: Colors.white,
+                                isScrollable: true,
+                                tabs: const [
+                                  Tab(text: 'Ranking'),
+                                  Tab(text: 'Palpitar'),
+                                  Tab(text: 'Ativos'),
+                                  Tab(text: 'Histórico'),
+                                  Tab(text: 'Regras'),
+                                ],
+                              ),
+                            ),
+                            pinned: true,
+                          ),
+                        ];
+                      },
+                      body: TabBarView(
+                        children: [
+                          _buildRankingTab(),
+                          _buildMatchesTab(league.competition.id),
+                          _buildActivePredictionsTab(league.competition.id),
+                          _buildHistoryPredictionsTab(league.competition.id),
+                          _buildRulesTab(),
+                        ],
+                      ),
                     ),
                   ),
                 );
@@ -344,6 +368,20 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
     );
   }
 
+  Widget _buildScrollablePlaceholder(Widget child) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: Center(child: child),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildRankingTab() {
     return FutureBuilder<List<dynamic>>(
       future: _rankingDataFuture,
@@ -352,24 +390,29 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
           return const LoadingWidget();
         }
         if (snapshot.hasError) {
-          return Center(
-            child: Text('Erro ao carregar ranking: ${snapshot.error}'),
+          return _buildScrollablePlaceholder(
+            Text('Erro ao carregar ranking: ${snapshot.error}'),
           );
         }
         if (!snapshot.hasData) {
-          return const Center(child: Text('Nenhum participante encontrado.'));
+          return _buildScrollablePlaceholder(
+            const Text('Nenhum participante encontrado.'),
+          );
         }
 
         final ranking = snapshot.data![0] as List<LeagueRankingModel>;
         final currentUserId = snapshot.data![1] as String;
 
         if (ranking.isEmpty) {
-          return const Center(child: Text('Nenhum participante encontrado.'));
+          return _buildScrollablePlaceholder(
+            const Text('Nenhum participante encontrado.'),
+          );
         }
 
         return ListView(
           key: const PageStorageKey('ranking'),
           padding: const EdgeInsets.all(16),
+          physics: const AlwaysScrollableScrollPhysics(),
           children: [
             Center(
               child: GlassCard(
@@ -503,23 +546,23 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const LoadingWidget();
         } else if (snapshot.hasError) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text(
-                'Erro ao carregar partidas:\n${snapshot.error}',
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.red),
-              ),
+          return _buildScrollablePlaceholder(
+            Text(
+              'Erro ao carregar partidas:\n${snapshot.error}',
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.red),
             ),
           );
         } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Center(child: Text('Nenhuma partida disponível.'));
+          return _buildScrollablePlaceholder(
+            const Text('Nenhuma partida disponível.'),
+          );
         }
 
         final matches = snapshot.data!;
         return ListView.builder(
           padding: const EdgeInsets.all(8),
+          physics: const AlwaysScrollableScrollPhysics(),
           itemCount: matches.length,
           itemBuilder: (context, index) {
             final match = matches[index];
@@ -560,7 +603,10 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
                                     url: match.homeTeamCrest!,
                                     width: 20,
                                     height: 20,
-                                    errorWidget: const Icon(Icons.sports_soccer, size: 20),
+                                    errorWidget: const Icon(
+                                      Icons.sports_soccer,
+                                      size: 20,
+                                    ),
                                   )
                                 : const Icon(Icons.sports_soccer, size: 20),
                           ),
@@ -585,7 +631,10 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
                                     url: match.awayTeamCrest!,
                                     width: 20,
                                     height: 20,
-                                    errorWidget: const Icon(Icons.sports_soccer, size: 20),
+                                    errorWidget: const Icon(
+                                      Icons.sports_soccer,
+                                      size: 20,
+                                    ),
                                   )
                                 : const Icon(Icons.sports_soccer, size: 20),
                           ),
@@ -651,23 +700,23 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const LoadingWidget();
         } else if (snapshot.hasError) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text(
-                'Erro ao carregar palpites:\n${snapshot.error}',
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.red),
-              ),
+          return _buildScrollablePlaceholder(
+            Text(
+              'Erro ao carregar palpites:\n${snapshot.error}',
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.red),
             ),
           );
         } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Center(child: Text('Nenhum palpite encontrado.'));
+          return _buildScrollablePlaceholder(
+            const Text('Nenhum palpite encontrado.'),
+          );
         }
 
         final predictions = snapshot.data!;
         return ListView.builder(
           padding: const EdgeInsets.all(8),
+          physics: const AlwaysScrollableScrollPhysics(),
           itemCount: predictions.length,
           itemBuilder: (context, index) {
             final prediction = predictions[index];
@@ -718,7 +767,10 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
                                     url: match.homeTeamCrest!,
                                     width: 20,
                                     height: 20,
-                                    errorWidget: const Icon(Icons.sports_soccer, size: 20),
+                                    errorWidget: const Icon(
+                                      Icons.sports_soccer,
+                                      size: 20,
+                                    ),
                                   )
                                 : const Icon(Icons.sports_soccer, size: 20),
                           ),
@@ -766,7 +818,10 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
                                     url: match.awayTeamCrest!,
                                     width: 20,
                                     height: 20,
-                                    errorWidget: const Icon(Icons.sports_soccer, size: 20),
+                                    errorWidget: const Icon(
+                                      Icons.sports_soccer,
+                                      size: 20,
+                                    ),
                                   )
                                 : const Icon(Icons.sports_soccer, size: 20),
                           ),
@@ -846,23 +901,23 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const LoadingWidget();
         } else if (snapshot.hasError) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text(
-                'Erro ao carregar regras:\n${snapshot.error}',
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.red),
-              ),
+          return _buildScrollablePlaceholder(
+            Text(
+              'Erro ao carregar regras:\n${snapshot.error}',
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.red),
             ),
           );
         } else if (!snapshot.hasData) {
-          return const Center(child: Text('Nenhuma regra encontrada.'));
+          return _buildScrollablePlaceholder(
+            const Text('Nenhuma regra encontrada.'),
+          );
         }
 
         final rules = snapshot.data!;
         return ListView(
           padding: const EdgeInsets.all(8),
+          physics: const AlwaysScrollableScrollPhysics(),
           children: [
             if (rules.scoring.isNotEmpty)
               GlassCard(
