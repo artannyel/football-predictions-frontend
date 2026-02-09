@@ -12,6 +12,7 @@ import 'package:football_predictions/features/matches/data/repositories/matches_
 import 'package:football_predictions/features/predictions/data/models/prediction_model.dart';
 import 'package:football_predictions/features/predictions/data/repositories/predictions_repository.dart';
 import 'package:football_predictions/features/predictions/presentation/pages/prediction_page.dart';
+import 'package:football_predictions/features/home/presentation/pages/edit_league_page.dart';
 import '../widgets/glass_card.dart';
 import 'package:provider/provider.dart';
 
@@ -28,6 +29,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
   late Future<LeagueDetailsModel> _detailsFuture;
   late Future<List<dynamic>> _rankingDataFuture;
   late Future<LeagueRulesModel> _rulesFuture;
+  late Future<String> _userIdFuture;
 
   @override
   void initState() {
@@ -35,6 +37,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
     final repo = context.read<LeaguesRepository>();
     final authRepo = context.read<AuthRepository>();
     _detailsFuture = repo.getLeagueDetails(widget.leagueId);
+    _userIdFuture = authRepo.getUserId();
     _rankingDataFuture = Future.wait([
       repo.getLeagueRanking(widget.leagueId),
       authRepo.getUserId(),
@@ -117,6 +120,38 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
         title: const Text('Detalhes da Liga'),
         backgroundColor: const Color(0xFF1B5E20), // Verde escuro
         foregroundColor: Colors.white,
+        actions: [
+          FutureBuilder(
+            future: Future.wait([_detailsFuture, _userIdFuture]),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) return const SizedBox();
+              
+              final league = snapshot.data![0] as LeagueDetailsModel;
+              final userId = snapshot.data![1] as String;
+
+              // Só mostra o botão se o usuário for o dono da liga
+              if (league.owner.id == userId) {
+                return IconButton(
+                  icon: const Icon(Icons.edit),
+                  tooltip: 'Editar Liga',
+                  onPressed: () async {
+                    final result = await Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => EditLeaguePage(leagueId: league.id),
+                      ),
+                    );
+                    if (result == true) {
+                      setState(() {
+                        _detailsFuture = context.read<LeaguesRepository>().getLeagueDetails(widget.leagueId);
+                      });
+                    }
+                  },
+                );
+              }
+              return const SizedBox();
+            },
+          ),
+        ],
       ),
       body: Stack(
         children: [

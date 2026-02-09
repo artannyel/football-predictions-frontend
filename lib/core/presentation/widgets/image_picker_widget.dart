@@ -13,12 +13,14 @@ class ImagePickerWidget extends StatelessWidget {
   final XFile? image;
   final ValueChanged<XFile> onImageSelected;
   final double radius;
+  final String? initialUrl;
 
   const ImagePickerWidget({
     super.key,
     required this.image,
     required this.onImageSelected,
     this.radius = 40,
+    this.initialUrl,
   });
 
   Future<void> _pickImage() async {
@@ -119,6 +121,15 @@ class ImagePickerWidget extends StatelessWidget {
     return File(targetPath).writeAsBytes(jpgBytes);
   }
 
+  ImageProvider? _getBackgroundImage() {
+    // 1. Se tem imagem nova selecionada (Mobile)
+    if (!kIsWeb && image != null) return FileImage(File(image!.path));
+    // 2. Se não tem imagem nova, mas tem URL inicial (Mobile e Web)
+    if (image == null && initialUrl != null) return NetworkImage(initialUrl!);
+    // 3. Caso contrário (Web com imagem nova é tratado no child)
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -126,18 +137,21 @@ class ImagePickerWidget extends StatelessWidget {
       child: CircleAvatar(
         radius: radius,
         backgroundColor: Colors.grey.shade300,
-        // No Mobile usamos FileImage no backgroundImage
-        backgroundImage: !kIsWeb && image != null
-            ? FileImage(File(image!.path))
-            : null,
+        backgroundImage: _getBackgroundImage(),
         child: _buildChild(),
       ),
     );
   }
 
   Widget? _buildChild() {
-    if (image == null) {
+    // Se não tem imagem nova nem URL inicial, mostra o ícone
+    if (image == null && initialUrl == null) {
       return Icon(Icons.add_a_photo, size: radius * 0.75, color: Colors.grey);
+    }
+
+    // Se tem URL inicial e nenhuma imagem nova, não mostra nada no child (o backgroundImage cuida disso)
+    if (image == null && initialUrl != null) {
+      return null;
     }
 
     // Na Web usamos Image.memory via FutureBuilder para ler os bytes

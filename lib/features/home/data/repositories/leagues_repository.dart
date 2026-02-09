@@ -78,6 +78,45 @@ class LeaguesRepository {
     }
   }
 
+  Future<void> updateLeague({
+    required String id,
+    required String name,
+    String? description,
+    XFile? avatar,
+  }) async {
+    try {
+      final formData = FormData.fromMap({
+        'name': name,
+        if (description != null) 'description': description,
+      });
+
+      if (avatar != null) {
+        if (kIsWeb) {
+          final bytes = await avatar.readAsBytes();
+          formData.files.add(MapEntry(
+            'avatar',
+            MultipartFile.fromBytes(bytes, filename: avatar.name),
+          ));
+        } else {
+          formData.files.add(MapEntry(
+            'avatar',
+            await MultipartFile.fromFile(avatar.path, filename: avatar.name),
+          ));
+        }
+      }
+
+      // Usando PUT para atualização
+      await dioClient.dio.post('leagues/$id', data: formData);
+    } on DioException catch (e) {
+      final errorMessage = e.response?.data is Map
+          ? (e.response?.data['message'] ?? 'Erro ao atualizar liga')
+          : 'Erro de conexão (${e.response?.statusCode})';
+      throw Exception(errorMessage);
+    } catch (e) {
+      throw Exception('Falha ao atualizar liga: $e');
+    }
+  }
+
   Future<void> joinLeague(String code) async {
     try {
       await dioClient.dio.post('leagues/join', data: {
