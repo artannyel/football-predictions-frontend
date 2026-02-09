@@ -41,6 +41,10 @@ dependencies:
   flutter_svg: ^2.0.10
   flutter_cache_manager: ^3.4.1
   cached_network_image: ^3.4.1
+  image_picker: ^1.2.1
+  flutter_image_compress: ^2.3.0
+  heic_to_png_jpg: ^0.0.6
+  file_picker: ^10.3.10
 
 dev_dependencies:
   flutter_test:

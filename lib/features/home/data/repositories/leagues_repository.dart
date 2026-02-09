@@ -1,3 +1,6 @@
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:football_predictions/dio_client.dart';
 import 'package:football_predictions/features/home/data/models/league_details_model.dart';
 import 'package:football_predictions/features/home/data/models/league_model.dart';
@@ -27,13 +30,49 @@ class LeaguesRepository {
     required String name,
     required int competitionId,
     String? description,
+    XFile? avatar,
   }) async {
     try {
-      await dioClient.dio.post('leagues', data: {
+      final formData = FormData.fromMap({
         'name': name,
         'competition_id': competitionId,
-        'description': description,
+        if (description != null) 'description': description,
       });
+
+      if (avatar != null) {
+        if (kIsWeb) {
+          // Na Web, lemos os bytes diretamente
+          final bytes = await avatar.readAsBytes();
+          formData.files.add(MapEntry(
+            'avatar',
+            MultipartFile.fromBytes(bytes, filename: avatar.name),
+          ));
+        } else {
+          // No Mobile, usamos o caminho do arquivo
+          formData.files.add(MapEntry(
+            'avatar',
+            await MultipartFile.fromFile(avatar.path, filename: avatar.name),
+          ));
+        }
+      }
+
+      final data = await dioClient.dio.post('leagues', data: formData);
+      debugPrint('Resposta do servidor: ${data.data}');
+    } on DioException catch (e) {
+      debugPrint('Erro Dio: ${e.response?.statusCode} - ${e.response?.data}');
+
+      // Tratamento específico para 302
+      if (e.response?.statusCode == 302) {
+        throw Exception('Sessão expirada ou erro de redirecionamento. Faça login novamente.');
+      }
+
+      // Tenta extrair a mensagem de erro amigável enviada pelo backend
+      // Geralmente vem em campos como 'message', 'error' ou 'errors'
+      final errorMessage = e.response?.data is Map
+          ? (e.response?.data['message'] ?? e.response?.data['error'] ?? 'Erro ao processar requisição')
+          : 'Erro de conexão com o servidor (${e.response?.statusCode})';
+
+      throw Exception(errorMessage);
     } catch (e) {
       throw Exception('Falha ao criar liga: $e');
     }

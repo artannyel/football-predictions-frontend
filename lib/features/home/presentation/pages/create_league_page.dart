@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:football_predictions/core/presentation/widgets/app_network_image.dart';
+import 'package:football_predictions/core/presentation/widgets/image_picker_widget.dart';
 import 'package:football_predictions/core/presentation/widgets/loading_widget.dart';
 import 'package:football_predictions/features/competitions/data/models/competition_model.dart';
 import 'package:football_predictions/features/competitions/data/repositories/competitions_repository.dart';
 import 'package:football_predictions/features/home/data/repositories/leagues_repository.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 class CreateLeaguePage extends StatefulWidget {
@@ -18,6 +20,7 @@ class _CreateLeaguePageState extends State<CreateLeaguePage> {
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
   int? _selectedCompetitionId;
+  XFile? _selectedImage;
   bool _isLoading = false;
 
   Future<void> _createLeague() async {
@@ -32,6 +35,7 @@ class _CreateLeaguePageState extends State<CreateLeaguePage> {
         description: _descriptionController.text.isNotEmpty
             ? _descriptionController.text
             : null,
+        avatar: _selectedImage,
       );
 
       if (mounted) {
@@ -64,12 +68,19 @@ class _CreateLeaguePageState extends State<CreateLeaguePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Criar Nova Liga')),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
           child: Column(
             children: [
+              ImagePickerWidget(
+                image: _selectedImage,
+                onImageSelected: (file) => setState(() {
+                  _selectedImage = file;
+                }),
+              ),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: _nameController,
                 decoration: const InputDecoration(
