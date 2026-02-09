@@ -553,16 +553,17 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          if (match.homeTeamCrest != null)
-                            Padding(
-                              padding: const EdgeInsets.only(left: 8.0),
-                              child: AppNetworkImage(
-                                url: match.homeTeamCrest!,
-                                width: 20,
-                                height: 20,
-                                errorWidget: const Icon(Icons.sports_soccer, size: 20),
-                              ),
-                            ),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8.0),
+                            child: match.homeTeamCrest != null
+                                ? AppNetworkImage(
+                                    url: match.homeTeamCrest!,
+                                    width: 20,
+                                    height: 20,
+                                    errorWidget: const Icon(Icons.sports_soccer, size: 20),
+                                  )
+                                : const Icon(Icons.sports_soccer, size: 20),
+                          ),
                         ],
                       ),
                     ),
@@ -577,16 +578,17 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
-                          if (match.awayTeamCrest != null)
-                            Padding(
-                              padding: const EdgeInsets.only(right: 8.0),
-                              child: AppNetworkImage(
-                                url: match.awayTeamCrest!,
-                                width: 20,
-                                height: 20,
-                                errorWidget: const Icon(Icons.sports_soccer, size: 20),
-                              ),
-                            ),
+                          Padding(
+                            padding: const EdgeInsets.only(right: 8.0),
+                            child: match.awayTeamCrest != null
+                                ? AppNetworkImage(
+                                    url: match.awayTeamCrest!,
+                                    width: 20,
+                                    height: 20,
+                                    errorWidget: const Icon(Icons.sports_soccer, size: 20),
+                                  )
+                                : const Icon(Icons.sports_soccer, size: 20),
+                          ),
                           Flexible(
                             child: Text(
                               match.awayTeamName,
@@ -709,16 +711,17 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          if (match.homeTeamCrest != null)
-                            Padding(
-                              padding: const EdgeInsets.only(left: 8.0),
-                              child: AppNetworkImage(
-                                url: match.homeTeamCrest!,
-                                width: 20,
-                                height: 20,
-                                errorWidget: const Icon(Icons.sports_soccer, size: 20),
-                              ),
-                            ),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8.0),
+                            child: match.homeTeamCrest != null
+                                ? AppNetworkImage(
+                                    url: match.homeTeamCrest!,
+                                    width: 20,
+                                    height: 20,
+                                    errorWidget: const Icon(Icons.sports_soccer, size: 20),
+                                  )
+                                : const Icon(Icons.sports_soccer, size: 20),
+                          ),
                         ],
                       ),
                     ),
@@ -756,16 +759,17 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
-                          if (match.awayTeamCrest != null)
-                            Padding(
-                              padding: const EdgeInsets.only(right: 8.0),
-                              child: AppNetworkImage(
-                                url: match.awayTeamCrest!,
-                                width: 20,
-                                height: 20,
-                                errorWidget: const Icon(Icons.sports_soccer, size: 20),
-                              ),
-                            ),
+                          Padding(
+                            padding: const EdgeInsets.only(right: 8.0),
+                            child: match.awayTeamCrest != null
+                                ? AppNetworkImage(
+                                    url: match.awayTeamCrest!,
+                                    width: 20,
+                                    height: 20,
+                                    errorWidget: const Icon(Icons.sports_soccer, size: 20),
+                                  )
+                                : const Icon(Icons.sports_soccer, size: 20),
+                          ),
                           Flexible(
                             child: Text(
                               match.awayTeamName,
