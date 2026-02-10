@@ -1,4 +1,6 @@
 import 'package:football_predictions/dio_client.dart';
+import 'package:football_predictions/features/auth/data/models/user_model.dart';
+import 'package:football_predictions/features/home/data/models/league_ranking_model.dart';
 import 'package:football_predictions/features/predictions/data/models/prediction_model.dart';
 
 class PredictionsRepository {
@@ -13,22 +15,29 @@ class PredictionsRepository {
     required String leagueId,
   }) async {
     try {
-      await dioClient.dio.post('predictions', data: {
-        'match_id': matchId,
-        'home_score': homeScore,
-        'away_score': awayScore,
-        'league_id': leagueId,
-      });
+      await dioClient.dio.post(
+        'predictions',
+        data: {
+          'match_id': matchId,
+          'home_score': homeScore,
+          'away_score': awayScore,
+          'league_id': leagueId,
+        },
+      );
     } catch (e) {
       throw Exception('Falha ao salvar palpite: $e');
     }
   }
 
-  Future<List<PredictionModel>> getUpcomingPredictions(
-      {String? leagueId}) async {
+  Future<List<PredictionModel>> getUpcomingPredictions({
+    String? leagueId,
+  }) async {
     try {
       final queryParams = leagueId != null ? {'league_id': leagueId} : null;
-      final response = await dioClient.dio.get('predictions/upcoming', queryParameters: queryParams);
+      final response = await dioClient.dio.get(
+        'predictions/upcoming',
+        queryParameters: queryParams,
+      );
       final List<dynamic> data = response.data['data'];
       return data.map((json) => PredictionModel.fromJson(json)).toList();
     } catch (e) {
@@ -45,11 +54,16 @@ class PredictionsRepository {
         if (leagueId != null) 'league_id': leagueId,
         'page': page,
       };
-      final response = await dioClient.dio.get('predictions', queryParameters: queryParams);
+      final response = await dioClient.dio.get(
+        'predictions',
+        queryParameters: queryParams,
+      );
       final List<dynamic> data = response.data['data'];
       final meta = response.data['meta'] ?? {};
       return (
-        predictions: data.map((json) => PredictionModel.fromJson(json)).toList(),
+        predictions: data
+            .map((json) => PredictionModel.fromJson(json))
+            .toList(),
         lastPage: (meta['last_page'] as int?) ?? 1,
       );
     } catch (e) {
@@ -66,7 +80,15 @@ class PredictionsRepository {
     }
   }
 
-  Future<({List<PredictionModel> predictions, int lastPage})> getUserPredictions({
+  Future<
+    ({
+      List<PredictionModel> predictions,
+      int lastPage,
+      RankingStatsModel? userStats,
+      UserModel userModel,
+    })
+  >
+  getUserPredictions({
     required String userId,
     required String leagueId,
     int page = 1,
@@ -76,11 +98,26 @@ class PredictionsRepository {
         'predictions/user/$userId',
         queryParameters: {'league_id': leagueId, 'page': page},
       );
-      final List<dynamic> data = response.data['data'];
-      final meta = response.data['meta'] ?? {};
+
+      final predictionsData = response.data['predictions'];
+      final List<dynamic> data = predictionsData['data'];
+      final meta = predictionsData['meta'] ?? {};
+
+      final userData = response.data['user'];
+      RankingStatsModel? userStats;
+      UserModel userModel = UserModel.fromJson(userData);
+      if (userData != null) {
+        final statsData = userData['stats'] ?? {};
+        userStats = RankingStatsModel.fromJson(statsData);
+      }
+
       return (
-        predictions: data.map((json) => PredictionModel.fromJson(json)).toList(),
+        predictions: data
+            .map((json) => PredictionModel.fromJson(json))
+            .toList(),
         lastPage: (meta['last_page'] as int?) ?? 1,
+        userStats: userStats,
+        userModel: userModel,
       );
     } catch (e) {
       throw Exception('Falha ao carregar palpites do usuário: $e');

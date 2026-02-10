@@ -1,4 +1,5 @@
 class RankingStatsModel {
+  final int? points;
   final int exactScore;
   final int winnerDiff;
   final int winnerGoal;
@@ -7,6 +8,7 @@ class RankingStatsModel {
   final int total;
 
   RankingStatsModel({
+    this.points,
     required this.exactScore,
     required this.winnerDiff,
     required this.winnerGoal,
@@ -17,6 +19,7 @@ class RankingStatsModel {
 
   factory RankingStatsModel.fromJson(Map<String, dynamic> json) {
     return RankingStatsModel(
+      points: json['points'],
       exactScore: json['exact_score'] ?? 0,
       winnerDiff: json['winner_diff'] ?? 0,
       winnerGoal: json['winner_goal'] ?? 0,

@@ -18,11 +18,13 @@ class UserModel {
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
       id: json['id'],
-      firebaseUid: json['firebase_uid'],
+      firebaseUid: json['firebase_uid'] ?? '',
       name: json['name'],
-      email: json['email'],
+      email: json['email'] ?? '',
       photoUrl: json['photo_url'],
-      createdAt: DateTime.parse(json['created_at']),
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'])
+          : DateTime.now(),
     );
   }
 }

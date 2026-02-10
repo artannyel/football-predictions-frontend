@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:football_predictions/core/presentation/widgets/app_network_image.dart';
 import 'package:football_predictions/core/presentation/widgets/loading_widget.dart';
+import 'package:football_predictions/features/auth/data/models/user_model.dart';
+import 'package:football_predictions/features/home/data/models/league_ranking_model.dart';
 import 'package:football_predictions/features/home/presentation/widgets/glass_card.dart';
 import 'package:football_predictions/features/predictions/data/models/prediction_model.dart';
 import 'package:football_predictions/features/predictions/data/repositories/predictions_repository.dart';
@@ -28,6 +30,8 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
   int _lastPage = 1;
   bool _isLoading = false;
   String? _error;
+  RankingStatsModel? _userStats;
+  UserModel? _userHistory;
 
   @override
   void initState() {
@@ -53,6 +57,10 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
         setState(() {
           _predictions.addAll(result.predictions);
           _lastPage = result.lastPage;
+          if (_page == 1) {
+            _userStats = result.userStats;
+          }
+          _userHistory = result.userModel;
           _page++;
           _isLoading = false;
         });
@@ -151,11 +159,13 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
   }
 
   Widget _buildContent() {
-    if (_predictions.isEmpty && _isLoading) {
+    // Se não tiver stats e estiver carregando (primeira carga), mostra loading tela cheia
+    if (_userStats == null && _isLoading) {
       return const Center(child: LoadingWidget());
     }
 
-    if (_predictions.isEmpty && _error != null) {
+    // Se não tiver stats e der erro (primeira carga), mostra erro tela cheia
+    if (_userStats == null && _error != null) {
       return Center(
         child: Text(
           'Erro: $_error',
@@ -164,18 +174,24 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
       );
     }
 
-    if (_predictions.isEmpty) {
-      return const Center(
-        child: Text(
-          'Nenhum palpite encontrado.',
-          style: TextStyle(color: Colors.white),
-        ),
-      );
+    final hasStats = _userStats != null;
+    final hasPredictions = _predictions.isNotEmpty;
+
+    // Calcula o número de itens
+    int itemCount = 0;
+    if (hasStats) itemCount++; // Header
+
+    if (hasPredictions) {
+      itemCount += _predictions.length;
+      if (_isLoading) itemCount++; // Loader do scroll infinito
+    } else {
+      itemCount++; // Item de status (Vazio, Erro ou Loading) abaixo do header
     }
 
     return NotificationListener<ScrollNotification>(
       onNotification: (scrollInfo) {
         if (!_isLoading &&
+            hasPredictions &&
             scrollInfo.metrics.pixels >=
                 scrollInfo.metrics.maxScrollExtent - 200) {
           _loadPredictions();
@@ -184,16 +200,56 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
       },
       child: ListView.builder(
         padding: const EdgeInsets.all(8),
-        itemCount: _predictions.length + (_isLoading ? 1 : 0),
+        itemCount: itemCount,
         itemBuilder: (context, index) {
-          if (index == _predictions.length) {
+          // 1. Header de Estatísticas
+          if (hasStats && index == 0) {
+            return _buildStatsHeader(_userStats!);
+          }
+
+          // Ajusta o índice considerando o header
+          final contentIndex = hasStats ? index - 1 : index;
+
+          // 2. Estado sem palpites (abaixo do header)
+          if (!hasPredictions) {
+            if (_isLoading) {
+              return const Padding(
+                padding: EdgeInsets.only(top: 32.0),
+                child: Center(child: LoadingWidget()),
+              );
+            }
+            if (_error != null) {
+              return Padding(
+                padding: const EdgeInsets.only(top: 32.0),
+                child: Center(
+                  child: Text(
+                    'Erro: $_error',
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ),
+              );
+            }
+            return const Padding(
+              padding: EdgeInsets.only(top: 32.0),
+              child: Center(
+                child: Text(
+                  'Nenhum palpite encontrado.',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            );
+          }
+
+          // 3. Loader do Scroll Infinito
+          if (contentIndex == _predictions.length) {
             return const Padding(
               padding: EdgeInsets.all(16.0),
               child: Center(child: LoadingWidget(size: 30)),
             );
           }
 
-          final prediction = _predictions[index];
+          // 4. Item da Lista de Palpites
+          final prediction = _predictions[contentIndex];
           final match = prediction.match;
 
           return GlassCard(
@@ -314,6 +370,113 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
           );
         },
       ),
+    );
+  }
+
+  Widget _buildStatsHeader(RankingStatsModel stats) {
+    return GlassCard(
+      margin: const EdgeInsets.fromLTRB(4, 0, 4, 12),
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        children: [
+          if (_userHistory != null) ...[
+            GestureDetector(
+              onTap: _userHistory!.photoUrl != null
+                  ? () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => Dialog(
+                          backgroundColor: Colors.black.withValues(alpha: 0.9),
+                          insetPadding: EdgeInsets.zero,
+                          child: Stack(
+                            children: [
+                              InteractiveViewer(
+                                child: Center(
+                                  child: Image.network(
+                                    _userHistory!.photoUrl!,
+                                    fit: BoxFit.contain,
+                                  ),
+                                ),
+                              ),
+                              Positioned(
+                                top: 16,
+                                right: 16,
+                                child: SafeArea(
+                                  child: IconButton(
+                                    icon: const Icon(Icons.close,
+                                        color: Colors.white),
+                                    onPressed: () =>
+                                        Navigator.of(context).pop(),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
+                  : null,
+              child: CircleAvatar(
+                radius: 40,
+                backgroundImage: _userHistory!.photoUrl != null
+                    ? NetworkImage(_userHistory!.photoUrl!)
+                    : null,
+                child: _userHistory!.photoUrl == null
+                    ? Text(
+                        _userHistory!.name.isNotEmpty
+                            ? _userHistory!.name[0].toUpperCase()
+                            : '?',
+                        style: const TextStyle(fontSize: 32),
+                      )
+                    : null,
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildStatItem('Pontos', '${stats.points ?? 0}', isMain: true),
+              _buildStatItem('Total', '${stats.total}'),
+              _buildStatItem('Exatos', '${stats.exactScore}', color: Colors.greenAccent),
+              _buildStatItem('Erros', '${stats.errors}',
+                  color: Colors.redAccent),
+            ],
+          ),
+          const Divider(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildStatItem('Vencedor + Saldo', '${stats.winnerDiff}'),
+              _buildStatItem('Vencedor + Gols', '${stats.winnerGoal}'),
+              _buildStatItem('Apenas Vencedor', '${stats.winnerOnly}'),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatItem(String label, String value,
+      {bool isMain = false, Color? color}) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: isMain ? 24 : 18,
+            fontWeight: FontWeight.bold,
+            color: color ?? Colors.white,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            color: Colors.white.withValues(alpha: 0.7),
+          ),
+        ),
+      ],
     );
   }
 }
