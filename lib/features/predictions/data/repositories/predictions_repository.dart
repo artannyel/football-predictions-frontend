@@ -55,4 +55,25 @@ class PredictionsRepository {
       throw Exception('Falha ao carregar palpite: $e');
     }
   }
+
+  Future<({List<PredictionModel> predictions, int lastPage})> getUserPredictions({
+    required String userId,
+    required String leagueId,
+    int page = 1,
+  }) async {
+    try {
+      final response = await dioClient.dio.get(
+        'predictions/user/$userId',
+        queryParameters: {'league_id': leagueId, 'page': page},
+      );
+      final List<dynamic> data = response.data['data'];
+      final meta = response.data['meta'] ?? {};
+      return (
+        predictions: data.map((json) => PredictionModel.fromJson(json)).toList(),
+        lastPage: (meta['last_page'] as int?) ?? 1,
+      );
+    } catch (e) {
+      throw Exception('Falha ao carregar palpites do usuário: $e');
+    }
+  }
 }

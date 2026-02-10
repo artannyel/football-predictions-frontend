@@ -12,6 +12,7 @@ import 'package:football_predictions/features/predictions/data/models/prediction
 import 'package:football_predictions/features/predictions/data/repositories/predictions_repository.dart';
 import 'package:football_predictions/features/predictions/presentation/pages/prediction_page.dart';
 import 'package:football_predictions/features/home/presentation/pages/edit_league_page.dart';
+import 'package:football_predictions/features/predictions/presentation/pages/user_predictions_page.dart';
 import '../widgets/glass_card.dart';
 import 'package:provider/provider.dart';
 
@@ -473,6 +474,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: DataTable(
+                  showCheckboxColumn: false,
                   columnSpacing: 20,
                   headingRowHeight: 40,
                   dataRowMinHeight: 48,
@@ -533,6 +535,19 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
                   rows: _rankings.map((member) {
                     final isCurrentUser = member.id == _currentUserId;
                     return DataRow(
+                      onSelectChanged: isCurrentUser
+                          ? null
+                          : (_) {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => UserPredictionsPage(
+                                    userId: member.id,
+                                    userName: member.name,
+                                    leagueId: widget.leagueId,
+                                  ),
+                                ),
+                              );
+                            },
                       color: isCurrentUser
                           ? MaterialStateProperty.all(
                               Theme.of(context).colorScheme.primaryContainer
