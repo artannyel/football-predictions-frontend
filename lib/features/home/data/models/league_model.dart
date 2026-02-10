@@ -8,6 +8,7 @@ class LeagueModel {
   final LeagueOwner owner;
   final int membersCount;
   final int myPoints;
+  final bool isActive;
 
   LeagueModel({
     required this.id,
@@ -19,6 +20,7 @@ class LeagueModel {
     required this.owner,
     required this.membersCount,
     required this.myPoints,
+    this.isActive = true,
   });
 
   factory LeagueModel.fromJson(Map<String, dynamic> json) {
@@ -32,6 +34,7 @@ class LeagueModel {
       owner: LeagueOwner.fromJson(json['owner']),
       membersCount: json['members_count'] ?? 0,
       myPoints: json['my_points'] ?? 0,
+      isActive: json['is_active'] ?? true,
     );
   }
 }

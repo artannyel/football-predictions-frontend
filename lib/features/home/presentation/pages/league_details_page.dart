@@ -344,7 +344,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
                       },
                       body: TabBarView(
                         children: [
-                          _buildRankingTab(),
+                          _buildRankingTab(league.isActive),
                           _buildMatchesTab(league.id),
                           _buildActivePredictionsTab(league.id),
                           _buildHistoryPredictionsTab(league.id),
@@ -363,11 +363,102 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
   }
 
   Widget _buildLeagueHeader(LeagueDetailsModel league) {
+    LeagueRankingModel? champion;
+    if (!league.isActive && _rankings.isNotEmpty) {
+      try {
+        champion = _rankings.firstWhere((r) => r.rank == 1);
+      } catch (_) {}
+    }
+
     return GlassCard(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
+          if (!league.isActive) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.amber.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.amber),
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.emoji_events, color: Colors.amber),
+                  SizedBox(width: 8),
+                  Text(
+                    "LIGA FINALIZADA",
+                    style: TextStyle(
+                      color: Colors.amber,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            if (champion != null) ...[
+              const Text(
+                "🏆 CAMPEÃO 🏆",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.amber,
+                  fontSize: 18,
+                ),
+              ),
+              const SizedBox(height: 16),
+              GestureDetector(
+                onTap: champion.photoUrl != null
+                    ? () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => Dialog(
+                            backgroundColor:
+                                Colors.black.withValues(alpha: 0.9),
+                            insetPadding: EdgeInsets.zero,
+                            child: InteractiveViewer(
+                              child: Center(
+                                child: Image.network(
+                                  champion!.photoUrl!,
+                                  fit: BoxFit.contain,
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      }
+                    : null,
+                child: CircleAvatar(
+                  radius: 60,
+                  backgroundImage: champion.photoUrl != null
+                      ? NetworkImage(champion.photoUrl!)
+                      : null,
+                  child: champion.photoUrl == null
+                      ? Text(
+                          champion.name.isNotEmpty
+                              ? champion.name[0].toUpperCase()
+                              : '?',
+                          style: const TextStyle(fontSize: 48),
+                        )
+                      : null,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                champion.name,
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              const Divider(),
+              const SizedBox(height: 24),
+            ],
+          ],
           CircleAvatar(
             radius: 40,
             backgroundImage: league.avatar != null
@@ -485,7 +576,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
     );
   }
 
-  Widget _buildRankingTab() {
+  Widget _buildRankingTab(bool isLeagueActive) {
     if (_rankingError != null && _rankings.isEmpty) {
       return _buildScrollablePlaceholder(
         Text('Erro ao carregar ranking: $_rankingError'),
@@ -623,6 +714,20 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
                               ),
                               const SizedBox(width: 8),
                               Text(member.name),
+                              if (!isLeagueActive &&
+                                  member.rank >= 1 &&
+                                  member.rank <= 3) ...[
+                                const SizedBox(width: 8),
+                                Icon(
+                                  Icons.emoji_events,
+                                  size: 20,
+                                  color: member.rank == 1
+                                      ? const Color(0xFFFFD700) // Ouro
+                                      : member.rank == 2
+                                          ? const Color(0xFFC0C0C0) // Prata
+                                          : const Color(0xFFCD7F32), // Bronze
+                                ),
+                              ],
                             ],
                           ),
                         ),
