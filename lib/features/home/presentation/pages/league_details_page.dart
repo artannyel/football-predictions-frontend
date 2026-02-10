@@ -70,8 +70,10 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
 
     try {
       final repo = context.read<LeaguesRepository>();
-      final result =
-          await repo.getLeagueRanking(widget.leagueId, page: _rankingPage);
+      final result = await repo.getLeagueRanking(
+        widget.leagueId,
+        page: _rankingPage,
+      );
 
       if (mounted) {
         setState(() {
@@ -346,7 +348,11 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
                 league.competition.name,
                 imageUrl: league.competition.emblem,
               ),
-              _buildInfoItem('Criador', league.owner.name),
+              _buildInfoItem(
+                'Criador',
+                league.owner.name,
+                imageUrl: league.owner.photoUrl,
+              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -398,11 +404,14 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
         Row(
           children: [
             if (imageUrl != null) ...[
-              AppNetworkImage(
-                url: imageUrl,
-                width: 20,
-                height: 20,
-                errorWidget: const Icon(Icons.sports_soccer, size: 20),
+              ClipOval(
+                clipBehavior: Clip.antiAlias,
+                child: AppNetworkImage(
+                  url: imageUrl,
+                  width: 20,
+                  height: 20,
+                  errorWidget: const Icon(Icons.sports_soccer, size: 20),
+                ),
               ),
               const SizedBox(width: 8),
             ],
@@ -454,134 +463,132 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
         return false;
       },
       child: ListView(
-          key: const PageStorageKey('ranking'),
-          padding: const EdgeInsets.all(16),
-          physics: const AlwaysScrollableScrollPhysics(),
-          children: [
-            Center(
-              child: GlassCard(
-                margin: EdgeInsets.zero,
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: DataTable(
-                    columnSpacing: 20,
-                    headingRowHeight: 40,
-                    dataRowMinHeight: 48,
-                    dataRowMaxHeight: 48,
-                    columns: const [
-                      DataColumn(label: Text('#'), numeric: true),
-                      DataColumn(label: Text('Nome')),
-                      DataColumn(label: Text('Pts'), numeric: true),
-                      DataColumn(
-                        label: Tooltip(
-                          message: 'Placar Exato',
-                          triggerMode: TooltipTriggerMode.tap,
-                          child: Text('PE'),
-                        ),
-                        numeric: true,
+        key: const PageStorageKey('ranking'),
+        padding: const EdgeInsets.all(16),
+        physics: const AlwaysScrollableScrollPhysics(),
+        children: [
+          Center(
+            child: GlassCard(
+              margin: EdgeInsets.zero,
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: DataTable(
+                  columnSpacing: 20,
+                  headingRowHeight: 40,
+                  dataRowMinHeight: 48,
+                  dataRowMaxHeight: 48,
+                  columns: const [
+                    DataColumn(label: Text('#'), numeric: true),
+                    DataColumn(label: Text('Nome')),
+                    DataColumn(label: Text('Pts'), numeric: true),
+                    DataColumn(
+                      label: Tooltip(
+                        message: 'Placar Exato',
+                        triggerMode: TooltipTriggerMode.tap,
+                        child: Text('PE'),
                       ),
-                      DataColumn(
-                        label: Tooltip(
-                          message: 'Vencedor + Saldo',
-                          triggerMode: TooltipTriggerMode.tap,
-                          child: Text('VS'),
-                        ),
-                        numeric: true,
+                      numeric: true,
+                    ),
+                    DataColumn(
+                      label: Tooltip(
+                        message: 'Vencedor + Saldo',
+                        triggerMode: TooltipTriggerMode.tap,
+                        child: Text('VS'),
                       ),
-                      DataColumn(
-                        label: Tooltip(
-                          message: 'Vencedor + Gols',
-                          triggerMode: TooltipTriggerMode.tap,
-                          child: Text('VG'),
-                        ),
-                        numeric: true,
+                      numeric: true,
+                    ),
+                    DataColumn(
+                      label: Tooltip(
+                        message: 'Vencedor + Gols',
+                        triggerMode: TooltipTriggerMode.tap,
+                        child: Text('VG'),
                       ),
-                      DataColumn(
-                        label: Tooltip(
-                          message: 'Apenas Vencedor',
-                          triggerMode: TooltipTriggerMode.tap,
-                          child: Text('AV'),
-                        ),
-                        numeric: true,
+                      numeric: true,
+                    ),
+                    DataColumn(
+                      label: Tooltip(
+                        message: 'Apenas Vencedor',
+                        triggerMode: TooltipTriggerMode.tap,
+                        child: Text('AV'),
                       ),
-                      DataColumn(
-                        label: Tooltip(
-                          message: 'Erros',
-                          triggerMode: TooltipTriggerMode.tap,
-                          child: Text('ER'),
-                        ),
-                        numeric: true,
+                      numeric: true,
+                    ),
+                    DataColumn(
+                      label: Tooltip(
+                        message: 'Erros',
+                        triggerMode: TooltipTriggerMode.tap,
+                        child: Text('ER'),
                       ),
-                      DataColumn(
-                        label: Tooltip(
-                          message: 'Total de Palpites',
-                          triggerMode: TooltipTriggerMode.tap,
-                          child: Text('TOT'),
-                        ),
-                        numeric: true,
+                      numeric: true,
+                    ),
+                    DataColumn(
+                      label: Tooltip(
+                        message: 'Total de Palpites',
+                        triggerMode: TooltipTriggerMode.tap,
+                        child: Text('TOT'),
                       ),
-                    ],
-                    rows: _rankings.map((member) {
-                      final isCurrentUser = member.id == _currentUserId;
-                      return DataRow(
-                        color: isCurrentUser
-                            ? MaterialStateProperty.all(
-                                Theme.of(context).colorScheme.primaryContainer
-                                    .withValues(alpha: 0.3),
-                              )
-                            : null,
-                        cells: [
-                          DataCell(Text('${member.rank}')),
-                          DataCell(
-                            Row(
-                              children: [
-                                CircleAvatar(
-                                  radius: 10,
-                                  backgroundImage: member.photoUrl != null
-                                      ? NetworkImage(member.photoUrl!)
-                                      : null,
-                                  child: member.photoUrl == null
-                                      ? Text(
-                                          member.name.isNotEmpty
-                                              ? member.name[0]
-                                              : '?',
-                                          style: const TextStyle(fontSize: 10),
-                                        )
-                                      : null,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(member.name),
-                              ],
-                            ),
-                          ),
-                          DataCell(
-                            Text(
-                              '${member.points}',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
+                      numeric: true,
+                    ),
+                  ],
+                  rows: _rankings.map((member) {
+                    final isCurrentUser = member.id == _currentUserId;
+                    return DataRow(
+                      color: isCurrentUser
+                          ? MaterialStateProperty.all(
+                              Theme.of(context).colorScheme.primaryContainer
+                                  .withValues(alpha: 0.3),
+                            )
+                          : null,
+                      cells: [
+                        DataCell(Text('${member.rank}')),
+                        DataCell(
+                          Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 10,
+                                backgroundImage: member.photoUrl != null
+                                    ? NetworkImage(member.photoUrl!)
+                                    : null,
+                                child: member.photoUrl == null
+                                    ? Text(
+                                        member.name.isNotEmpty
+                                            ? member.name[0]
+                                            : '?',
+                                        style: const TextStyle(fontSize: 10),
+                                      )
+                                    : null,
                               ),
-                            ),
+                              const SizedBox(width: 8),
+                              Text(member.name),
+                            ],
                           ),
-                          DataCell(Text('${member.stats.exactScore}')),
-                          DataCell(Text('${member.stats.winnerDiff}')),
-                          DataCell(Text('${member.stats.winnerGoal}')),
-                          DataCell(Text('${member.stats.winnerOnly}')),
-                          DataCell(Text('${member.stats.errors}')),
-                          DataCell(Text('${member.stats.total}')),
-                        ],
-                      );
-                    }).toList(),
-                  ),
+                        ),
+                        DataCell(
+                          Text(
+                            '${member.points}',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        DataCell(Text('${member.stats.exactScore}')),
+                        DataCell(Text('${member.stats.winnerDiff}')),
+                        DataCell(Text('${member.stats.winnerGoal}')),
+                        DataCell(Text('${member.stats.winnerOnly}')),
+                        DataCell(Text('${member.stats.errors}')),
+                        DataCell(Text('${member.stats.total}')),
+                      ],
+                    );
+                  }).toList(),
                 ),
               ),
             ),
-            if (_isRankingLoading)
-              const Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Center(child: LoadingWidget(size: 30)),
-              ),
-          ],
-        ),
+          ),
+          if (_isRankingLoading)
+            const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Center(child: LoadingWidget(size: 30)),
+            ),
+        ],
+      ),
     );
   }
 
@@ -735,9 +742,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
 
   Widget _buildHistoryPredictionsTab(String leagueId) {
     return _buildPredictionsList(
-      context.read<PredictionsRepository>().getPredictions(
-        leagueId: leagueId,
-      ),
+      context.read<PredictionsRepository>().getPredictions(leagueId: leagueId),
     );
   }
 
