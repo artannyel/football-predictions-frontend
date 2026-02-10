@@ -68,7 +68,7 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _error = e.toString();
+          _error = e.toString().replaceAll('Exception: ', '');
           _isLoading = false;
         });
       }
@@ -168,7 +168,7 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
     if (_userStats == null && _error != null) {
       return Center(
         child: Text(
-          'Erro: $_error',
+          _error!,
           style: const TextStyle(color: Colors.white),
         ),
       );
@@ -223,7 +223,7 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
                 padding: const EdgeInsets.only(top: 32.0),
                 child: Center(
                   child: Text(
-                    'Erro: $_error',
+                    _error!,
                     style: const TextStyle(color: Colors.white),
                   ),
                 ),

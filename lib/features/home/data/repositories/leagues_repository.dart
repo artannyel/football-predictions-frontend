@@ -123,6 +123,11 @@ class LeaguesRepository {
       await dioClient.dio.post('leagues/join', data: {
         'code': code,
       });
+    } on DioException catch (e) {
+      final errorMessage = e.response?.data is Map
+          ? (e.response?.data['message'] ?? e.response?.data['error'] ?? 'Erro ao entrar na liga')
+          : 'Erro ao entrar na liga (${e.response?.statusCode})';
+      throw Exception(errorMessage);
     } catch (e) {
       throw Exception('Falha ao entrar na liga: $e');
     }

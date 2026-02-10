@@ -49,7 +49,7 @@ class _PredictionPageState extends State<PredictionPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao carregar palpite: $e')),
+          SnackBar(content: Text('Erro ao carregar palpite: ${e.toString().replaceAll('Exception: ', '')}')),
         );
       }
     } finally {
@@ -94,8 +94,9 @@ class _PredictionPageState extends State<PredictionPage> {
       }
     } catch (e) {
       if (mounted) {
+        final message = e.toString().replaceAll('Exception: ', '');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text(message), backgroundColor: Colors.red),
         );
       }
     } finally {

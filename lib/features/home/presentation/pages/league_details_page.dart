@@ -108,7 +108,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _rankingError = e.toString();
+          _rankingError = e.toString().replaceAll('Exception: ', '');
           _isRankingLoading = false;
         });
       }
@@ -167,7 +167,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _historyError = e.toString();
+          _historyError = e.toString().replaceAll('Exception: ', '');
           _isHistoryLoading = false;
         });
       }
@@ -335,7 +335,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
                 if (snapshot.hasError) {
                   return Center(
                     child: Text(
-                      'Erro ao carregar detalhes: ${snapshot.error}',
+                      'Erro ao carregar detalhes: ${snapshot.error.toString().replaceAll('Exception: ', '')}',
                       style: const TextStyle(color: Colors.white),
                     ),
                   );
@@ -820,7 +820,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
         } else if (snapshot.hasError) {
           return _buildScrollablePlaceholder(
             Text(
-              'Erro ao carregar partidas:\n${snapshot.error}',
+              'Erro ao carregar partidas:\n${snapshot.error.toString().replaceAll('Exception: ', '')}',
               textAlign: TextAlign.center,
               style: const TextStyle(color: Colors.red),
             ),
@@ -1151,7 +1151,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
         } else if (snapshot.hasError) {
           return _buildScrollablePlaceholder(
             Text(
-              'Erro ao carregar palpites:\n${snapshot.error}',
+              'Erro ao carregar palpites:\n${snapshot.error.toString().replaceAll('Exception: ', '')}',
               textAlign: TextAlign.center,
               style: const TextStyle(color: Colors.red),
             ),
@@ -1352,7 +1352,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
         } else if (snapshot.hasError) {
           return _buildScrollablePlaceholder(
             Text(
-              'Erro ao carregar regras:\n${snapshot.error}',
+              'Erro ao carregar regras:\n${snapshot.error.toString().replaceAll('Exception: ', '')}',
               textAlign: TextAlign.center,
               style: const TextStyle(color: Colors.red),
             ),

@@ -144,7 +144,8 @@ class _HomePageState extends State<HomePage> {
                   SizedBox(
                     height: MediaQuery.of(context).size.height * 0.7,
                     child: Center(
-                      child: Text('Erro ao carregar ligas: ${snapshot.error}'),
+                      child: Text(
+                          'Erro ao carregar ligas: ${snapshot.error.toString().replaceAll('Exception: ', '')}'),
                     ),
                   ),
                 ],
@@ -316,8 +317,9 @@ class _JoinLeagueDialogState extends State<_JoinLeagueDialog> {
       }
     } catch (e) {
       if (mounted) {
+        final message = e.toString().replaceAll('Exception: ', '');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text(message), backgroundColor: Colors.red),
         );
         setState(() => _isLoading = false);
       }
