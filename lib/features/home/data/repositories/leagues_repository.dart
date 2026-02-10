@@ -136,12 +136,21 @@ class LeaguesRepository {
     }
   }
 
-  Future<List<LeagueRankingModel>> getLeagueRanking(String id) async {
+  Future<({List<LeagueRankingModel> rankings, int lastPage})> getLeagueRanking(
+    String id, {
+    int page = 1,
+  }) async {
     try {
-      // Assumindo que existe um endpoint específico para o ranking
-      final response = await dioClient.dio.get('leagues/$id/ranking');
+      final response = await dioClient.dio.get(
+        'leagues/$id/ranking',
+        queryParameters: {'page': page},
+      );
       final List<dynamic> data = response.data['data'];
-      return data.map((json) => LeagueRankingModel.fromJson(json)).toList();
+      final meta = response.data['meta'] ?? {};
+      return (
+        rankings: data.map((json) => LeagueRankingModel.fromJson(json)).toList(),
+        lastPage: (meta['last_page'] as int?) ?? 1,
+      );
     } catch (e) {
       throw Exception('Falha ao carregar ranking: $e');
     }

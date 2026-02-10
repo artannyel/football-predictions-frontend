@@ -27,9 +27,16 @@ class LeagueDetailsPage extends StatefulWidget {
 
 class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
   late Future<LeagueDetailsModel> _detailsFuture;
-  late Future<List<dynamic>> _rankingDataFuture;
   late Future<LeagueRulesModel> _rulesFuture;
   late Future<String> _userIdFuture;
+
+  // Ranking state
+  final List<LeagueRankingModel> _rankings = [];
+  int _rankingPage = 1;
+  int _rankingLastPage = 1;
+  bool _isRankingLoading = false;
+  String? _rankingError;
+  String? _currentUserId;
 
   @override
   void initState() {
@@ -38,26 +45,65 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
     final authRepo = context.read<AuthRepository>();
     _detailsFuture = repo.getLeagueDetails(widget.leagueId);
     _userIdFuture = authRepo.getUser().then((u) => u.id);
-    _rankingDataFuture = Future.wait([
-      repo.getLeagueRanking(widget.leagueId),
-      authRepo.getUser().then((u) => u.id),
-    ]);
+
+    // Carrega ranking inicial e usuário
+    _loadRanking();
+    _userIdFuture.then((id) {
+      if (mounted) setState(() => _currentUserId = id);
+    });
+
     _rulesFuture = repo.getRules();
+  }
+
+  Future<void> _loadRanking({bool refresh = false}) async {
+    if (_isRankingLoading) return;
+
+    if (refresh) {
+      _rankingPage = 1;
+      _rankings.clear();
+      _rankingError = null;
+      _rankingLastPage = 1;
+    } else if (_rankingPage > _rankingLastPage) {
+      return;
+    }
+
+    setState(() => _isRankingLoading = true);
+
+    try {
+      final repo = context.read<LeaguesRepository>();
+      final result =
+          await repo.getLeagueRanking(widget.leagueId, page: _rankingPage);
+
+      if (mounted) {
+        setState(() {
+          _rankings.addAll(result.rankings);
+          _rankingLastPage = result.lastPage;
+          _rankingPage++;
+          _isRankingLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _rankingError = e.toString();
+          _isRankingLoading = false;
+        });
+      }
+    }
   }
 
   Future<void> _refreshData() async {
     final repo = context.read<LeaguesRepository>();
-    final authRepo = context.read<AuthRepository>();
     setState(() {
       _detailsFuture = repo.getLeagueDetails(widget.leagueId);
-      _rankingDataFuture = Future.wait([
-        repo.getLeagueRanking(widget.leagueId),
-        authRepo.getUser().then((u) => u.id),
-      ]);
       _rulesFuture = repo.getRules();
     });
     // Aguarda o carregamento para parar o indicador de refresh
-    await Future.wait([_detailsFuture, _rankingDataFuture, _rulesFuture]);
+    await Future.wait([
+      _detailsFuture,
+      _loadRanking(refresh: true),
+      _rulesFuture,
+    ]);
   }
 
   String _formatDate(String utcDate) {
@@ -383,33 +429,32 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
   }
 
   Widget _buildRankingTab() {
-    return FutureBuilder<List<dynamic>>(
-      future: _rankingDataFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const LoadingWidget();
-        }
-        if (snapshot.hasError) {
-          return _buildScrollablePlaceholder(
-            Text('Erro ao carregar ranking: ${snapshot.error}'),
-          );
-        }
-        if (!snapshot.hasData) {
-          return _buildScrollablePlaceholder(
-            const Text('Nenhum participante encontrado.'),
-          );
-        }
+    if (_rankingError != null && _rankings.isEmpty) {
+      return _buildScrollablePlaceholder(
+        Text('Erro ao carregar ranking: $_rankingError'),
+      );
+    }
 
-        final ranking = snapshot.data![0] as List<LeagueRankingModel>;
-        final currentUserId = snapshot.data![1] as String;
+    if (_rankings.isEmpty && _isRankingLoading) {
+      return const LoadingWidget();
+    }
 
-        if (ranking.isEmpty) {
-          return _buildScrollablePlaceholder(
-            const Text('Nenhum participante encontrado.'),
-          );
+    if (_rankings.isEmpty) {
+      return _buildScrollablePlaceholder(
+        const Text('Nenhum participante encontrado.'),
+      );
+    }
+
+    return NotificationListener<ScrollNotification>(
+      onNotification: (scrollInfo) {
+        if (!_isRankingLoading &&
+            scrollInfo.metrics.pixels >=
+                scrollInfo.metrics.maxScrollExtent - 200) {
+          _loadRanking();
         }
-
-        return ListView(
+        return false;
+      },
+      child: ListView(
           key: const PageStorageKey('ranking'),
           padding: const EdgeInsets.all(16),
           physics: const AlwaysScrollableScrollPhysics(),
@@ -477,8 +522,8 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
                         numeric: true,
                       ),
                     ],
-                    rows: ranking.map((member) {
-                      final isCurrentUser = member.id == currentUserId;
+                    rows: _rankings.map((member) {
+                      final isCurrentUser = member.id == _currentUserId;
                       return DataRow(
                         color: isCurrentUser
                             ? MaterialStateProperty.all(
@@ -531,9 +576,13 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
                 ),
               ),
             ),
+            if (_isRankingLoading)
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Center(child: LoadingWidget(size: 30)),
+              ),
           ],
-        );
-      },
+        ),
     );
   }
 
