@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:football_predictions/features/matches/data/models/match_model.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:football_predictions/dio_client.dart';
 import 'package:football_predictions/features/home/data/models/league_details_model.dart';
@@ -124,6 +125,24 @@ class LeaguesRepository {
       });
     } catch (e) {
       throw Exception('Falha ao entrar na liga: $e');
+    }
+  }
+
+  Future<List<MatchModel>> getMatchesPredictions({String? leagueId}) async {
+    try {
+      final String endpoint = leagueId != null
+          ? 'leagues/$leagueId/matches/upcoming'
+          : 'matches';
+      final response = await dioClient.dio.get(endpoint);
+
+      if (response.statusCode == 200 && response.data != null) {
+        final List<dynamic> matchesList = response.data['data'];
+        return matchesList.map((json) => MatchModel.fromJson(json)).toList();
+      }
+      return [];
+    } on DioException catch (e) {
+      debugPrint('Erro ao carregar partidas: ${e.message}');
+      throw Exception('Falha ao carregar partidas: ${e.message}');
     }
   }
 

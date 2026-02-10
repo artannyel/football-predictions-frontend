@@ -25,22 +25,4 @@ class MatchesRepository {
       throw Exception('Falha ao carregar partidas: ${e.message}');
     }
   }
-
-  Future<List<MatchModel>> getMatchesPredictions({int? competitionId}) async {
-    try {
-      final String endpoint = competitionId != null
-          ? 'competitions/$competitionId/matches/upcoming'
-          : 'matches';
-      final response = await dioClient.dio.get(endpoint);
-
-      if (response.statusCode == 200 && response.data != null) {
-        final List<dynamic> matchesList = response.data['data'];
-        return matchesList.map((json) => MatchModel.fromJson(json)).toList();
-      }
-      return [];
-    } on DioException catch (e) {
-      debugPrint('Erro ao carregar partidas: ${e.message}');
-      throw Exception('Falha ao carregar partidas: ${e.message}');
-    }
-  }
 }

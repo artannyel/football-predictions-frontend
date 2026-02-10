@@ -83,6 +83,7 @@ class _PredictionPageState extends State<PredictionPage> {
             matchId: widget.match.id,
             homeScore: homeScore,
             awayScore: awayScore,
+            leagueId: widget.leagueId,
           );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

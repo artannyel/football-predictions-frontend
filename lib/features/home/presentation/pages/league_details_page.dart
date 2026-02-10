@@ -8,7 +8,6 @@ import 'package:football_predictions/features/home/data/models/league_ranking_mo
 import 'package:football_predictions/features/home/data/repositories/leagues_repository.dart';
 import 'package:football_predictions/features/home/data/models/rule_model.dart';
 import 'package:football_predictions/features/matches/data/models/match_model.dart';
-import 'package:football_predictions/features/matches/data/repositories/matches_repository.dart';
 import 'package:football_predictions/features/predictions/data/models/prediction_model.dart';
 import 'package:football_predictions/features/predictions/data/repositories/predictions_repository.dart';
 import 'package:football_predictions/features/predictions/presentation/pages/prediction_page.dart';
@@ -295,9 +294,9 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
                       body: TabBarView(
                         children: [
                           _buildRankingTab(),
-                          _buildMatchesTab(league.competition.id),
-                          _buildActivePredictionsTab(league.competition.id),
-                          _buildHistoryPredictionsTab(league.competition.id),
+                          _buildMatchesTab(league.id),
+                          _buildActivePredictionsTab(league.id),
+                          _buildHistoryPredictionsTab(league.id),
                           _buildRulesTab(),
                         ],
                       ),
@@ -586,10 +585,10 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
     );
   }
 
-  Widget _buildMatchesTab(int competitionId) {
+  Widget _buildMatchesTab(String leagueId) {
     return FutureBuilder<List<MatchModel>>(
-      future: context.read<MatchesRepository>().getMatchesPredictions(
-        competitionId: competitionId,
+      future: context.read<LeaguesRepository>().getMatchesPredictions(
+        leagueId: leagueId,
       ),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -726,18 +725,18 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
     );
   }
 
-  Widget _buildActivePredictionsTab(int competitionId) {
+  Widget _buildActivePredictionsTab(String leagueId) {
     return _buildPredictionsList(
       context.read<PredictionsRepository>().getUpcomingPredictions(
-        competitionId: competitionId,
+        leagueId: leagueId,
       ),
     );
   }
 
-  Widget _buildHistoryPredictionsTab(int competitionId) {
+  Widget _buildHistoryPredictionsTab(String leagueId) {
     return _buildPredictionsList(
       context.read<PredictionsRepository>().getPredictions(
-        competitionId: competitionId,
+        leagueId: leagueId,
       ),
     );
   }
