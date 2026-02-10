@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:football_predictions/core/presentation/widgets/image_picker_widget.dart';
 import 'package:football_predictions/core/presentation/widgets/loading_widget.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/errors/auth_exception.dart';
 import '../../data/repositories/auth_repository.dart';
@@ -16,6 +18,7 @@ class _SignUpPageState extends State<SignUpPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  XFile? _selectedImage;
   bool _isLoading = false;
 
   Future<void> _signUp() async {
@@ -45,6 +48,7 @@ class _SignUpPageState extends State<SignUpPage> {
         name: _nameController.text.trim(),
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
+        photo: _selectedImage,
       );
       
       if (mounted) {
@@ -80,7 +84,12 @@ class _SignUpPageState extends State<SignUpPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.person_add, size: 80, color: Colors.deepPurple),
+              ImagePickerWidget(
+                image: _selectedImage,
+                onImageSelected: (file) => setState(() {
+                  _selectedImage = file;
+                }),
+              ),
               const SizedBox(height: 32),
               TextField(
                 controller: _nameController,

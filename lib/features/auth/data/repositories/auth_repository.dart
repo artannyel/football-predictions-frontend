@@ -1,7 +1,9 @@
+import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:football_predictions/core/errors/auth_exception.dart';
 import 'package:football_predictions/dio_client.dart';
+import 'package:image_picker/image_picker.dart';
 
 class AuthRepository {
   final FirebaseAuth _firebaseAuth;
@@ -35,6 +37,7 @@ class AuthRepository {
     required String name,
     required String email,
     required String password,
+    XFile? photo,
   }) async {
     UserCredential? userCredential;
     try {
@@ -44,10 +47,30 @@ class AuthRepository {
       );
       await userCredential.user?.updateDisplayName(name);
 
+      final formData = FormData.fromMap({
+        'name': name,
+        'email': email,
+      });
+
+      if (photo != null) {
+        if (kIsWeb) {
+          final bytes = await photo.readAsBytes();
+          formData.files.add(MapEntry(
+            'photo_url',
+            MultipartFile.fromBytes(bytes, filename: photo.name),
+          ));
+        } else {
+          formData.files.add(MapEntry(
+            'photo_url',
+            await MultipartFile.fromFile(photo.path, filename: photo.name),
+          ));
+        }
+      }
+
       // O token será adicionado automaticamente pelo interceptor do DioClient
       await _dioClient.dio.post(
         'users',
-        data: {'name': name, 'email': email},
+        data: formData,
       );
 
       return userCredential;
