@@ -2,20 +2,29 @@ import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:football_predictions/core/errors/auth_exception.dart';
+import 'package:football_predictions/features/auth/data/models/user_model.dart';
 import 'package:football_predictions/dio_client.dart';
 import 'package:image_picker/image_picker.dart';
 
 class AuthRepository {
   final FirebaseAuth _firebaseAuth;
   final DioClient _dioClient;
+  UserModel? _backendUser;
 
   AuthRepository({FirebaseAuth? firebaseAuth, required DioClient dioClient})
-      : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance,
-        _dioClient = dioClient;
+    : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance,
+      _dioClient = dioClient;
 
   Stream<User?> get authStateChanges => _firebaseAuth.authStateChanges();
 
-  Future<UserCredential> login({required String email, required String password}) async {
+  User? get currentUser => _firebaseAuth.currentUser;
+
+  UserModel? get backendUser => _backendUser;
+
+  Future<UserCredential> login({
+    required String email,
+    required String password,
+  }) async {
     try {
       UserCredential user = await _firebaseAuth.signInWithEmailAndPassword(
         email: email,
@@ -24,6 +33,14 @@ class AuthRepository {
       debugPrint('Usuário logado: ${user.user?.email}');
       final token = await user.user?.getIdToken();
       debugPrint('Token: $token');
+
+      // Sincroniza dados do backend (especialmente a foto) com o Firebase
+      try {
+        final backendUser = await getUser();
+        await user.user?.updateDisplayName(backendUser.name);
+      } catch (e) {
+        debugPrint('Erro ao sincronizar usuário do backend: $e');
+      }
 
       return user;
     } on FirebaseAuthException catch (e) {
@@ -47,31 +64,29 @@ class AuthRepository {
       );
       await userCredential.user?.updateDisplayName(name);
 
-      final formData = FormData.fromMap({
-        'name': name,
-        'email': email,
-      });
+      final formData = FormData.fromMap({'name': name, 'email': email});
 
       if (photo != null) {
         if (kIsWeb) {
           final bytes = await photo.readAsBytes();
-          formData.files.add(MapEntry(
-            'photo_url',
-            MultipartFile.fromBytes(bytes, filename: photo.name),
-          ));
+          formData.files.add(
+            MapEntry(
+              'photo_url',
+              MultipartFile.fromBytes(bytes, filename: photo.name),
+            ),
+          );
         } else {
-          formData.files.add(MapEntry(
-            'photo_url',
-            await MultipartFile.fromFile(photo.path, filename: photo.name),
-          ));
+          formData.files.add(
+            MapEntry(
+              'photo_url',
+              await MultipartFile.fromFile(photo.path, filename: photo.name),
+            ),
+          );
         }
       }
 
       // O token será adicionado automaticamente pelo interceptor do DioClient
-      await _dioClient.dio.post(
-        'users',
-        data: formData,
-      );
+      await _dioClient.dio.post('users', data: formData);
 
       return userCredential;
     } on FirebaseAuthException catch (e) {
@@ -90,16 +105,60 @@ class AuthRepository {
     }
   }
 
+  Future<void> updateProfile({String? name, XFile? photo}) async {
+    try {
+      final user = _firebaseAuth.currentUser;
+      if (user == null) return;
+
+      final formData = FormData.fromMap({
+        'name': name ?? user.displayName,
+        'email': user.email,
+      });
+
+      if (photo != null) {
+        if (kIsWeb) {
+          final bytes = await photo.readAsBytes();
+          formData.files.add(
+            MapEntry(
+              'photo_url',
+              MultipartFile.fromBytes(bytes, filename: photo.name),
+            ),
+          );
+        } else {
+          formData.files.add(
+            MapEntry(
+              'photo_url',
+              await MultipartFile.fromFile(photo.path, filename: photo.name),
+            ),
+          );
+        }
+      }
+
+      await _dioClient.dio.post('users', data: formData);
+      _backendUser = null; // Invalida o cache para buscar os dados atualizados na próxima chamada
+
+      if (name != null) {
+        await user.updateDisplayName(name);
+      }
+    } catch (e) {
+      throw AuthException('Falha ao atualizar perfil: $e');
+    }
+  }
+
   Future<void> logout() async {
+    _backendUser = null;
     await _firebaseAuth.signOut();
   }
 
-  Future<String> getUserId() async {
+  Future<UserModel> getUser({bool forceRefresh = false}) async {
+    if (_backendUser != null && !forceRefresh) return _backendUser!;
+
     try {
       final response = await _dioClient.dio.get('user');
-      return response.data['user']['id'];
+      _backendUser = UserModel.fromJson(response.data['user']);
+      return _backendUser!;
     } catch (e) {
-      throw Exception('Falha ao carregar ID do usuário: $e');
+      throw Exception('Falha ao carregar usuário: $e');
     }
   }
 

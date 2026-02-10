@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:football_predictions/core/presentation/widgets/app_network_image.dart';
 import 'package:football_predictions/core/presentation/widgets/loading_widget.dart';
 import 'package:football_predictions/features/auth/data/repositories/auth_repository.dart';
+import 'package:football_predictions/features/auth/presentation/pages/edit_profile_page.dart';
 import 'package:football_predictions/features/competitions/presentation/pages/competitions_page.dart';
+import 'package:football_predictions/features/auth/data/models/user_model.dart';
 import 'package:football_predictions/features/home/data/models/league_model.dart';
 import 'package:football_predictions/features/home/data/repositories/leagues_repository.dart';
 import 'package:football_predictions/features/home/presentation/pages/create_league_page.dart';
@@ -17,6 +20,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   late Future<List<LeagueModel>> _leaguesFuture;
+  late Future<UserModel> _userFuture;
 
   @override
   void initState() {
@@ -26,13 +30,15 @@ class _HomePageState extends State<HomePage> {
 
   void _loadLeagues() {
     _leaguesFuture = context.read<LeaguesRepository>().getLeagues();
+    _userFuture = context.read<AuthRepository>().getUser();
   }
 
   Future<void> _refreshLeagues() async {
     setState(() {
-      _loadLeagues();
+      _leaguesFuture = context.read<LeaguesRepository>().getLeagues();
+      _userFuture = context.read<AuthRepository>().getUser(forceRefresh: true);
     });
-    await _leaguesFuture;
+    await Future.wait([_leaguesFuture, _userFuture]);
   }
 
   @override
@@ -45,11 +51,74 @@ class _HomePageState extends State<HomePage> {
             icon: const Icon(Icons.add),
             onPressed: () => _showAddOptions(context),
           ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () => context.read<AuthRepository>().logout(),
-          ),
         ],
+      ),
+      drawer: Drawer(
+        child: FutureBuilder<UserModel>(
+          future: _userFuture,
+          builder: (drawerContext, snapshot) {
+            final user = snapshot.data;
+            return ListView(
+              padding: EdgeInsets.zero,
+              children: [
+                UserAccountsDrawerHeader(
+                  accountName: Text(
+                    user?.name ?? 'Usuário',
+                    style: TextStyle(
+                      color: Theme.of(drawerContext).colorScheme.onPrimary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  accountEmail: Text(
+                    user?.email ?? '',
+                    style: TextStyle(
+                      color: Theme.of(drawerContext).colorScheme.onPrimary,
+                    ),
+                  ),
+                  currentAccountPicture: CircleAvatar(
+                    backgroundColor: Colors.white,
+                    child: ClipOval(
+                      child: user?.photoUrl != null
+                          ? AppNetworkImage(
+                              url: user!.photoUrl!,
+                              width: 72,
+                              height: 72,
+                              fit: BoxFit.cover,
+                              errorWidget: const Icon(Icons.person,
+                                  size: 40, color: Colors.grey),
+                            )
+                          : const Icon(Icons.person, size: 40, color: Colors.grey),
+                    ),
+                  ),
+                  decoration: BoxDecoration(
+                    color: Theme.of(drawerContext).colorScheme.primary,
+                  ),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.edit),
+                  title: const Text('Editar Perfil'),
+                  onTap: () async {
+                    Navigator.pop(drawerContext); // Fecha o drawer
+                    await Navigator.push(context, MaterialPageRoute(builder: (context) => const EditProfilePage()));
+                    if (mounted) {
+                      setState(() {
+                        _userFuture = context.read<AuthRepository>().getUser(forceRefresh: true);
+                      });
+                    }
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.logout),
+                  title: const Text('Sair'),
+                  onTap: () {
+                    Navigator.pop(drawerContext);
+                    context.read<AuthRepository>().logout();
+                  },
+                ),
+              ],
+            );
+          },
+        ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {

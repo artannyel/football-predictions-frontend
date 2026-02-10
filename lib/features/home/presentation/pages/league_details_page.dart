@@ -37,10 +37,10 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
     final repo = context.read<LeaguesRepository>();
     final authRepo = context.read<AuthRepository>();
     _detailsFuture = repo.getLeagueDetails(widget.leagueId);
-    _userIdFuture = authRepo.getUserId();
+    _userIdFuture = authRepo.getUser().then((u) => u.id);
     _rankingDataFuture = Future.wait([
       repo.getLeagueRanking(widget.leagueId),
-      authRepo.getUserId(),
+      authRepo.getUser().then((u) => u.id),
     ]);
     _rulesFuture = repo.getRules();
   }
@@ -52,7 +52,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
       _detailsFuture = repo.getLeagueDetails(widget.leagueId);
       _rankingDataFuture = Future.wait([
         repo.getLeagueRanking(widget.leagueId),
-        authRepo.getUserId(),
+        authRepo.getUser().then((u) => u.id),
       ]);
       _rulesFuture = repo.getRules();
     });
