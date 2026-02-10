@@ -1,3 +1,4 @@
+import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:football_predictions/core/presentation/widgets/app_network_image.dart';
@@ -45,6 +46,9 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
   bool _isHistoryLoading = false;
   String? _historyError;
 
+  late ConfettiController _confettiController;
+  bool _confettiPlayed = false;
+
   @override
   void initState() {
     super.initState();
@@ -52,6 +56,8 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
     final authRepo = context.read<AuthRepository>();
     _detailsFuture = repo.getLeagueDetails(widget.leagueId);
     _userIdFuture = authRepo.getUser().then((u) => u.id);
+    _confettiController =
+        ConfettiController(duration: const Duration(seconds: 5));
 
     // Carrega ranking inicial e usuário
     _loadRanking();
@@ -61,6 +67,12 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
     });
 
     _rulesFuture = repo.getRules();
+  }
+
+  @override
+  void dispose() {
+    _confettiController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadRanking({bool refresh = false}) async {
@@ -91,6 +103,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
           _rankingPage++;
           _isRankingLoading = false;
         });
+        _checkConfetti();
       }
     } catch (e) {
       if (mounted) {
@@ -100,6 +113,26 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
         });
       }
     }
+  }
+
+  Future<void> _checkConfetti() async {
+    if (_confettiPlayed) return;
+
+    try {
+      final results = await Future.wait([_detailsFuture, _userIdFuture]);
+      if (!mounted) return;
+
+      final league = results[0] as LeagueDetailsModel;
+      final userId = results[1] as String;
+
+      if (!league.isActive && _rankings.isNotEmpty) {
+        final championIndex = _rankings.indexWhere((r) => r.rank == 1);
+        if (championIndex != -1 && _rankings[championIndex].id == userId) {
+          _confettiPlayed = true;
+          _confettiController.play();
+        }
+      }
+    } catch (_) {}
   }
 
   Future<void> _loadHistoryPredictions({bool refresh = false}) async {
@@ -355,6 +388,22 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
                   ),
                 );
               },
+            ),
+          ),
+          Align(
+            alignment: Alignment.topCenter,
+            child: ConfettiWidget(
+              confettiController: _confettiController,
+              blastDirectionality: BlastDirectionality.explosive,
+              shouldLoop: false,
+              colors: const [
+                Colors.green,
+                Colors.blue,
+                Colors.pink,
+                Colors.orange,
+                Colors.purple,
+                Colors.amber,
+              ],
             ),
           ),
         ],
