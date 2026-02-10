@@ -38,6 +38,13 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
   String? _rankingError;
   String? _currentUserId;
 
+  // History Predictions state
+  final List<PredictionModel> _historyPredictions = [];
+  int _historyPage = 1;
+  int _historyLastPage = 1;
+  bool _isHistoryLoading = false;
+  String? _historyError;
+
   @override
   void initState() {
     super.initState();
@@ -48,6 +55,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
 
     // Carrega ranking inicial e usuário
     _loadRanking();
+    _loadHistoryPredictions();
     _userIdFuture.then((id) {
       if (mounted) setState(() => _currentUserId = id);
     });
@@ -94,6 +102,45 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
     }
   }
 
+  Future<void> _loadHistoryPredictions({bool refresh = false}) async {
+    if (_isHistoryLoading) return;
+
+    if (refresh) {
+      _historyPage = 1;
+      _historyPredictions.clear();
+      _historyError = null;
+      _historyLastPage = 1;
+    } else if (_historyPage > _historyLastPage) {
+      return;
+    }
+
+    setState(() => _isHistoryLoading = true);
+
+    try {
+      final repo = context.read<PredictionsRepository>();
+      final result = await repo.getPredictions(
+        leagueId: widget.leagueId,
+        page: _historyPage,
+      );
+
+      if (mounted) {
+        setState(() {
+          _historyPredictions.addAll(result.predictions);
+          _historyLastPage = result.lastPage;
+          _historyPage++;
+          _isHistoryLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _historyError = e.toString();
+          _isHistoryLoading = false;
+        });
+      }
+    }
+  }
+
   Future<void> _refreshData() async {
     final repo = context.read<LeaguesRepository>();
     setState(() {
@@ -104,6 +151,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
     await Future.wait([
       _detailsFuture,
       _loadRanking(refresh: true),
+      _loadHistoryPredictions(refresh: true),
       _rulesFuture,
     ]);
   }
@@ -756,8 +804,187 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
   }
 
   Widget _buildHistoryPredictionsTab(String leagueId) {
-    return _buildPredictionsList(
-      context.read<PredictionsRepository>().getPredictions(leagueId: leagueId),
+    if (_historyError != null && _historyPredictions.isEmpty) {
+      return _buildScrollablePlaceholder(
+        Text(
+          'Erro ao carregar histórico:\n$_historyError',
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: Colors.red),
+        ),
+      );
+    }
+
+    if (_historyPredictions.isEmpty && _isHistoryLoading) {
+      return const LoadingWidget();
+    }
+
+    if (_historyPredictions.isEmpty) {
+      return _buildScrollablePlaceholder(
+        const Text('Nenhum palpite encontrado.'),
+      );
+    }
+
+    return NotificationListener<ScrollNotification>(
+      onNotification: (scrollInfo) {
+        if (!_isHistoryLoading &&
+            scrollInfo.metrics.pixels >=
+                scrollInfo.metrics.maxScrollExtent - 200) {
+          _loadHistoryPredictions();
+        }
+        return false;
+      },
+      child: ListView.builder(
+        key: const PageStorageKey('history'),
+        padding: const EdgeInsets.all(8),
+        physics: const AlwaysScrollableScrollPhysics(),
+        itemCount: _historyPredictions.length + (_isHistoryLoading ? 1 : 0),
+        itemBuilder: (context, index) {
+          if (index == _historyPredictions.length) {
+            return const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Center(child: LoadingWidget(size: 30)),
+            );
+          }
+
+          final prediction = _historyPredictions[index];
+          final match = prediction.match;
+
+          return GlassCard(
+            margin: const EdgeInsets.symmetric(vertical: 4),
+            child: ListTile(
+              title: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            match.homeTeamName,
+                            textAlign: TextAlign.end,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 8.0),
+                          child: match.homeTeamCrest != null
+                              ? AppNetworkImage(
+                                  url: match.homeTeamCrest!,
+                                  width: 20,
+                                  height: 20,
+                                  errorWidget: const Icon(
+                                    Icons.sports_soccer,
+                                    size: 20,
+                                  ),
+                                )
+                              : const Icon(Icons.sports_soccer, size: 20),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                    child: Column(
+                      children: [
+                        const Text('Palpite', style: TextStyle(fontSize: 10)),
+                        Text(
+                          '${prediction.homeScore} x ${prediction.awayScore}',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        if (match.homeScore != null &&
+                            match.awayScore != null) ...[
+                          const SizedBox(height: 4),
+                          const Text(
+                            'Placar',
+                            style: TextStyle(fontSize: 10),
+                          ),
+                          Text(
+                            '${match.homeScore} x ${match.awayScore}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(right: 8.0),
+                          child: match.awayTeamCrest != null
+                              ? AppNetworkImage(
+                                  url: match.awayTeamCrest!,
+                                  width: 20,
+                                  height: 20,
+                                  errorWidget: const Icon(
+                                    Icons.sports_soccer,
+                                    size: 20,
+                                  ),
+                                )
+                              : const Icon(Icons.sports_soccer, size: 20),
+                        ),
+                        Flexible(
+                          child: Text(
+                            match.awayTeamName,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              subtitle: Center(
+                child: Column(
+                  children: [
+                    const SizedBox(height: 4),
+                    Text(
+                      _formatMatchday(match.stage, match.matchday),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    Text(_formatDate(match.utcDate)),
+                    const SizedBox(height: 4),
+                    Text(_translateStatus(match.status)),
+                    if (prediction.pointsEarned != null)
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Pontos ganhos: ${prediction.pointsEarned}',
+                            style: TextStyle(
+                              color: prediction.pointsEarned == 0
+                                  ? Colors.red
+                                  : Colors.green,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Icon(
+                            prediction.pointsEarned == 0
+                                ? Icons.cancel
+                                : Icons.check_circle,
+                            size: 16,
+                            color: prediction.pointsEarned == 0
+                                ? Colors.red
+                                : Colors.green,
+                          ),
+                        ],
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 

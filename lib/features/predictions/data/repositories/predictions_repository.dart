@@ -36,12 +36,22 @@ class PredictionsRepository {
     }
   }
 
-  Future<List<PredictionModel>> getPredictions({String? leagueId}) async {
+  Future<({List<PredictionModel> predictions, int lastPage})> getPredictions({
+    String? leagueId,
+    int page = 1,
+  }) async {
     try {
-      final queryParams = leagueId != null ? {'league_id': leagueId} : null;
+      final queryParams = {
+        if (leagueId != null) 'league_id': leagueId,
+        'page': page,
+      };
       final response = await dioClient.dio.get('predictions', queryParameters: queryParams);
       final List<dynamic> data = response.data['data'];
-      return data.map((json) => PredictionModel.fromJson(json)).toList();
+      final meta = response.data['meta'] ?? {};
+      return (
+        predictions: data.map((json) => PredictionModel.fromJson(json)).toList(),
+        lastPage: (meta['last_page'] as int?) ?? 1,
+      );
     } catch (e) {
       throw Exception('Falha ao carregar histórico de palpites: $e');
     }
