@@ -25,26 +25,11 @@ class AppNetworkImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (kIsWeb) {
+      return renderWebImage(url, width, height, fit);
+    }
+
     if (url.toLowerCase().endsWith('.svg')) {
-      if (kIsWeb) {
-        return SvgPicture.network(
-          url,
-          width: width,
-          height: height,
-          fit: fit,
-          placeholderBuilder: (context) => SizedBox(
-            width: width,
-            height: height,
-            child: const Center(
-              child: SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-            ),
-          ),
-        );
-      }
       // Usa o Cache Manager para baixar e cachear o arquivo SVG
       return FutureBuilder<File>(
         future: DefaultCacheManager().getSingleFile(url),
@@ -78,10 +63,6 @@ class AppNetworkImage extends StatelessWidget {
           );
         },
       );
-    }
-
-    if (kIsWeb) {
-      return renderWebImage(url, width, height, fit);
     }
 
     // Usa CachedNetworkImage para imagens raster (JPG, PNG, etc.)
