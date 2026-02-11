@@ -206,13 +206,22 @@ class _HomePageState extends State<HomePage> {
                                 LeagueDetailsPage(leagueId: league.id)),
                       );
                     },
-                    leading: CircleAvatar(
-                      backgroundImage: league.avatar != null
-                          ? NetworkImage(league.avatar!)
-                          : null,
-                      child: league.avatar == null
-                          ? Text(league.name[0].toUpperCase())
-                          : null,
+                    leading: SizedBox(
+                      width: 40,
+                      height: 40,
+                      child: ClipOval(
+                        child: league.avatar != null
+                            ? AppNetworkImage(
+                                url: league.avatar!,
+                                fit: BoxFit.cover,
+                                errorWidget: CircleAvatar(
+                                  child: Text(league.name[0].toUpperCase()),
+                                ),
+                              )
+                            : CircleAvatar(
+                                child: Text(league.name[0].toUpperCase()),
+                              ),
+                      ),
                     ),
                     title: Text(
                       league.name,

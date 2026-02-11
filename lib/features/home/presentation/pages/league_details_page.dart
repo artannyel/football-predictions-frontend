@@ -469,8 +469,8 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
                             insetPadding: EdgeInsets.zero,
                             child: InteractiveViewer(
                               child: Center(
-                                child: Image.network(
-                                  champion!.photoUrl!,
+                                child: AppNetworkImage(
+                                  url: champion!.photoUrl!,
                                   fit: BoxFit.contain,
                                 ),
                               ),
@@ -479,19 +479,34 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
                         );
                       }
                     : null,
-                child: CircleAvatar(
-                  radius: 60,
-                  backgroundImage: champion.photoUrl != null
-                      ? NetworkImage(champion.photoUrl!)
-                      : null,
-                  child: champion.photoUrl == null
-                      ? Text(
-                          champion.name.isNotEmpty
-                              ? champion.name[0].toUpperCase()
-                              : '?',
-                          style: const TextStyle(fontSize: 48),
-                        )
-                      : null,
+                child: SizedBox(
+                  width: 120,
+                  height: 120,
+                  child: ClipOval(
+                    child: champion.photoUrl != null
+                        ? AppNetworkImage(
+                            url: champion.photoUrl!,
+                            fit: BoxFit.cover,
+                            errorWidget: CircleAvatar(
+                              radius: 60,
+                              child: Text(
+                                champion.name.isNotEmpty
+                                    ? champion.name[0].toUpperCase()
+                                    : '?',
+                                style: const TextStyle(fontSize: 48),
+                              ),
+                            ),
+                          )
+                        : CircleAvatar(
+                            radius: 60,
+                            child: Text(
+                              champion.name.isNotEmpty
+                                  ? champion.name[0].toUpperCase()
+                                  : '?',
+                              style: const TextStyle(fontSize: 48),
+                            ),
+                          ),
+                  ),
                 ),
               ),
               const SizedBox(height: 12),
@@ -508,17 +523,30 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
               const SizedBox(height: 24),
             ],
           ],
-          CircleAvatar(
-            radius: 40,
-            backgroundImage: league.avatar != null
-                ? NetworkImage(league.avatar!)
-                : null,
-            child: league.avatar == null
-                ? Text(
-                    league.name[0].toUpperCase(),
-                    style: const TextStyle(fontSize: 32),
-                  )
-                : null,
+          SizedBox(
+            width: 80,
+            height: 80,
+            child: ClipOval(
+              child: league.avatar != null
+                  ? AppNetworkImage(
+                      url: league.avatar!,
+                      fit: BoxFit.cover,
+                      errorWidget: CircleAvatar(
+                        radius: 40,
+                        child: Text(
+                          league.name[0].toUpperCase(),
+                          style: const TextStyle(fontSize: 32),
+                        ),
+                      ),
+                    )
+                  : CircleAvatar(
+                      radius: 40,
+                      child: Text(
+                        league.name[0].toUpperCase(),
+                        style: const TextStyle(fontSize: 32),
+                      ),
+                    ),
+            ),
           ),
           const SizedBox(height: 16),
           Text(
@@ -747,19 +775,34 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
                         DataCell(
                           Row(
                             children: [
-                              CircleAvatar(
-                                radius: 10,
-                                backgroundImage: member.photoUrl != null
-                                    ? NetworkImage(member.photoUrl!)
-                                    : null,
-                                child: member.photoUrl == null
-                                    ? Text(
-                                        member.name.isNotEmpty
-                                            ? member.name[0]
-                                            : '?',
-                                        style: const TextStyle(fontSize: 10),
-                                      )
-                                    : null,
+                              SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: ClipOval(
+                                  child: member.photoUrl != null
+                                      ? AppNetworkImage(
+                                          url: member.photoUrl!,
+                                          fit: BoxFit.cover,
+                                          errorWidget: CircleAvatar(
+                                            radius: 10,
+                                            child: Text(
+                                              member.name.isNotEmpty
+                                                  ? member.name[0]
+                                                  : '?',
+                                              style: const TextStyle(fontSize: 10),
+                                            ),
+                                          ),
+                                        )
+                                      : CircleAvatar(
+                                          radius: 10,
+                                          child: Text(
+                                            member.name.isNotEmpty
+                                                ? member.name[0]
+                                                : '?',
+                                            style: const TextStyle(fontSize: 10),
+                                          ),
+                                        ),
+                                ),
                               ),
                               const SizedBox(width: 8),
                               Text(member.name),

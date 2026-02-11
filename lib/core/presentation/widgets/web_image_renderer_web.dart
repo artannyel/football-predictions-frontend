@@ -1,7 +1,7 @@
 // ignore: avoid_web_libraries_in_flutter
-import 'dart:html' as html;
 import 'dart:ui_web' as ui_web;
 import 'package:flutter/material.dart';
+import 'package:web/web.dart' as web;
 
 Widget renderWebImage(String url, double? width, double? height, BoxFit fit) {
   // Cria um ID único baseado na URL para registrar a factory
@@ -10,7 +10,7 @@ Widget renderWebImage(String url, double? width, double? height, BoxFit fit) {
   // Registra a factory que cria o elemento HTML <img>
   // O platformViewRegistry permite injetar HTML nativo na árvore de widgets do Flutter
   ui_web.platformViewRegistry.registerViewFactory(viewType, (int viewId) {
-    final element = html.ImageElement();
+    final element = web.HTMLImageElement();
     element.src = url;
     element.style.width = '100%';
     element.style.height = '100%';

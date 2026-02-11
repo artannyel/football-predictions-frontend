@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:heic_to_png_jpg/heic_to_png_jpg.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:football_predictions/core/presentation/widgets/app_network_image.dart';
 import 'package:football_predictions/core/utils/web_heic_converter_stub.dart'
     if (dart.library.html) 'package:football_predictions/core/utils/web_heic_converter.dart';
 
@@ -124,8 +125,9 @@ class ImagePickerWidget extends StatelessWidget {
   ImageProvider? _getBackgroundImage() {
     // 1. Se tem imagem nova selecionada (Mobile)
     if (!kIsWeb && image != null) return FileImage(File(image!.path));
-    // 2. Se não tem imagem nova, mas tem URL inicial (Mobile e Web)
-    if (image == null && initialUrl != null) return NetworkImage(initialUrl!);
+    // 2. Se não tem imagem nova, mas tem URL inicial (Apenas Mobile)
+    // Na Web, usamos AppNetworkImage no child para evitar problemas de CORS
+    if (!kIsWeb && image == null && initialUrl != null) return NetworkImage(initialUrl!);
     // 3. Caso contrário (Web com imagem nova é tratado no child)
     return null;
   }
@@ -151,7 +153,17 @@ class ImagePickerWidget extends StatelessWidget {
 
     // Se tem URL inicial e nenhuma imagem nova, não mostra nada no child (o backgroundImage cuida disso)
     if (image == null && initialUrl != null) {
-      return null;
+      if (kIsWeb) {
+        return ClipOval(
+          child: AppNetworkImage(
+            url: initialUrl!,
+            width: radius * 2,
+            height: radius * 2,
+            fit: BoxFit.cover,
+          ),
+        );
+      }
+      return null; // No mobile o backgroundImage cuida da exibição
     }
 
     // Na Web usamos Image.memory via FutureBuilder para ler os bytes
