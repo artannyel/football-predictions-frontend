@@ -105,10 +105,10 @@ class AuthRepository {
     }
   }
 
-  Future<void> updateProfile({String? name, XFile? photo}) async {
+  Future<UserModel> updateProfile({String? name, XFile? photo}) async {
     try {
       final user = _firebaseAuth.currentUser;
-      if (user == null) return;
+      if (user == null) throw AuthException('Usuário não autenticado');
 
       final formData = FormData.fromMap({
         'name': name ?? user.displayName,
@@ -134,12 +134,14 @@ class AuthRepository {
         }
       }
 
-      await _dioClient.dio.post('users', data: formData);
-      _backendUser = null; // Invalida o cache para buscar os dados atualizados na próxima chamada
+      final response = await _dioClient.dio.post('users', data: formData);
+      _backendUser = UserModel.fromJson(response.data['data']);
 
       if (name != null) {
         await user.updateDisplayName(name);
       }
+
+      return _backendUser!;
     } catch (e) {
       throw AuthException('Falha ao atualizar perfil: $e');
     }

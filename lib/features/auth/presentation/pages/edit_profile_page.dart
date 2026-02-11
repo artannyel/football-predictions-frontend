@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:football_predictions/core/auth/auth_notifier.dart';
 import 'package:football_predictions/core/presentation/widgets/image_picker_widget.dart';
 import 'package:football_predictions/core/presentation/widgets/loading_widget.dart';
 import 'package:football_predictions/features/auth/data/repositories/auth_repository.dart';
@@ -37,12 +38,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
     setState(() => _isLoading = true);
 
     try {
-      await context.read<AuthRepository>().updateProfile(
+      final updatedUser = await context.read<AuthRepository>().updateProfile(
             name: _nameController.text.trim(),
             photo: _selectedImage,
           );
 
       if (mounted) {
+        // Atualiza o AuthNotifier para refletir as mudanças em todo o app
+        await context.read<AuthNotifier>().refreshUser(updatedUser);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Perfil atualizado com sucesso!')),
         );
