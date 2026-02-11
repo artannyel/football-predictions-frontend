@@ -36,9 +36,8 @@ class _HomePageState extends State<HomePage> {
   Future<void> _refreshLeagues() async {
     setState(() {
       _leaguesFuture = context.read<LeaguesRepository>().getLeagues();
-      _userFuture = context.read<AuthRepository>().getUser(forceRefresh: true);
     });
-    await Future.wait([_leaguesFuture, _userFuture]);
+    await _leaguesFuture;
   }
 
   @override
@@ -267,7 +266,7 @@ class _HomePageState extends State<HomePage> {
                         builder: (context) => const CreateLeaguePage()),
                   );
                   if (result == true) {
-                    setState(() {});
+                    _refreshLeagues();
                   }
                 },
               ),
@@ -281,7 +280,7 @@ class _HomePageState extends State<HomePage> {
                     builder: (context) => const _JoinLeagueDialog(),
                   );
                   if (result == true) {
-                    setState(() {});
+                    _refreshLeagues();
                   }
                 },
               ),
