@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'web_image_renderer.dart'
+    if (dart.library.html) 'web_image_renderer_web.dart';
 
 class AppNetworkImage extends StatelessWidget {
   final String url;
@@ -76,6 +78,10 @@ class AppNetworkImage extends StatelessWidget {
           );
         },
       );
+    }
+
+    if (kIsWeb) {
+      return renderWebImage(url, width, height, fit);
     }
 
     // Usa CachedNetworkImage para imagens raster (JPG, PNG, etc.)

@@ -1,23 +1,27 @@
-import 'dart:async';
-import 'dart:html' as html;
-import 'dart:js_util' as js_util;
+import 'dart:js_interop';
+import 'dart:js_interop_unsafe';
 import 'dart:typed_data';
 
+import 'package:web/web.dart';
+
+@JS('heic2any')
+external JSPromise heic2any(JSObject options);
+
 Future<Uint8List> convertHeicToJpgWeb(Uint8List bytes) async {
-  final blob = html.Blob([bytes]);
+  final blob = Blob([bytes.toJS].toJS);
   
   // Configura as opções: { blob: blob, toType: "image/jpeg", quality: 0.9 }
-  final options = js_util.newObject();
-  js_util.setProperty(options, 'blob', blob);
-  js_util.setProperty(options, 'toType', 'image/jpeg');
-  js_util.setProperty(options, 'quality', 0.9);
+  final options = JSObject();
+  options['blob'] = blob;
+  options['toType'] = 'image/jpeg'.toJS;
+  options['quality'] = 0.9.toJS;
 
   // Chama a função global heic2any(options)
-  final promise = js_util.callMethod(html.window, 'heic2any', [options]);
-  final resultBlob = await js_util.promiseToFuture(promise);
+  final promise = heic2any(options);
+  final result = await promise.toDart;
+  final resultBlob = result as Blob;
 
   // Converte o Blob resultante de volta para Uint8List
-  final reader = html.FileReader()..readAsArrayBuffer(resultBlob);
-  await reader.onLoad.first;
-  return reader.result as Uint8List;
+  final arrayBuffer = await resultBlob.arrayBuffer().toDart;
+  return arrayBuffer.toDart.asUint8List();
 }
