@@ -11,16 +11,14 @@ import 'package:football_predictions/features/home/data/repositories/leagues_rep
 import 'package:football_predictions/features/home/presentation/pages/home_page.dart';
 import 'package:football_predictions/features/matches/data/repositories/matches_repository.dart';
 import 'package:football_predictions/features/predictions/data/repositories/predictions_repository.dart';
-import 'package:football_predictions/firebase_options.dart';
+import 'package:football_predictions/firebase_options_prod.dart';
 import 'package:provider/provider.dart';
 
-void main() async {
+Future<void> initApp(FirebaseOptions? firebaseOptions) async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Inicializa o Firebase usando as opções geradas para a plataforma atual
-  await Firebase.initializeApp(
-    options: kIsWeb ? DefaultFirebaseOptions.currentPlatform : null,
-  );
+  // Inicializa o Firebase usando as opções passadas por parâmetro
+  await Firebase.initializeApp(options: firebaseOptions);
 
   runApp(
     MultiProvider(
@@ -46,6 +44,12 @@ void main() async {
       child: const MyApp(),
     ),
   );
+}
+
+void main() async {
+  // Entry point padrão (geralmente Prod ou fallback)
+  // Mantém a lógica original para caso rode apenas "flutter run" sem target
+  await initApp(kIsWeb ? DefaultFirebaseOptions.currentPlatform : null);
 }
 
 class MyApp extends StatelessWidget {
