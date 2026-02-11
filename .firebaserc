@@ -1,5 +1,7 @@
 {
   "projects": {
-    "default": "football-predictions-prod"
-  }
+    "default": "palpitesfutebol-b0f33"
+  },
+  "targets": {},
+  "etags": {}
 }
