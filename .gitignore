@@ -69,6 +69,11 @@ macos/flutter/ephemeral/
 **/google-services.json
 **/GoogleService-Info.plist
 /lib/firebase_options.dart
+/lib/firebase_options_dev.dart
+/lib/firebase_options_prod.dart
+
+# Firebase cache
+.firebase/
 
 # Local Configuration
 config/
