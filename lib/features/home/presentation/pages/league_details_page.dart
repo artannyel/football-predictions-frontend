@@ -559,16 +559,21 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
           const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildInfoItem(
-                'Competição',
-                league.competition.name,
-                imageUrl: league.competition.emblem,
+              Expanded(
+                child: _buildInfoItem(
+                  'Competição',
+                  league.competition.name,
+                  imageUrl: league.competition.emblem,
+                ),
               ),
-              _buildInfoItem(
-                'Criador',
-                league.owner.name,
-                imageUrl: league.owner.photoUrl,
+              Expanded(
+                child: _buildInfoItem(
+                  'Criador',
+                  league.owner.name,
+                  imageUrl: league.owner.photoUrl,
+                ),
               ),
             ],
           ),
@@ -619,6 +624,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
         Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
         const SizedBox(height: 4),
         Row(
+                mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (imageUrl != null) ...[
               ClipOval(
@@ -632,7 +638,11 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
               ),
               const SizedBox(width: 8),
             ],
-            Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
+                  Flexible(
+                    child: Text(value,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                  ),
           ],
         ),
       ],
