@@ -42,7 +42,7 @@ android {
         }
         create("prod") {
             dimension = "default"
-            resValue("string", "app_name", "Football Predictions")
+            resValue("string", "app_name", "Palpites Futebol")
         }
     }
 
