@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -52,6 +53,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
   String? _historyError;
 
   late ConfettiController _confettiController;
+  late ConfettiController _fireworksController;
   bool _confettiPlayed = false;
   Timer? _liveUpdateTimer;
 
@@ -64,6 +66,9 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
     _userIdFuture = authRepo.getUser().then((u) => u.id);
     _confettiController = ConfettiController(
       duration: const Duration(seconds: 5),
+    );
+    _fireworksController = ConfettiController(
+      duration: const Duration(seconds: 10),
     );
 
     // Carrega ranking inicial e usuário
@@ -81,6 +86,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
   void dispose() {
     _liveUpdateTimer?.cancel();
     _confettiController.dispose();
+    _fireworksController.dispose();
     super.dispose();
   }
 
@@ -158,10 +164,16 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
       final userId = results[1] as String;
 
       if (!league.isActive && _rankings.isNotEmpty) {
-        final championIndex = _rankings.indexWhere((r) => r.rank == 1);
-        if (championIndex != -1 && _rankings[championIndex].id == userId) {
-          _confettiPlayed = true;
-          _confettiController.play();
+        final userIndex = _rankings.indexWhere((r) => r.id == userId);
+        if (userIndex != -1) {
+          final rank = _rankings[userIndex].rank;
+          if (rank >= 1 && rank <= 3) {
+            _confettiPlayed = true;
+            _confettiController.play();
+            if (rank == 1) {
+              _fireworksController.play();
+            }
+          }
         }
       }
     } catch (_) {}
@@ -330,6 +342,29 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
 
   void _onBackPage(BuildContext context) {
     context.go('/ligas');
+  }
+
+  Path drawStar(Size size) {
+    double degToRad(double deg) => deg * (pi / 180.0);
+
+    const numberOfPoints = 5;
+    final halfWidth = size.width / 2;
+    final externalRadius = halfWidth;
+    final internalRadius = halfWidth / 2.5;
+    final degreesPerStep = degToRad(360 / numberOfPoints);
+    final halfDegreesPerStep = degreesPerStep / 2;
+    final path = Path();
+    final fullAngle = degToRad(360);
+    path.moveTo(size.width, halfWidth);
+
+    for (double step = 0; step < fullAngle; step += degreesPerStep) {
+      path.lineTo(halfWidth + externalRadius * cos(step),
+          halfWidth + externalRadius * sin(step));
+      path.lineTo(halfWidth + internalRadius * cos(step + halfDegreesPerStep),
+          halfWidth + internalRadius * sin(step + halfDegreesPerStep));
+    }
+    path.close();
+    return path;
   }
 
   @override
@@ -534,6 +569,23 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
                 ],
               ),
             ),
+            Align(
+              alignment: Alignment.topCenter,
+              child: ConfettiWidget(
+                confettiController: _fireworksController,
+                blastDirectionality: BlastDirectionality.explosive,
+                shouldLoop: false,
+                colors: const [
+                  Colors.green,
+                  Colors.blue,
+                  Colors.pink,
+                  Colors.orange,
+                  Colors.purple,
+                  Colors.amber,
+                ],
+                createParticlePath: drawStar,
+              ),
+            ),
           ],
         ),
       ),
@@ -542,9 +594,18 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
 
   Widget _buildLeagueHeader(LeagueDetailsModel league) {
     LeagueRankingModel? champion;
+    LeagueRankingModel? viceChampion;
+    LeagueRankingModel? thirdPlace;
+
     if (!league.isActive && _rankings.isNotEmpty) {
       try {
         champion = _rankings.firstWhere((r) => r.rank == 1);
+      } catch (_) {}
+      try {
+        viceChampion = _rankings.firstWhere((r) => r.rank == 2);
+      } catch (_) {}
+      try {
+        thirdPlace = _rankings.firstWhere((r) => r.rank == 3);
       } catch (_) {}
     }
 
@@ -597,13 +658,29 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
                               alpha: 0.9,
                             ),
                             insetPadding: EdgeInsets.zero,
-                            child: InteractiveViewer(
-                              child: Center(
-                                child: AppNetworkImage(
-                                  url: champion!.photoUrl!,
-                                  fit: BoxFit.contain,
+                            child: Stack(
+                              children: [
+                                InteractiveViewer(
+                                  child: Center(
+                                    child: AppNetworkImage(
+                                      url: champion!.photoUrl!,
+                                      fit: BoxFit.contain,
+                                    ),
+                                  ),
                                 ),
-                              ),
+                                Positioned(
+                                  top: 16,
+                                  right: 16,
+                                  child: SafeArea(
+                                    child: IconButton(
+                                      icon: const Icon(Icons.close,
+                                          color: Colors.white),
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         );
@@ -648,6 +725,23 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
                 ),
                 textAlign: TextAlign.center,
               ),
+              Text(
+                '${champion.points} pts',
+                style: const TextStyle(fontSize: 14),
+              ),
+              if (viceChampion != null || thirdPlace != null) ...[
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (viceChampion != null)
+                      Expanded(child: _buildPodiumItem(viceChampion, 2)),
+                    if (thirdPlace != null)
+                      Expanded(child: _buildPodiumItem(thirdPlace, 3)),
+                  ],
+                ),
+              ],
               const SizedBox(height: 24),
               const Divider(),
               const SizedBox(height: 24),
@@ -745,6 +839,106 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildPodiumItem(LeagueRankingModel member, int rank) {
+    final color = rank == 2 ? const Color(0xFFC0C0C0) : const Color(0xFFCD7F32);
+    final label = rank == 2 ? "🥈 Vice-Campeão" : "🥉 3º Lugar";
+
+    return Column(
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: color,
+            fontSize: 14,
+          ),
+        ),
+        const SizedBox(height: 8),
+        GestureDetector(
+          onTap: member.photoUrl != null
+              ? () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => Dialog(
+                      backgroundColor: Colors.black.withValues(alpha: 0.9),
+                      insetPadding: EdgeInsets.zero,
+                      child: Stack(
+                        children: [
+                          InteractiveViewer(
+                            child: Center(
+                              child: AppNetworkImage(
+                                url: member.photoUrl!,
+                                fit: BoxFit.contain,
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            top: 16,
+                            right: 16,
+                            child: SafeArea(
+                              child: IconButton(
+                                icon: const Icon(Icons.close,
+                                    color: Colors.white),
+                                onPressed: () =>
+                                    Navigator.of(context).pop(),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+              : null,
+          child: SizedBox(
+            width: 80,
+            height: 80,
+            child: ClipOval(
+              child: member.photoUrl != null
+                  ? AppNetworkImage(
+                      url: member.photoUrl!,
+                      fit: BoxFit.cover,
+                      errorWidget: CircleAvatar(
+                        radius: 40,
+                        child: Text(
+                          member.name.isNotEmpty
+                              ? member.name[0].toUpperCase()
+                              : '?',
+                          style: const TextStyle(fontSize: 32),
+                        ),
+                      ),
+                    )
+                  : CircleAvatar(
+                      radius: 40,
+                      child: Text(
+                        member.name.isNotEmpty
+                            ? member.name[0].toUpperCase()
+                            : '?',
+                        style: const TextStyle(fontSize: 32),
+                      ),
+                    ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          member.name,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+          textAlign: TextAlign.center,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        ),
+        Text(
+          '${member.points} pts',
+          style: const TextStyle(fontSize: 12),
+        ),
+      ],
     );
   }
 
@@ -953,7 +1147,14 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
                                 ),
                               ),
                               const SizedBox(width: 8),
-                              Text(member.name),
+                              Text(
+                                member.name,
+                                style: TextStyle(
+                                  fontWeight: isCurrentUser
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                ),
+                              ),
                               if (!isLeagueActive &&
                                   member.rank >= 1 &&
                                   member.rank <= 3) ...[
