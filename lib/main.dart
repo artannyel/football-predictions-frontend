@@ -102,43 +102,40 @@ class MyAppOld extends StatelessWidget {
   }
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  late final GoRouter _router;
+
+  @override
+  void initState() {
+    super.initState();
+    _router = appRouter(context.read<AuthNotifier>());
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Consumer<AuthNotifier>(
-      builder: (context, authNotifier, _) {
-        return MaterialApp.router(
-          routerConfig: appRouter(authNotifier),
-          debugShowCheckedModeBanner: false,
-          title: 'Palpites Futebol',
-          theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: const Color(0xFF1B5E20),
-            ),
-          ),
-          darkTheme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: const Color(0xFF1B5E20),
-              brightness: Brightness.dark,
-            ),
-          ),
-          themeMode: ThemeMode.system,
-          /*home: StreamBuilder<User?>(
-            stream: context.read<AuthRepository>().authStateChanges,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Scaffold(body: LoadingWidget());
-              }
-              if (snapshot.hasData) {
-                return const HomePage();
-              }
-              return const LoginPage();
-            },
-          ),*/
-        );
-      },
+    return MaterialApp.router(
+      routerConfig: _router,
+      debugShowCheckedModeBanner: false,
+      title: 'Palpites Futebol',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF1B5E20),
+        ),
+      ),
+      darkTheme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF1B5E20),
+          brightness: Brightness.dark,
+        ),
+      ),
+      themeMode: ThemeMode.system,
     );
   }
 }
