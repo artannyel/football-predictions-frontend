@@ -15,6 +15,8 @@ class AuthNotifier extends ChangeNotifier {
   firebase.User? get user => _user;
   UserModel? _backendUser;
   UserModel? get backendUser => _backendUser;
+  String? _redirectPath;
+  String? get redirectPath => _redirectPath;
 
   bool _isInitialized = false;
   bool get isInitialized => _isInitialized;
@@ -26,6 +28,11 @@ class AuthNotifier extends ChangeNotifier {
 
   void updateAuthRepository(AuthRepository authRepository) {
     _authRepository = authRepository;
+  }
+
+  /// Salva a rota que o usuário tentou acessar para redirecionar após o login/inicialização.
+  void setRedirectPath(String? path) {
+    _redirectPath = path;
   }
 
   void _listenToAuthStateChanges() {

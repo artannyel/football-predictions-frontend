@@ -8,7 +8,7 @@ import 'package:football_predictions/features/competitions/presentation/pages/co
 import 'package:football_predictions/features/home/data/models/league_model.dart';
 import 'package:football_predictions/features/home/data/repositories/leagues_repository.dart';
 import 'package:football_predictions/features/home/presentation/pages/create_league_page.dart';
-import 'package:football_predictions/features/home/presentation/pages/league_details_page.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget {
@@ -81,10 +81,17 @@ class _HomePageState extends State<HomePage> {
                               width: 72,
                               height: 72,
                               fit: BoxFit.cover,
-                              errorWidget: const Icon(Icons.person,
-                                  size: 40, color: Colors.grey),
+                              errorWidget: const Icon(
+                                Icons.person,
+                                size: 40,
+                                color: Colors.grey,
+                              ),
                             )
-                          : const Icon(Icons.person, size: 40, color: Colors.grey),
+                          : const Icon(
+                              Icons.person,
+                              size: 40,
+                              color: Colors.grey,
+                            ),
                     ),
                   ),
                   decoration: BoxDecoration(
@@ -96,7 +103,12 @@ class _HomePageState extends State<HomePage> {
                   title: const Text('Editar Perfil'),
                   onTap: () async {
                     Navigator.pop(context); // Fecha o drawer
-                    await Navigator.push(context, MaterialPageRoute(builder: (context) => const EditProfilePage()));
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const EditProfilePage(),
+                      ),
+                    );
                   },
                 ),
                 ListTile(
@@ -137,7 +149,8 @@ class _HomePageState extends State<HomePage> {
                     height: MediaQuery.of(context).size.height * 0.7,
                     child: Center(
                       child: Text(
-                          'Erro ao carregar ligas: ${snapshot.error.toString().replaceAll('Exception: ', '')}'),
+                        'Erro ao carregar ligas: ${snapshot.error.toString().replaceAll('Exception: ', '')}',
+                      ),
                     ),
                   ),
                 ],
@@ -155,8 +168,11 @@ class _HomePageState extends State<HomePage> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.groups_outlined,
-                            size: 64, color: Colors.grey),
+                        const Icon(
+                          Icons.groups_outlined,
+                          size: 64,
+                          color: Colors.grey,
+                        ),
                         const SizedBox(height: 16),
                         const Text(
                           'Você ainda não participa de nenhuma liga.',
@@ -167,7 +183,8 @@ class _HomePageState extends State<HomePage> {
                           onPressed: () {
                             Navigator.of(context).push(
                               MaterialPageRoute(
-                                  builder: (context) => const CompetitionsPage()),
+                                builder: (context) => const CompetitionsPage(),
+                              ),
                             );
                           },
                           child: const Text('Explorar competições'),
@@ -192,11 +209,7 @@ class _HomePageState extends State<HomePage> {
                 return Card(
                   child: ListTile(
                     onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                            builder: (context) =>
-                                LeagueDetailsPage(leagueId: league.id)),
-                      );
+                      context.go('/liga/${league.id}');
                     },
                     leading: SizedBox(
                       width: 40,
@@ -230,7 +243,9 @@ class _HomePageState extends State<HomePage> {
                     trailing: Text(
                       '${league.myPoints} pts',
                       style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.bold),
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 );
@@ -256,7 +271,8 @@ class _HomePageState extends State<HomePage> {
                   Navigator.pop(context);
                   final result = await Navigator.of(context).push(
                     MaterialPageRoute(
-                        builder: (context) => const CreateLeaguePage()),
+                      builder: (context) => const CreateLeaguePage(),
+                    ),
                   );
                   if (result == true) {
                     _refreshLeagues();
@@ -312,9 +328,9 @@ class _JoinLeagueDialogState extends State<_JoinLeagueDialog> {
       await context.read<LeaguesRepository>().joinLeague(code);
       if (mounted) {
         Navigator.pop(context, true);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Você entrou na liga!')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Você entrou na liga!')));
       }
     } catch (e) {
       if (mounted) {

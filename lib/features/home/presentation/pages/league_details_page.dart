@@ -14,6 +14,7 @@ import 'package:football_predictions/features/predictions/data/repositories/pred
 import 'package:football_predictions/features/predictions/presentation/pages/prediction_page.dart';
 import 'package:football_predictions/features/home/presentation/pages/edit_league_page.dart';
 import 'package:football_predictions/features/predictions/presentation/pages/user_predictions_page.dart';
+import 'package:go_router/go_router.dart';
 import '../widgets/glass_card.dart';
 import 'package:provider/provider.dart';
 
@@ -56,8 +57,9 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
     final authRepo = context.read<AuthRepository>();
     _detailsFuture = repo.getLeagueDetails(widget.leagueId);
     _userIdFuture = authRepo.getUser().then((u) => u.id);
-    _confettiController =
-        ConfettiController(duration: const Duration(seconds: 5));
+    _confettiController = ConfettiController(
+      duration: const Duration(seconds: 5),
+    );
 
     // Carrega ranking inicial e usuário
     _loadRanking();
@@ -257,156 +259,171 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
     return 'Rodada $matchday';
   }
 
+  void _onBackPage(BuildContext context) {
+    context.go('/ligas');
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Detalhes da Liga'),
-        backgroundColor: const Color(0xFF1B5E20), // Verde escuro
-        foregroundColor: Colors.white,
-        actions: [
-          FutureBuilder(
-            future: Future.wait([_detailsFuture, _userIdFuture]),
-            builder: (context, snapshot) {
-              if (!snapshot.hasData) return const SizedBox();
-
-              final league = snapshot.data![0] as LeagueDetailsModel;
-              final userId = snapshot.data![1] as String;
-
-              // Só mostra o botão se o usuário for o dono da liga
-              if (league.owner.id == userId) {
-                return IconButton(
-                  icon: const Icon(Icons.edit),
-                  tooltip: 'Editar Liga',
-                  onPressed: () async {
-                    final result = await Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            EditLeaguePage(leagueId: league.id),
-                      ),
-                    );
-                    if (result == true) {
-                      setState(() {
-                        _detailsFuture = context
-                            .read<LeaguesRepository>()
-                            .getLeagueDetails(widget.leagueId);
-                      });
-                    }
-                  },
-                );
-              }
-              return const SizedBox();
-            },
+    return PopScope(
+      onPopInvokedWithResult: (canPop, _) {
+        _onBackPage(context);
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Detalhes da Liga'),
+          leading: IconButton(
+            onPressed: () => _onBackPage(context),
+            icon: Icon(Icons.arrow_back_rounded),
           ),
-        ],
-      ),
-      body: Stack(
-        children: [
-          // Background do campo de futebol
-          Positioned.fill(
-            child: Image.asset(
-              'assets/images/background.jpg',
-              fit: BoxFit.fill,
-              //color: Colors.black.withOpacity(0.6), // Escurece a imagem
-              colorBlendMode: BlendMode.darken,
-              errorBuilder: (context, error, stackTrace) {
-                debugPrint('Erro ao carregar imagem de fundo: $error');
-                // Fallback para um gradiente verde caso a imagem falhe
-                return Container(
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [Color(0xFF2E7D32), Color(0xFF388E3C)],
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-          SafeArea(
-            top: false,
-            child: FutureBuilder<LeagueDetailsModel>(
-              future: _detailsFuture,
+          backgroundColor: const Color(0xFF1B5E20), // Verde escuro
+          foregroundColor: Colors.white,
+          actions: [
+            FutureBuilder(
+              future: Future.wait([_detailsFuture, _userIdFuture]),
               builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const LoadingWidget();
-                }
-                if (snapshot.hasError) {
-                  return Center(
-                    child: Text(
-                      'Erro ao carregar detalhes: ${snapshot.error.toString().replaceAll('Exception: ', '')}',
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                  );
-                }
                 if (!snapshot.hasData) return const SizedBox();
 
-                final league = snapshot.data!;
+                final league = snapshot.data![0] as LeagueDetailsModel;
+                final userId = snapshot.data![1] as String;
 
-                return DefaultTabController(
-                  length: 5,
-                  child: RefreshIndicator(
-                    onRefresh: _refreshData,
-                    notificationPredicate: (notification) {
-                      return notification.depth == 2;
+                // Só mostra o botão se o usuário for o dono da liga
+                if (league.owner.id == userId) {
+                  return IconButton(
+                    icon: const Icon(Icons.edit),
+                    tooltip: 'Editar Liga',
+                    onPressed: () async {
+                      final result = await Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              EditLeaguePage(leagueId: league.id),
+                        ),
+                      );
+                      if (result == true) {
+                        setState(() {
+                          _detailsFuture = context
+                              .read<LeaguesRepository>()
+                              .getLeagueDetails(widget.leagueId);
+                        });
+                      }
                     },
-                    child: NestedScrollView(
-                      headerSliverBuilder: (context, innerBoxIsScrolled) {
-                        return [
-                          SliverToBoxAdapter(child: _buildLeagueHeader(league)),
-                          SliverPersistentHeader(
-                            delegate: _SliverAppBarDelegate(
-                              TabBar(
-                                labelColor: Colors.white,
-                                unselectedLabelColor: Colors.white70,
-                                indicatorColor: Colors.white,
-                                isScrollable: true,
-                                tabs: const [
-                                  Tab(text: 'Ranking'),
-                                  Tab(text: 'Palpitar'),
-                                  Tab(text: 'Ativos'),
-                                  Tab(text: 'Histórico'),
-                                  Tab(text: 'Regras'),
-                                ],
-                              ),
-                            ),
-                            pinned: true,
-                          ),
-                        ];
-                      },
-                      body: TabBarView(
-                        children: [
-                          _buildRankingTab(league.isActive),
-                          _buildMatchesTab(league.id),
-                          _buildActivePredictionsTab(league.id),
-                          _buildHistoryPredictionsTab(league.id),
-                          _buildRulesTab(),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
+                  );
+                }
+                return const SizedBox();
               },
             ),
-          ),
-          Align(
-            alignment: Alignment.topCenter,
-            child: ConfettiWidget(
-              confettiController: _confettiController,
-              blastDirectionality: BlastDirectionality.explosive,
-              shouldLoop: false,
-              colors: const [
-                Colors.green,
-                Colors.blue,
-                Colors.pink,
-                Colors.orange,
-                Colors.purple,
-                Colors.amber,
-              ],
+          ],
+        ),
+        body: Stack(
+          children: [
+            // Background do campo de futebol
+            Positioned.fill(
+              child: Image.asset(
+                'assets/images/background.jpg',
+                fit: BoxFit.fill,
+                //color: Colors.black.withOpacity(0.6), // Escurece a imagem
+                colorBlendMode: BlendMode.darken,
+                errorBuilder: (context, error, stackTrace) {
+                  debugPrint('Erro ao carregar imagem de fundo: $error');
+                  // Fallback para um gradiente verde caso a imagem falhe
+                  return Container(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [Color(0xFF2E7D32), Color(0xFF388E3C)],
+                      ),
+                    ),
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+            SafeArea(
+              top: false,
+              child: FutureBuilder<LeagueDetailsModel>(
+                future: _detailsFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const LoadingWidget();
+                  }
+                  if (snapshot.hasError) {
+                    return Center(
+                      child: Text(
+                        'Erro ao carregar detalhes: ${snapshot.error.toString().replaceAll('Exception: ', '')}',
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    );
+                  }
+                  if (!snapshot.hasData) return const SizedBox();
+
+                  final league = snapshot.data!;
+
+                  return DefaultTabController(
+                    length: 5,
+                    child: RefreshIndicator(
+                      onRefresh: _refreshData,
+                      notificationPredicate: (notification) {
+                        return notification.depth == 2;
+                      },
+                      child: NestedScrollView(
+                        headerSliverBuilder: (context, innerBoxIsScrolled) {
+                          return [
+                            SliverToBoxAdapter(
+                              child: _buildLeagueHeader(league),
+                            ),
+                            SliverPersistentHeader(
+                              delegate: _SliverAppBarDelegate(
+                                TabBar(
+                                  labelColor: Colors.white,
+                                  unselectedLabelColor: Colors.white70,
+                                  indicatorColor: Colors.white,
+                                  isScrollable: true,
+                                  tabs: const [
+                                    Tab(text: 'Ranking'),
+                                    Tab(text: 'Palpitar'),
+                                    Tab(text: 'Ativos'),
+                                    Tab(text: 'Histórico'),
+                                    Tab(text: 'Regras'),
+                                  ],
+                                ),
+                              ),
+                              pinned: true,
+                            ),
+                          ];
+                        },
+                        body: TabBarView(
+                          children: [
+                            _buildRankingTab(league.isActive),
+                            _buildMatchesTab(league.id),
+                            _buildActivePredictionsTab(league.id),
+                            _buildHistoryPredictionsTab(league.id),
+                            _buildRulesTab(),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            Align(
+              alignment: Alignment.topCenter,
+              child: ConfettiWidget(
+                confettiController: _confettiController,
+                blastDirectionality: BlastDirectionality.explosive,
+                shouldLoop: false,
+                colors: const [
+                  Colors.green,
+                  Colors.blue,
+                  Colors.pink,
+                  Colors.orange,
+                  Colors.purple,
+                  Colors.amber,
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -464,8 +481,9 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
                         showDialog(
                           context: context,
                           builder: (context) => Dialog(
-                            backgroundColor:
-                                Colors.black.withValues(alpha: 0.9),
+                            backgroundColor: Colors.black.withValues(
+                              alpha: 0.9,
+                            ),
                             insetPadding: EdgeInsets.zero,
                             child: InteractiveViewer(
                               child: Center(
@@ -624,7 +642,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
         Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
         const SizedBox(height: 4),
         Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (imageUrl != null) ...[
               ClipOval(
@@ -638,11 +656,13 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
               ),
               const SizedBox(width: 8),
             ],
-                  Flexible(
-                    child: Text(value,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(fontWeight: FontWeight.bold)),
-                  ),
+            Flexible(
+              child: Text(
+                value,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
           ],
         ),
       ],
@@ -799,7 +819,9 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
                                               member.name.isNotEmpty
                                                   ? member.name[0]
                                                   : '?',
-                                              style: const TextStyle(fontSize: 10),
+                                              style: const TextStyle(
+                                                fontSize: 10,
+                                              ),
                                             ),
                                           ),
                                         )
@@ -809,7 +831,9 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
                                             member.name.isNotEmpty
                                                 ? member.name[0]
                                                 : '?',
-                                            style: const TextStyle(fontSize: 10),
+                                            style: const TextStyle(
+                                              fontSize: 10,
+                                            ),
                                           ),
                                         ),
                                 ),
@@ -826,8 +850,8 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
                                   color: member.rank == 1
                                       ? const Color(0xFFFFD700) // Ouro
                                       : member.rank == 2
-                                          ? const Color(0xFFC0C0C0) // Prata
-                                          : const Color(0xFFCD7F32), // Bronze
+                                      ? const Color(0xFFC0C0C0) // Prata
+                                      : const Color(0xFFCD7F32), // Bronze
                                 ),
                               ],
                             ],
@@ -1105,10 +1129,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
                         if (match.homeScore != null &&
                             match.awayScore != null) ...[
                           const SizedBox(height: 4),
-                          const Text(
-                            'Placar',
-                            style: TextStyle(fontSize: 10),
-                          ),
+                          const Text('Placar', style: TextStyle(fontSize: 10)),
                           Text(
                             '${match.homeScore} x ${match.awayScore}',
                             style: const TextStyle(
