@@ -71,14 +71,14 @@ GoRouter appRouter(AuthNotifier authNotifier) {
         builder: (context, state) => const SplashPage(),
       ),
       GoRoute(
-        path: '/ligas',
-        name: 'Home',
-        builder: (context, state) =>  const HomePage(),
-      ),
-      GoRoute(
         path: '/entrar',
         name: 'Login',
         builder: (context, state) => const LoginPage(),
+      ),
+      GoRoute(
+        path: '/ligas',
+        name: 'Home',
+        builder: (context, state) =>  const HomePage(),
       ),
       GoRoute(
         path: '/liga/:id',
