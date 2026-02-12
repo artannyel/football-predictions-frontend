@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:football_predictions/core/presentation/widgets/app_network_image.dart';
+import 'package:football_predictions/core/presentation/widgets/blinking_live_indicator.dart';
 import 'package:football_predictions/core/presentation/widgets/loading_widget.dart';
 import 'package:provider/provider.dart';
 import '../../data/models/match_model.dart';
@@ -193,7 +194,7 @@ class _MatchesPageState extends State<MatchesPage> {
                     children: [
                       Center(
                         child: match.status == 'IN_PLAY'
-                            ? const _BlinkingLiveIndicator()
+                            ? const BlinkingLiveIndicator()
                             : Text(_translateStatus(match.status)),
                       ),
                       const SizedBox(height: 4),
@@ -217,51 +218,6 @@ class _MatchesPageState extends State<MatchesPage> {
             },
           );
         },
-      ),
-    );
-  }
-}
-
-class _BlinkingLiveIndicator extends StatefulWidget {
-  const _BlinkingLiveIndicator();
-
-  @override
-  State<_BlinkingLiveIndicator> createState() => _BlinkingLiveIndicatorState();
-}
-
-class _BlinkingLiveIndicatorState extends State<_BlinkingLiveIndicator>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 500),
-      vsync: this,
-    )..repeat(reverse: true);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return FadeTransition(
-      opacity: _controller,
-      child: const Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.circle, color: Colors.red, size: 10),
-          SizedBox(width: 4),
-          Text(
-            'AO VIVO',
-            style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-          ),
-        ],
       ),
     );
   }

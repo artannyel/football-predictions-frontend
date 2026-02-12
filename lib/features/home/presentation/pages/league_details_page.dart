@@ -2,6 +2,7 @@ import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:football_predictions/core/presentation/widgets/app_network_image.dart';
+import 'package:football_predictions/core/presentation/widgets/blinking_live_indicator.dart';
 import 'package:football_predictions/core/presentation/widgets/loading_widget.dart';
 import 'package:football_predictions/features/auth/data/repositories/auth_repository.dart';
 import 'package:football_predictions/features/home/data/models/league_details_model.dart';
@@ -1001,7 +1002,10 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
                 subtitle: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Center(child: Text(_translateStatus(match.status))),
+                    Center(
+                        child: match.status == 'IN_PLAY'
+                            ? const BlinkingLiveIndicator()
+                            : Text(_translateStatus(match.status))),
                     const SizedBox(height: 4),
                     Text(_translateStage(match.stage)),
                     if (match.group != null)
@@ -1180,7 +1184,9 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
                     ),
                     Text(_formatDate(match.utcDate)),
                     const SizedBox(height: 4),
-                    Text(_translateStatus(match.status)),
+                    match.status == 'IN_PLAY'
+                        ? const BlinkingLiveIndicator()
+                        : Text(_translateStatus(match.status)),
                     if (prediction.pointsEarned != null)
                       Row(
                         mainAxisSize: MainAxisSize.min,
@@ -1369,7 +1375,9 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
                       ),
                       Text(_formatDate(match.utcDate)),
                       const SizedBox(height: 4),
-                      Text(_translateStatus(match.status)),
+                      match.status == 'IN_PLAY'
+                          ? const BlinkingLiveIndicator()
+                          : Text(_translateStatus(match.status)),
                       if (prediction.pointsEarned != null)
                         Row(
                           mainAxisSize: MainAxisSize.min,

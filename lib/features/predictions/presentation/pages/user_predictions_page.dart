@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:football_predictions/core/presentation/widgets/app_network_image.dart';
+import 'package:football_predictions/core/presentation/widgets/blinking_live_indicator.dart';
 import 'package:football_predictions/core/presentation/widgets/loading_widget.dart';
 import 'package:football_predictions/features/auth/data/models/user_model.dart';
 import 'package:football_predictions/features/home/data/models/league_ranking_model.dart';
@@ -352,7 +353,9 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
                     ),
                     Text(_formatDate(match.utcDate)),
                     const SizedBox(height: 4),
-                    Text(_translateStatus(match.status)),
+                    match.status == 'IN_PLAY'
+                        ? const BlinkingLiveIndicator()
+                        : Text(_translateStatus(match.status)),
                     if (prediction.pointsEarned != null)
                       Text(
                         'Pontos ganhos: ${prediction.pointsEarned}',
