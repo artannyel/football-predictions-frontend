@@ -38,10 +38,18 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
     _loadPredictions();
   }
 
-  Future<void> _loadPredictions() async {
-    if (_isLoading || _page > _lastPage) return;
+  Future<void> _loadPredictions({bool refresh = false}) async {
+    if (_isLoading) return;
+    if (!refresh && _page > _lastPage) return;
 
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      if (refresh) {
+        _page = 1;
+        _lastPage = 1;
+        _error = null;
+      }
+    });
 
     try {
       final result = await context
@@ -54,6 +62,9 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
 
       if (mounted) {
         setState(() {
+          if (refresh) {
+            _predictions.clear();
+          }
           _predictions.addAll(result.predictions);
           _lastPage = result.lastPage;
           if (_page == 1) {
@@ -127,9 +138,11 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_userHistory != null
-            ? 'Palpites de ${_userHistory!.name}'
-            : 'Palpites'),
+        title: Text(
+          _userHistory != null
+              ? 'Palpites de ${_userHistory!.name}'
+              : 'Palpites',
+        ),
         backgroundColor: const Color(0xFF1B5E20),
         foregroundColor: Colors.white,
       ),
@@ -153,7 +166,7 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
               },
             ),
           ),
-          _buildContent(),
+          SafeArea(child: _buildContent()),
         ],
       ),
     );
@@ -168,10 +181,7 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
     // Se não tiver stats e der erro (primeira carga), mostra erro tela cheia
     if (_userStats == null && _error != null) {
       return Center(
-        child: Text(
-          _error!,
-          style: const TextStyle(color: Colors.white),
-        ),
+        child: Text(_error!, style: const TextStyle(color: Colors.white)),
       );
     }
 
@@ -184,7 +194,7 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
 
     if (hasPredictions) {
       itemCount += _predictions.length;
-      if (_isLoading) itemCount++; // Loader do scroll infinito
+      if (_isLoading && _page > 1) itemCount++; // Loader do scroll infinito
     } else {
       itemCount++; // Item de status (Vazio, Erro ou Loading) abaixo do header
     }
@@ -199,179 +209,186 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
         }
         return false;
       },
-      child: ListView.builder(
-        padding: const EdgeInsets.all(8),
-        itemCount: itemCount,
-        itemBuilder: (context, index) {
-          // 1. Header de Estatísticas
-          if (hasStats && index == 0) {
-            return _buildStatsHeader(_userStats!);
-          }
-
-          // Ajusta o índice considerando o header
-          final contentIndex = hasStats ? index - 1 : index;
-
-          // 2. Estado sem palpites (abaixo do header)
-          if (!hasPredictions) {
-            if (_isLoading) {
-              return const Padding(
-                padding: EdgeInsets.only(top: 32.0),
-                child: Center(child: LoadingWidget()),
-              );
+      child: RefreshIndicator(
+        onRefresh: () => _loadPredictions(refresh: true),
+        child: ListView.builder(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(8),
+          itemCount: itemCount,
+          itemBuilder: (context, index) {
+            // 1. Header de Estatísticas
+            if (hasStats && index == 0) {
+              return _buildStatsHeader(_userStats!);
             }
-            if (_error != null) {
-              return Padding(
-                padding: const EdgeInsets.only(top: 32.0),
-                child: Center(
-                  child: Text(
-                    _error!,
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                ),
-              );
-            }
-            return const Padding(
-              padding: EdgeInsets.only(top: 32.0),
-              child: Center(
-                child: Text(
-                  'Nenhum palpite encontrado.',
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-            );
-          }
 
-          // 3. Loader do Scroll Infinito
-          if (contentIndex == _predictions.length) {
-            return const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Center(child: LoadingWidget(size: 30)),
-            );
-          }
+            // Ajusta o índice considerando o header
+            final contentIndex = hasStats ? index - 1 : index;
 
-          // 4. Item da Lista de Palpites
-          final prediction = _predictions[contentIndex];
-          final match = prediction.match;
-
-          return GlassCard(
-            margin: const EdgeInsets.symmetric(vertical: 4),
-            child: ListTile(
-              title: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Flexible(
-                          child: Text(
-                            match.homeTeamName,
-                            textAlign: TextAlign.end,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(left: 8.0),
-                          child: match.homeTeamCrest != null
-                              ? AppNetworkImage(
-                                  url: match.homeTeamCrest!,
-                                  width: 20,
-                                  height: 20,
-                                  errorWidget: const Icon(
-                                    Icons.sports_soccer,
-                                    size: 20,
-                                  ),
-                                )
-                              : const Icon(Icons.sports_soccer, size: 20),
-                        ),
-                      ],
+            // 2. Estado sem palpites (abaixo do header)
+            if (!hasPredictions) {
+              if (_isLoading) {
+                return const Padding(
+                  padding: EdgeInsets.only(top: 32.0),
+                  child: Center(child: LoadingWidget()),
+                );
+              }
+              if (_error != null) {
+                return Padding(
+                  padding: const EdgeInsets.only(top: 32.0),
+                  child: Center(
+                    child: Text(
+                      _error!,
+                      style: const TextStyle(color: Colors.white),
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                    child: Column(
-                      children: [
-                        const Text('Palpite', style: TextStyle(fontSize: 10)),
-                        Text(
-                          '${prediction.homeScore} x ${prediction.awayScore}',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
+                );
+              }
+              return const Padding(
+                padding: EdgeInsets.only(top: 32.0),
+                child: Center(
+                  child: Text(
+                    'Nenhum palpite encontrado.',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              );
+            }
+
+            // 3. Loader do Scroll Infinito
+            if (contentIndex == _predictions.length) {
+              return const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Center(child: LoadingWidget(size: 30)),
+              );
+            }
+
+            // 4. Item da Lista de Palpites
+            final prediction = _predictions[contentIndex];
+            final match = prediction.match;
+
+            return GlassCard(
+              margin: const EdgeInsets.symmetric(vertical: 4),
+              child: ListTile(
+                title: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              match.homeTeamName,
+                              textAlign: TextAlign.end,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
-                        ),
-                        if (match.homeScore != null &&
-                            match.awayScore != null) ...[
-                          const SizedBox(height: 4),
-                          const Text('Placar', style: TextStyle(fontSize: 10)),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8.0),
+                            child: match.homeTeamCrest != null
+                                ? AppNetworkImage(
+                                    url: match.homeTeamCrest!,
+                                    width: 20,
+                                    height: 20,
+                                    errorWidget: const Icon(
+                                      Icons.sports_soccer,
+                                      size: 20,
+                                    ),
+                                  )
+                                : const Icon(Icons.sports_soccer, size: 20),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                      child: Column(
+                        children: [
+                          const Text('Palpite', style: TextStyle(fontSize: 10)),
                           Text(
-                            '${match.homeScore} x ${match.awayScore}',
+                            '${prediction.homeScore} x ${prediction.awayScore}',
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
                             ),
                           ),
+                          if (match.homeScore != null &&
+                              match.awayScore != null) ...[
+                            const SizedBox(height: 4),
+                            const Text(
+                              'Placar',
+                              style: TextStyle(fontSize: 10),
+                            ),
+                            Text(
+                              '${match.homeScore} x ${match.awayScore}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
                         ],
-                      ],
-                    ),
-                  ),
-                  Expanded(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(right: 8.0),
-                          child: match.awayTeamCrest != null
-                              ? AppNetworkImage(
-                                  url: match.awayTeamCrest!,
-                                  width: 20,
-                                  height: 20,
-                                  errorWidget: const Icon(
-                                    Icons.sports_soccer,
-                                    size: 20,
-                                  ),
-                                )
-                              : const Icon(Icons.sports_soccer, size: 20),
-                        ),
-                        Flexible(
-                          child: Text(
-                            match.awayTeamName,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              subtitle: Center(
-                child: Column(
-                  children: [
-                    const SizedBox(height: 4),
-                    Text(
-                      _formatMatchday(match.stage, match.matchday),
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    Text(_formatDate(match.utcDate)),
-                    const SizedBox(height: 4),
-                    match.status == 'IN_PLAY'
-                        ? const BlinkingLiveIndicator()
-                        : Text(_translateStatus(match.status)),
-                    if (prediction.pointsEarned != null)
-                      Text(
-                        'Pontos ganhos: ${prediction.pointsEarned}',
-                        style: TextStyle(
-                          color: prediction.pointsEarned == 0
-                              ? Colors.red
-                              : Colors.green,
-                          fontWeight: FontWeight.bold,
-                        ),
                       ),
+                    ),
+                    Expanded(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(right: 8.0),
+                            child: match.awayTeamCrest != null
+                                ? AppNetworkImage(
+                                    url: match.awayTeamCrest!,
+                                    width: 20,
+                                    height: 20,
+                                    errorWidget: const Icon(
+                                      Icons.sports_soccer,
+                                      size: 20,
+                                    ),
+                                  )
+                                : const Icon(Icons.sports_soccer, size: 20),
+                          ),
+                          Flexible(
+                            child: Text(
+                              match.awayTeamName,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
+                subtitle: Center(
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 4),
+                      Text(
+                        _formatMatchday(match.stage, match.matchday),
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      Text(_formatDate(match.utcDate)),
+                      const SizedBox(height: 4),
+                      match.status == 'IN_PLAY'
+                          ? const BlinkingLiveIndicator()
+                          : Text(_translateStatus(match.status)),
+                      if (prediction.pointsEarned != null)
+                        Text(
+                          'Pontos ganhos: ${prediction.pointsEarned}',
+                          style: TextStyle(
+                            color: prediction.pointsEarned == 0
+                                ? Colors.red
+                                : Colors.green,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
@@ -406,8 +423,10 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
                                 right: 16,
                                 child: SafeArea(
                                   child: IconButton(
-                                    icon: const Icon(Icons.close,
-                                        color: Colors.white),
+                                    icon: const Icon(
+                                      Icons.close,
+                                      color: Colors.white,
+                                    ),
                                     onPressed: () =>
                                         Navigator.of(context).pop(),
                                   ),
@@ -441,9 +460,16 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
             children: [
               _buildStatItem('Pontos', '${stats.points ?? 0}', isMain: true),
               _buildStatItem('Total', '${stats.total}'),
-              _buildStatItem('Exatos', '${stats.exactScore}', color: Colors.greenAccent),
-              _buildStatItem('Erros', '${stats.errors}',
-                  color: Colors.redAccent),
+              _buildStatItem(
+                'Exatos',
+                '${stats.exactScore}',
+                color: Colors.greenAccent,
+              ),
+              _buildStatItem(
+                'Erros',
+                '${stats.errors}',
+                color: Colors.redAccent,
+              ),
             ],
           ),
           const Divider(height: 24),
@@ -460,8 +486,12 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
     );
   }
 
-  Widget _buildStatItem(String label, String value,
-      {bool isMain = false, Color? color}) {
+  Widget _buildStatItem(
+    String label,
+    String value, {
+    bool isMain = false,
+    Color? color,
+  }) {
     return Column(
       children: [
         Text(
