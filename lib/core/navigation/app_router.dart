@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:football_predictions/core/auth/auth_notifier.dart';
 import 'package:football_predictions/features/auth/presentation/pages/login_page.dart';
 import 'package:football_predictions/features/auth/presentation/pages/splash_page.dart';
+import 'package:football_predictions/features/auth/presentation/pages/edit_profile_page.dart';
+import 'package:football_predictions/features/competitions/presentation/pages/competitions_page.dart';
 import 'package:football_predictions/features/home/presentation/pages/home_page.dart';
 import 'package:football_predictions/features/home/presentation/pages/league_details_page.dart';
+import 'package:football_predictions/features/matches/presentation/pages/matches_page.dart';
+import 'package:football_predictions/features/predictions/presentation/pages/user_predictions_page.dart';
 import 'package:go_router/go_router.dart';
 
 GoRouter appRouter(AuthNotifier authNotifier) {
@@ -12,8 +16,9 @@ GoRouter appRouter(AuthNotifier authNotifier) {
     refreshListenable: authNotifier,
     redirect: (BuildContext context, GoRouterState state) {
       final isInitialized = authNotifier.isInitialized;
-      final isLoggedIn = authNotifier.user != null && authNotifier.backendUser != null;
-      
+      final isLoggedIn =
+          authNotifier.user != null && authNotifier.backendUser != null;
+
       final isSplash = state.matchedLocation == '/';
       final isLogin = state.matchedLocation == '/entrar';
 
@@ -29,8 +34,8 @@ GoRouter appRouter(AuthNotifier authNotifier) {
       if (!isInitialized) {
         // Se não estamos na raiz (Splash), salvamos onde o usuário queria ir e vamos para a Splash
         if (!isSplash) {
-           authNotifier.setRedirectPath(state.uri.toString());
-           return '/';
+          authNotifier.setRedirectPath(state.uri.toString());
+          return '/';
         }
         return null; // Já estamos na Splash, aguarda.
       }
@@ -38,7 +43,7 @@ GoRouter appRouter(AuthNotifier authNotifier) {
       // 2. Inicializou e está na Splash (Raiz)
       if (isSplash && isInitialized) {
         final originalPath = authNotifier.redirectPath;
-        
+
         // Se tinha um destino salvo (e não era a própria raiz), vai pra lá
         if (originalPath != null && originalPath != '/') {
           return originalPath;
@@ -49,13 +54,13 @@ GoRouter appRouter(AuthNotifier authNotifier) {
 
       // 3. Se não está logado e tenta acessar página protegida (nem Splash nem Login)
       if (!isLoggedIn && !isLogin && !isSplash) {
-         authNotifier.setRedirectPath(state.uri.toString());
+        authNotifier.setRedirectPath(state.uri.toString());
         return '/entrar';
       }
 
       // 4. Se está logado e tenta acessar Login, vai para Home
       if (isLoggedIn && isLogin) {
-         final originalPath = authNotifier.redirectPath;
+        final originalPath = authNotifier.redirectPath;
         if (originalPath != null && originalPath != '/entrar') {
           return originalPath;
         }
@@ -76,17 +81,43 @@ GoRouter appRouter(AuthNotifier authNotifier) {
         builder: (context, state) => const LoginPage(),
       ),
       GoRoute(
+        path: '/perfil',
+        name: 'EditProfile',
+        builder: (context, state) => const EditProfilePage(),
+      ),
+      GoRoute(
         path: '/ligas',
         name: 'Home',
-        builder: (context, state) =>  const HomePage(),
+        builder: (context, state) => const HomePage(),
       ),
       GoRoute(
         path: '/liga/:id',
         name: 'LeagueDetails',
         builder: (context, state) {
-         final leagueId = state.pathParameters['id']!;
+          final leagueId = state.pathParameters['id']!;
           return LeagueDetailsPage(leagueId: leagueId);
         },
+        routes: [
+          GoRoute(
+            path: '/usuario/:userId',
+            name: 'Predictions',
+            builder: (context, state) => UserPredictionsPage(
+              userId: state.pathParameters['userId']!,
+              leagueId: state.pathParameters['id']!,
+            ),
+          ),
+        ],
+      ),
+      GoRoute(
+        path: '/competicoes',
+        name: 'Competitions',
+        builder: (context, state) => const CompetitionsPage(),
+      ),
+      GoRoute(
+        path: '/competicao/:id/partidas',
+        name: 'Matches',
+        builder: (context, state) =>
+            MatchesPage(competitionId: int.parse(state.pathParameters['id']!)),
       ),
     ],
   );

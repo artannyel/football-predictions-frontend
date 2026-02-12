@@ -2,9 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:football_predictions/core/auth/auth_notifier.dart';
 import 'package:football_predictions/core/presentation/widgets/app_network_image.dart';
 import 'package:football_predictions/core/presentation/widgets/loading_widget.dart';
-import 'package:football_predictions/features/auth/data/repositories/auth_repository.dart';
-import 'package:football_predictions/features/auth/presentation/pages/edit_profile_page.dart';
-import 'package:football_predictions/features/competitions/presentation/pages/competitions_page.dart';
 import 'package:football_predictions/features/home/data/models/league_model.dart';
 import 'package:football_predictions/features/home/data/repositories/leagues_repository.dart';
 import 'package:football_predictions/features/home/presentation/pages/create_league_page.dart';
@@ -103,20 +100,15 @@ class _HomePageState extends State<HomePage> {
                   title: const Text('Editar Perfil'),
                   onTap: () async {
                     Navigator.pop(context); // Fecha o drawer
-                    await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const EditProfilePage(),
-                      ),
-                    );
+                    context.go('/perfil');
                   },
                 ),
                 ListTile(
                   leading: const Icon(Icons.logout),
                   title: const Text('Sair'),
-                  onTap: () {
+                  onTap: () async {
                     Navigator.pop(context);
-                    context.read<AuthRepository>().logout();
+                    await context.read<AuthNotifier>().logout();
                   },
                 ),
               ],
@@ -126,9 +118,7 @@ class _HomePageState extends State<HomePage> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (context) => const CompetitionsPage()),
-          );
+          context.go('/competicoes');
         },
         label: const Text('Ver Competições'),
         icon: const Icon(Icons.sports_soccer),
@@ -181,11 +171,7 @@ class _HomePageState extends State<HomePage> {
                         const SizedBox(height: 8),
                         TextButton(
                           onPressed: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (context) => const CompetitionsPage(),
-                              ),
-                            );
+                            context.go('/competicoes');
                           },
                           child: const Text('Explorar competições'),
                         ),

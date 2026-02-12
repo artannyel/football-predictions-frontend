@@ -11,13 +11,11 @@ import 'package:provider/provider.dart';
 
 class UserPredictionsPage extends StatefulWidget {
   final String userId;
-  final String userName;
   final String leagueId;
 
   const UserPredictionsPage({
     super.key,
     required this.userId,
-    required this.userName,
     required this.leagueId,
   });
 
@@ -129,7 +127,9 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Palpites de ${widget.userName}'),
+        title: Text(_userHistory != null
+            ? 'Palpites de ${_userHistory!.name}'
+            : 'Palpites'),
         backgroundColor: const Color(0xFF1B5E20),
         foregroundColor: Colors.white,
       ),

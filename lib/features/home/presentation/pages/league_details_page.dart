@@ -14,7 +14,6 @@ import 'package:football_predictions/features/predictions/data/models/prediction
 import 'package:football_predictions/features/predictions/data/repositories/predictions_repository.dart';
 import 'package:football_predictions/features/predictions/presentation/pages/prediction_page.dart';
 import 'package:football_predictions/features/home/presentation/pages/edit_league_page.dart';
-import 'package:football_predictions/features/predictions/presentation/pages/user_predictions_page.dart';
 import 'package:go_router/go_router.dart';
 import '../widgets/glass_card.dart';
 import 'package:provider/provider.dart';
@@ -348,6 +347,49 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
                     return const LoadingWidget();
                   }
                   if (snapshot.hasError) {
+                    if (snapshot.error.toString().contains('403')) {
+                      return Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: GlassCard(
+                            padding: const EdgeInsets.all(24),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.lock_outline,
+                                  size: 64,
+                                  color: Colors.white,
+                                ),
+                                const SizedBox(height: 16),
+                                const Text(
+                                  'Acesso Negado',
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                const Text(
+                                  'Você não tem permissão para visualizar esta liga.',
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 24),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: FilledButton(
+                                    onPressed: () => context.go('/ligas'),
+                                    child: const Text(
+                                      'VOLTAR PARA MINHAS LIGAS',
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    }
                     return Center(
                       child: Text(
                         'Erro ao carregar detalhes: ${snapshot.error.toString().replaceAll('Exception: ', '')}',
@@ -785,14 +827,8 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
                       onSelectChanged: isCurrentUser
                           ? null
                           : (_) {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => UserPredictionsPage(
-                                    userId: member.id,
-                                    userName: member.name,
-                                    leagueId: widget.leagueId,
-                                  ),
-                                ),
+                              context.go(
+                                '/liga/${widget.leagueId}/usuario/${member.id}',
                               );
                             },
                       color: isCurrentUser
@@ -1003,9 +1039,10 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Center(
-                        child: match.status == 'IN_PLAY'
-                            ? const BlinkingLiveIndicator()
-                            : Text(_translateStatus(match.status))),
+                      child: match.status == 'IN_PLAY'
+                          ? const BlinkingLiveIndicator()
+                          : Text(_translateStatus(match.status)),
+                    ),
                     const SizedBox(height: 4),
                     Text(_translateStage(match.stage)),
                     if (match.group != null)

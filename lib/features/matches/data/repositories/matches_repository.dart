@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:football_predictions/dio_client.dart';
+import 'package:football_predictions/features/competitions/data/models/competition_model.dart';
 import '../models/match_model.dart';
 
 class MatchesRepository {
@@ -8,7 +9,7 @@ class MatchesRepository {
 
   MatchesRepository({required this.dioClient});
 
-  Future<List<MatchModel>> getMatches({int? competitionId}) async {
+  Future<({CompetitionModel competition, List<MatchModel> matches})> getMatches({int? competitionId}) async {
     try {
       final String endpoint = competitionId != null
           ? 'competitions/$competitionId/matches'
@@ -16,10 +17,12 @@ class MatchesRepository {
       final response = await dioClient.dio.get(endpoint);
 
       if (response.statusCode == 200 && response.data != null) {
+        final competition = CompetitionModel.fromJson(response.data['competition']);
         final List<dynamic> matchesList = response.data['data'];
-        return matchesList.map((json) => MatchModel.fromJson(json)).toList();
+        final matches = matchesList.map((json) => MatchModel.fromJson(json)).toList();
+        return (competition: competition, matches: matches);
       }
-      return [];
+      throw Exception('Resposta inválida do servidor');
     } on DioException catch (e) {
       debugPrint('Erro ao carregar partidas: ${e.message}');
       throw Exception('Falha ao carregar partidas: ${e.message}');

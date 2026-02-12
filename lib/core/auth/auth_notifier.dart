@@ -98,6 +98,17 @@ class AuthNotifier extends ChangeNotifier {
     _authStateSubscription?.resume();
   }
 
+  Future<void> logout() async {
+    if (_authRepository != null) {
+      await _authRepository!.logout();
+    } else {
+      await _auth.signOut();
+    }
+    _user = null;
+    _backendUser = null;
+    notifyListeners();
+  }
+
   @override
   void dispose() {
     _authStateSubscription?.cancel();

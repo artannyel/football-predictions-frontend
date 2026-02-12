@@ -5,6 +5,7 @@ import 'package:football_predictions/core/presentation/widgets/loading_widget.da
 import 'package:football_predictions/features/auth/data/repositories/auth_repository.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
@@ -30,6 +31,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
   void dispose() {
     _nameController.dispose();
     super.dispose();
+  }
+
+  void _onBackPage(BuildContext context) {
+    context.go('/ligas');
   }
 
   Future<void> _updateProfile() async {
@@ -69,45 +74,56 @@ class _EditProfilePageState extends State<EditProfilePage> {
   Widget build(BuildContext context) {
     final user = context.read<AuthRepository>().backendUser;
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Editar Perfil')),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              ImagePickerWidget(
-                image: _selectedImage,
-                initialUrl: user?.photoUrl,
-                onImageSelected: (file) => setState(() {
-                  _selectedImage = file;
-                }),
-              ),
-              const SizedBox(height: 24),
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Nome',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.person),
+    return PopScope(
+      onPopInvokedWithResult: (didPop, _) {
+        _onBackPage(context);
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Editar Perfil'),
+          leading: IconButton(
+            onPressed: () => _onBackPage(context),
+            icon: const Icon(Icons.arrow_back_rounded),
+          ),
+        ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                ImagePickerWidget(
+                  image: _selectedImage,
+                  initialUrl: user?.photoUrl,
+                  onImageSelected: (file) => setState(() {
+                    _selectedImage = file;
+                  }),
                 ),
-                validator: (value) => value == null || value.isEmpty
-                    ? 'Por favor, insira seu nome'
-                    : null,
-              ),
-              const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: _isLoading
-                    ? const Center(child: LoadingWidget())
-                    : FilledButton(
-                        onPressed: _updateProfile,
-                        child: const Text('SALVAR ALTERAÇÕES'),
-                      ),
-              ),
-            ],
+                const SizedBox(height: 24),
+                TextFormField(
+                  controller: _nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Nome',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.person),
+                  ),
+                  validator: (value) => value == null || value.isEmpty
+                      ? 'Por favor, insira seu nome'
+                      : null,
+                ),
+                const SizedBox(height: 32),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: _isLoading
+                      ? const Center(child: LoadingWidget())
+                      : FilledButton(
+                          onPressed: _updateProfile,
+                          child: const Text('SALVAR ALTERAÇÕES'),
+                        ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
