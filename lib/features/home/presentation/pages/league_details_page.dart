@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -37,6 +38,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
   int _rankingPage = 1;
   int _rankingLastPage = 1;
   bool _isRankingLoading = false;
+  bool _isSilentRankingLoading = false;
   String? _rankingError;
   String? _currentUserId;
 
@@ -45,10 +47,12 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
   int _historyPage = 1;
   int _historyLastPage = 1;
   bool _isHistoryLoading = false;
+  bool _isSilentHistoryLoading = false;
   String? _historyError;
 
   late ConfettiController _confettiController;
   bool _confettiPlayed = false;
+  Timer? _liveUpdateTimer;
 
   @override
   void initState() {
@@ -69,27 +73,35 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
     });
 
     _rulesFuture = repo.getRules();
+    _startLiveTimer();
   }
 
   @override
   void dispose() {
+    _liveUpdateTimer?.cancel();
     _confettiController.dispose();
     super.dispose();
   }
 
-  Future<void> _loadRanking({bool refresh = false}) async {
-    if (_isRankingLoading) return;
+  Future<void> _loadRanking({bool refresh = false, bool silent = false}) async {
+    if (_isRankingLoading || _isSilentRankingLoading) return;
 
     if (refresh) {
       _rankingPage = 1;
-      _rankings.clear();
-      _rankingError = null;
       _rankingLastPage = 1;
+      if (!silent) {
+        _rankings.clear();
+        _rankingError = null;
+      }
     } else if (_rankingPage > _rankingLastPage) {
       return;
     }
 
-    setState(() => _isRankingLoading = true);
+    if (silent) {
+      _isSilentRankingLoading = true;
+    } else {
+      setState(() => _isRankingLoading = true);
+    }
 
     try {
       final repo = context.read<LeaguesRepository>();
@@ -100,18 +112,30 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
 
       if (mounted) {
         setState(() {
+          if (refresh) {
+            _rankings.clear();
+            _rankingError = null;
+          }
           _rankings.addAll(result.rankings);
           _rankingLastPage = result.lastPage;
           _rankingPage++;
-          _isRankingLoading = false;
+          if (silent) {
+            _isSilentRankingLoading = false;
+          } else {
+            _isRankingLoading = false;
+          }
         });
         _checkConfetti();
       }
     } catch (e) {
       if (mounted) {
         setState(() {
-          _rankingError = e.toString().replaceAll('Exception: ', '');
-          _isRankingLoading = false;
+          if (!silent) {
+            _rankingError = e.toString().replaceAll('Exception: ', '');
+            _isRankingLoading = false;
+          } else {
+            _isSilentRankingLoading = false;
+          }
         });
       }
     }
@@ -137,19 +161,25 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
     } catch (_) {}
   }
 
-  Future<void> _loadHistoryPredictions({bool refresh = false}) async {
-    if (_isHistoryLoading) return;
+  Future<void> _loadHistoryPredictions({bool refresh = false, bool silent = false}) async {
+    if (_isHistoryLoading || _isSilentHistoryLoading) return;
 
     if (refresh) {
       _historyPage = 1;
-      _historyPredictions.clear();
-      _historyError = null;
       _historyLastPage = 1;
+      if (!silent) {
+        _historyPredictions.clear();
+        _historyError = null;
+      }
     } else if (_historyPage > _historyLastPage) {
       return;
     }
 
-    setState(() => _isHistoryLoading = true);
+    if (silent) {
+      _isSilentHistoryLoading = true;
+    } else {
+      setState(() => _isHistoryLoading = true);
+    }
 
     try {
       final repo = context.read<PredictionsRepository>();
@@ -160,19 +190,52 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
 
       if (mounted) {
         setState(() {
+          if (refresh) {
+            _historyPredictions.clear();
+            _historyError = null;
+          }
           _historyPredictions.addAll(result.predictions);
           _historyLastPage = result.lastPage;
           _historyPage++;
-          _isHistoryLoading = false;
+          if (silent) {
+            _isSilentHistoryLoading = false;
+          } else {
+            _isHistoryLoading = false;
+          }
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
-          _historyError = e.toString().replaceAll('Exception: ', '');
-          _isHistoryLoading = false;
+          if (!silent) {
+            _historyError = e.toString().replaceAll('Exception: ', '');
+            _isHistoryLoading = false;
+          } else {
+            _isSilentHistoryLoading = false;
+          }
         });
       }
+    }
+  }
+
+  void _startLiveTimer() {
+    _liveUpdateTimer?.cancel();
+    _liveUpdateTimer = Timer.periodic(const Duration(minutes: 1), (timer) {
+      _checkForLiveMatchesAndUpdate();
+    });
+  }
+
+  void _checkForLiveMatchesAndUpdate() {
+    // Verifica se há algum jogo "IN_PLAY" (Ao vivo) no histórico carregado
+    final hasLiveMatch = _historyPredictions.any(
+      (p) => p.match.status == 'IN_PLAY',
+    );
+
+    if (hasLiveMatch) {
+      _loadRanking(refresh: true, silent: true);
+      _loadHistoryPredictions(refresh: true, silent: true);
+      // O setState fará o rebuild, atualizando também o FutureBuilder dos palpites ativos
+      if (mounted) setState(() {});
     }
   }
 
