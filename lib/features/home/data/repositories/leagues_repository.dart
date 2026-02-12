@@ -118,11 +118,12 @@ class LeaguesRepository {
     }
   }
 
-  Future<void> joinLeague(String code) async {
+  Future<LeagueModel> joinLeague(String code) async {
     try {
-      await dioClient.dio.post('leagues/join', data: {
+      final response = await dioClient.dio.post('leagues/join', data: {
         'code': code,
       });
+      return LeagueModel.fromJson(response.data['data']);
     } on DioException catch (e) {
       final errorMessage = e.response?.data is Map
           ? (e.response?.data['message'] ?? e.response?.data['error'] ?? 'Erro ao entrar na liga')

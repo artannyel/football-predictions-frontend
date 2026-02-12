@@ -246,7 +246,7 @@ class _HomePageState extends State<HomePage> {
   void _showAddOptions(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      builder: (context) {
+      builder: (modalContext) {
         return SafeArea(
           child: Wrap(
             children: [
@@ -254,7 +254,7 @@ class _HomePageState extends State<HomePage> {
                 leading: const Icon(Icons.add_circle_outline),
                 title: const Text('Criar nova liga'),
                 onTap: () async {
-                  Navigator.pop(context);
+                  Navigator.pop(modalContext);
                   final result = await Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (context) => const CreateLeaguePage(),
@@ -269,12 +269,17 @@ class _HomePageState extends State<HomePage> {
                 leading: const Icon(Icons.input),
                 title: const Text('Entrar com código'),
                 onTap: () async {
-                  Navigator.pop(context);
+                  Navigator.pop(modalContext);
                   final result = await showDialog(
                     context: context,
                     builder: (context) => const _JoinLeagueDialog(),
                   );
-                  if (result == true) {
+                  if (result is LeagueModel) {
+                    _refreshLeagues();
+                    if (mounted) {
+                      context.go('/liga/${result.id}');
+                    }
+                  } else if (result == true) {
                     _refreshLeagues();
                   }
                 },
@@ -311,9 +316,9 @@ class _JoinLeagueDialogState extends State<_JoinLeagueDialog> {
     setState(() => _isLoading = true);
 
     try {
-      await context.read<LeaguesRepository>().joinLeague(code);
+      final league = await context.read<LeaguesRepository>().joinLeague(code);
       if (mounted) {
-        Navigator.pop(context, true);
+        Navigator.pop(context, league);
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('Você entrou na liga!')));
