@@ -152,6 +152,21 @@ class LeaguesRepository {
     }
   }
 
+  Future<MatchModel> getMatch(int id) async {
+    try {
+      final response = await dioClient.dio.get('matches/$id');
+      return MatchModel.fromJson(response.data['data']);
+    } on DioException catch (e) {
+      debugPrint('Erro ao carregar partida: ${e.response?.data['message']}');
+      final errorMessage = e.response?.data is Map
+          ? (e.response?.data['message'] ?? e.response?.data['error'] ?? 'Erro ao carregar partida')
+          : 'Erro ao carregar partida (${e.response?.statusCode})';
+      throw Exception(errorMessage);
+    } catch (e) {
+      throw Exception('Falha ao carregar partida: $e');
+    }
+  }
+
   Future<LeagueDetailsModel> getLeagueDetails(String id) async {
     try {
       final response = await dioClient.dio.get('leagues/$id');

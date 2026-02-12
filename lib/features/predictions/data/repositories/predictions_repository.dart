@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:football_predictions/dio_client.dart';
 import 'package:football_predictions/features/auth/data/models/user_model.dart';
 import 'package:football_predictions/features/home/data/models/league_ranking_model.dart';
@@ -24,6 +25,11 @@ class PredictionsRepository {
           'league_id': leagueId,
         },
       );
+    } on DioException catch (e) {
+      final errorMessage = e.response?.data is Map
+          ? (e.response?.data['message'] ?? e.response?.data['error'] ?? 'Erro ao salvar palpite')
+          : 'Erro ao salvar palpite (${e.response?.statusCode})';
+      throw Exception(errorMessage);
     } catch (e) {
       throw Exception('Falha ao salvar palpite: $e');
     }
@@ -40,6 +46,11 @@ class PredictionsRepository {
       );
       final List<dynamic> data = response.data['data'];
       return data.map((json) => PredictionModel.fromJson(json)).toList();
+    } on DioException catch (e) {
+      final errorMessage = e.response?.data is Map
+          ? (e.response?.data['message'] ?? e.response?.data['error'] ?? 'Erro ao carregar palpites ativos')
+          : 'Erro ao carregar palpites ativos (${e.response?.statusCode})';
+      throw Exception(errorMessage);
     } catch (e) {
       throw Exception('Falha ao carregar palpites ativos: $e');
     }
@@ -66,6 +77,11 @@ class PredictionsRepository {
             .toList(),
         lastPage: (meta['last_page'] as int?) ?? 1,
       );
+    } on DioException catch (e) {
+      final errorMessage = e.response?.data is Map
+          ? (e.response?.data['message'] ?? e.response?.data['error'] ?? 'Erro ao carregar histórico de palpites')
+          : 'Erro ao carregar histórico de palpites (${e.response?.statusCode})';
+      throw Exception(errorMessage);
     } catch (e) {
       throw Exception('Falha ao carregar histórico de palpites: $e');
     }
@@ -75,6 +91,11 @@ class PredictionsRepository {
     try {
       final response = await dioClient.dio.get('predictions/$id');
       return PredictionModel.fromJson(response.data['data']);
+    } on DioException catch (e) {
+      final errorMessage = e.response?.data is Map
+          ? (e.response?.data['message'] ?? e.response?.data['error'] ?? 'Erro ao carregar palpite')
+          : 'Erro ao carregar palpite (${e.response?.statusCode})';
+      throw Exception(errorMessage);
     } catch (e) {
       throw Exception('Falha ao carregar palpite: $e');
     }
@@ -119,6 +140,11 @@ class PredictionsRepository {
         userStats: userStats,
         userModel: userModel,
       );
+    } on DioException catch (e) {
+      final errorMessage = e.response?.data is Map
+          ? (e.response?.data['message'] ?? e.response?.data['error'] ?? 'Erro ao carregar palpites do usuário')
+          : 'Erro ao carregar palpites do usuário (${e.response?.statusCode})';
+      throw Exception(errorMessage);
     } catch (e) {
       throw Exception('Falha ao carregar palpites do usuário: $e');
     }

@@ -10,7 +10,10 @@ class DioClient {
           defaultValue: 'http://192.168.0.11/'),
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 10),
-      headers: {'Content-Type': 'application/json'},
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
     );
 
     _dio.interceptors.add(

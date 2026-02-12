@@ -8,6 +8,7 @@ import 'package:football_predictions/features/home/presentation/pages/home_page.
 import 'package:football_predictions/features/home/presentation/pages/league_details_page.dart';
 import 'package:football_predictions/features/matches/presentation/pages/matches_page.dart';
 import 'package:football_predictions/features/predictions/presentation/pages/user_predictions_page.dart';
+import 'package:football_predictions/features/predictions/presentation/pages/prediction_page.dart';
 import 'package:go_router/go_router.dart';
 
 GoRouter appRouter(AuthNotifier authNotifier) {
@@ -104,6 +105,17 @@ GoRouter appRouter(AuthNotifier authNotifier) {
             builder: (context, state) => UserPredictionsPage(
               userId: state.pathParameters['userId']!,
               leagueId: state.pathParameters['id']!,
+            ),
+          ),
+          GoRoute(
+            path: 'palpite/:matchId',
+            name: 'Prediction',
+            builder: (context, state) => PredictionPage(
+              leagueId: state.pathParameters['id']!,
+              matchId: int.parse(state.pathParameters['matchId']!),
+              predictionId: state.uri.queryParameters['predictionId'] != null
+                  ? int.parse(state.uri.queryParameters['predictionId']!)
+                  : null,
             ),
           ),
         ],

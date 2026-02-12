@@ -14,7 +14,6 @@ import 'package:football_predictions/features/home/data/models/rule_model.dart';
 import 'package:football_predictions/features/matches/data/models/match_model.dart';
 import 'package:football_predictions/features/predictions/data/models/prediction_model.dart';
 import 'package:football_predictions/features/predictions/data/repositories/predictions_repository.dart';
-import 'package:football_predictions/features/predictions/presentation/pages/prediction_page.dart';
 import 'package:football_predictions/features/home/presentation/pages/edit_league_page.dart';
 import 'package:go_router/go_router.dart';
 import '../widgets/glass_card.dart';
@@ -246,7 +245,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
   void _checkForLiveMatchesAndUpdate() {
     // Verifica se há algum jogo "IN_PLAY" (Ao vivo) no histórico carregado
     final hasLiveMatch = _historyPredictions.any(
-      (p) => p.match.status == 'IN_PLAY',
+      (p) => p.match.status == 'IN_PLAY' || p.match.status == 'PAUSED',
     );
 
     if (hasLiveMatch) {
@@ -1270,13 +1269,12 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
               margin: const EdgeInsets.symmetric(vertical: 4),
               child: ListTile(
                 onTap: () async {
-                  final result = await Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => PredictionPage(
-                        match: match,
-                        leagueId: widget.leagueId,
-                      ),
-                    ),
+                  final result = await context.pushNamed(
+                    'Prediction',
+                    pathParameters: {
+                      'id': widget.leagueId,
+                      'matchId': match.id.toString(),
+                    },
                   );
                   if (result == true) {
                     setState(() {});
@@ -1612,14 +1610,15 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
               child: ListTile(
                 onTap: isEditable
                     ? () async {
-                        final result = await Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => PredictionPage(
-                              match: match,
-                              leagueId: widget.leagueId,
-                              predictionId: prediction.id,
-                            ),
-                          ),
+                        final result = await context.pushNamed(
+                          'Prediction',
+                          pathParameters: {
+                            'id': widget.leagueId,
+                            'matchId': match.id.toString(),
+                          },
+                          queryParameters: {
+                            'predictionId': prediction.id.toString(),
+                          },
                         );
                         if (result == true) {
                           setState(() {});
