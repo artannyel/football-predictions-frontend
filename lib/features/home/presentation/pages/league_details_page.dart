@@ -35,7 +35,6 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
 
   // Ranking state
   final List<LeagueRankingModel> _rankings = [];
-  Map<String, int> _previousRanks = {};
   int _rankingPage = 1;
   int _rankingLastPage = 1;
   bool _isRankingLoading = false;
@@ -93,11 +92,6 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
     if (_isRankingLoading || _isSilentRankingLoading) return;
 
     if (refresh) {
-      // Salva o ranking atual antes de limpar/atualizar para calcular as diferenças
-      if (_rankings.isNotEmpty) {
-        _previousRanks = {for (var r in _rankings) r.id: r.rank};
-      }
-
       _rankingPage = 1;
       _rankingLastPage = 1;
       if (!silent) {
@@ -1105,7 +1099,6 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text('${member.rank}'),
-                              _buildRankChangeIndicator(member.id, member.rank),
                             ],
                           ),
                         ),
@@ -1195,42 +1188,6 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
               padding: EdgeInsets.all(16.0),
               child: Center(child: LoadingWidget(size: 30)),
             ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRankChangeIndicator(String userId, int currentRank) {
-    if (!_previousRanks.containsKey(userId)) return const SizedBox();
-
-    final prevRank = _previousRanks[userId]!;
-    final diff = prevRank - currentRank; // Positivo = subiu (ex: era 5, virou 3. 5-3=2)
-
-    if (diff == 0) return const SizedBox();
-
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.0, end: 1.0),
-      duration: const Duration(milliseconds: 600),
-      curve: Curves.elasticOut,
-      builder: (context, value, child) {
-        return Transform.scale(scale: value, child: child);
-      },
-      child: Row(
-        children: [
-          const SizedBox(width: 4),
-          Icon(
-            diff > 0 ? Icons.arrow_drop_up : Icons.arrow_drop_down,
-            color: diff > 0 ? Colors.green : Colors.red,
-            size: 18,
-          ),
-          Text(
-            diff.abs().toString(),
-            style: TextStyle(
-              color: diff > 0 ? Colors.green : Colors.red,
-              fontSize: 10,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
         ],
       ),
     );
