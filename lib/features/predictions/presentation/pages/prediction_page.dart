@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:football_predictions/core/presentation/widgets/app_network_image.dart';
 import 'package:football_predictions/core/presentation/widgets/loading_widget.dart';
 import 'package:football_predictions/features/matches/data/models/match_model.dart';
+import 'package:football_predictions/features/matches/data/models/match_stats_model.dart';
 import 'package:football_predictions/features/home/data/repositories/leagues_repository.dart';
 import 'package:football_predictions/features/predictions/data/repositories/predictions_repository.dart';
 import 'package:provider/provider.dart';
@@ -30,6 +31,7 @@ class _PredictionPageState extends State<PredictionPage> {
   bool _isLoading = false;
   bool _isFetching = false;
   MatchModel? _match;
+  MatchStatsModel? _stats;
   String? _errorMessage;
 
   @override
@@ -44,10 +46,18 @@ class _PredictionPageState extends State<PredictionPage> {
       _errorMessage = null;
     });
     try {
+      final leaguesRepo = context.read<LeaguesRepository>();
+
       // Carrega a partida
-      final match = await context.read<LeaguesRepository>().getMatch(
-        widget.matchId,
-      );
+      final match = await leaguesRepo.getMatch(widget.matchId);
+
+      // Tenta carregar as estatísticas (não impede o carregamento da página em caso de erro)
+      MatchStatsModel? stats;
+      try {
+        stats = await leaguesRepo.getMatchStats(widget.matchId);
+      } catch (e) {
+        debugPrint('Erro ao carregar estatísticas: $e');
+      }
 
       // Se tiver ID de palpite, carrega o palpite também
       if (widget.predictionId != null) {
@@ -66,7 +76,10 @@ class _PredictionPageState extends State<PredictionPage> {
       }
 
       if (mounted) {
-        setState(() => _match = match);
+        setState(() {
+          _match = match;
+          _stats = stats;
+        });
       }
     } on DioException catch (e) {
       if (mounted) {
@@ -238,6 +251,7 @@ class _PredictionPageState extends State<PredictionPage> {
               _buildTeamColumn(_match!.awayTeamName, _match!.awayTeamCrest),
             ],
           ),
+          _buildStats(),
           const SizedBox(height: 32),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -266,6 +280,99 @@ class _PredictionPageState extends State<PredictionPage> {
                                 : 'SALVAR PALPITE'),
                     ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStats() {
+    if (_stats == null || _stats!.total == 0) return const SizedBox(height: 16);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 24.0, horizontal: 8.0),
+      child: Column(
+        children: [
+          Text(
+            'Palpites da Comunidade (${_stats!.total})',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: SizedBox(
+              height: 24,
+              child: Row(
+                children: [
+                  if (_stats!.homeWinPercentage > 0)
+                    Expanded(
+                      flex: (_stats!.homeWinPercentage * 10).toInt(),
+                      child: Container(
+                        color: Colors.green,
+                        alignment: Alignment.center,
+                        child: Text(
+                          '${_stats!.homeWinPercentage}%',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  if (_stats!.drawPercentage > 0)
+                    Expanded(
+                      flex: (_stats!.drawPercentage * 10).toInt(),
+                      child: Container(
+                        color: Colors.grey,
+                        alignment: Alignment.center,
+                        child: Text(
+                          '${_stats!.drawPercentage}%',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  if (_stats!.awayWinPercentage > 0)
+                    Expanded(
+                      flex: (_stats!.awayWinPercentage * 10).toInt(),
+                      child: Container(
+                        color: Colors.blue,
+                        alignment: Alignment.center,
+                        child: Text(
+                          '${_stats!.awayWinPercentage}%',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                _match!.homeTeamName,
+                style: const TextStyle(fontSize: 10, color: Colors.green),
+              ),
+              const Text(
+                'Empate',
+                style: TextStyle(fontSize: 10, color: Colors.grey),
+              ),
+              Text(
+                _match!.awayTeamName,
+                style: const TextStyle(fontSize: 10, color: Colors.blue),
+              ),
+            ],
           ),
         ],
       ),

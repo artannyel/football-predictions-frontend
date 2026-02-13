@@ -7,6 +7,7 @@ import 'package:football_predictions/features/home/data/models/league_details_mo
 import 'package:football_predictions/features/home/data/models/league_model.dart';
 import 'package:football_predictions/features/home/data/models/league_ranking_model.dart';
 import 'package:football_predictions/features/home/data/models/rule_model.dart';
+import 'package:football_predictions/features/matches/data/models/match_stats_model.dart';
 
 class LeaguesRepository {
   final DioClient dioClient;
@@ -164,6 +165,15 @@ class LeaguesRepository {
       throw Exception(errorMessage);
     } catch (e) {
       throw Exception('Falha ao carregar partida: $e');
+    }
+  }
+
+  Future<MatchStatsModel> getMatchStats(int id) async {
+    try {
+      final response = await dioClient.dio.get('matches/$id/stats');
+      return MatchStatsModel.fromJson(response.data['data']);
+    } catch (e) {
+      throw Exception('Falha ao carregar estatísticas da partida: $e');
     }
   }
 
