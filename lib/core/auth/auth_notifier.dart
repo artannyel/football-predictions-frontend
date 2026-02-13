@@ -1,9 +1,12 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase;
 import 'package:football_predictions/features/auth/data/repositories/auth_repository.dart';
 import 'package:football_predictions/features/auth/data/models/user_model.dart';
+import 'package:onesignal_flutter/onesignal_flutter.dart';
+import 'package:football_predictions/core/utils/onesignal_stub.dart'
+    if (dart.library.js_interop) 'package:football_predictions/core/utils/onesignal_web.dart';
 
 class AuthNotifier extends ChangeNotifier {
   final firebase.FirebaseAuth _auth;
@@ -49,6 +52,28 @@ class AuthNotifier extends ChangeNotifier {
       }
 
       _user = firebaseUser;
+
+      // Integração OneSignal: Vincula o dispositivo ao ID do usuário
+      try {
+        if (kIsWeb) {
+          // Na Web, usamos o JS Interop (onesignal_web.dart)
+          if (_backendUser != null) {
+            oneSignalLoginWeb(_backendUser!.id.toString());
+          } else {
+            oneSignalLogoutWeb();
+          }
+        } else {
+          // No Mobile, usamos o plugin oficial
+          if (_backendUser != null) {
+            OneSignal.login(_backendUser!.id.toString());
+          } else {
+            OneSignal.logout();
+          }
+        }
+      } catch (e) {
+        debugPrint('Erro OneSignal: $e');
+      }
+
       _isInitialized = true;
       // Notifica o GoRouter sobre a mudança no estado de autenticação.
       notifyListeners();

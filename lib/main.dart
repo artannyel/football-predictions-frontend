@@ -15,8 +15,11 @@ import 'package:football_predictions/features/matches/data/repositories/matches_
 import 'package:football_predictions/features/predictions/data/repositories/predictions_repository.dart';
 import 'package:football_predictions/firebase_options_prod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:url_strategy/url_strategy.dart';
+import 'package:football_predictions/core/utils/onesignal_stub.dart'
+    if (dart.library.js_interop) 'package:football_predictions/core/utils/onesignal_web.dart';
 
 late final FirebaseAuth auth;
 
@@ -26,6 +29,26 @@ Future<void> initApp(FirebaseOptions? firebaseOptions) async {
   // Inicializa o Firebase usando as opções passadas por parâmetro
   final app = await Firebase.initializeApp(options: firebaseOptions);
   auth = FirebaseAuth.instanceFor(app: app);
+
+  // Inicialização do OneSignal
+  try {
+    const oneSignalAppId = String.fromEnvironment('ONESIGNAL_APP_ID');
+    debugPrint('Inicializando OneSignal com ID: $oneSignalAppId');
+
+    if (oneSignalAppId.isNotEmpty) {
+      if (kIsWeb) {
+        oneSignalInitWeb(oneSignalAppId);
+      } else {
+        OneSignal.Debug.setLogLevel(OSLogLevel.verbose);
+        OneSignal.initialize(oneSignalAppId);
+        OneSignal.Notifications.requestPermission(true);
+      }
+    } else {
+      debugPrint('AVISO: ONESIGNAL_APP_ID não foi encontrado ou está vazio.');
+    }
+  } catch (e) {
+    debugPrint('Erro ao inicializar OneSignal: $e');
+  }
 
   setPathUrlStrategy();
   GoRouter.optionURLReflectsImperativeAPIs = true;

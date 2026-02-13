@@ -34,6 +34,62 @@
   <title>Palpites de Futebol</title>
   <link rel="manifest" href="manifest.json">
   <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
+  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js"></script>
+  <script>
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+
+    // Função auxiliar para inicializar via Dart
+    window.flutterOneSignalInit = function(appId) {
+      window.OneSignalDeferred.push(function(OneSignal) {
+        console.log("OneSignal JS: Inicializando com ID " + appId);
+        var initPromise = OneSignal.init({
+          appId: appId,
+          allowLocalhostAsSecureOrigin: true,
+        });
+        // Captura erros de inicialização (como bloqueio de domínio)
+        if (initPromise && typeof initPromise.catch === 'function') {
+            initPromise.catch(function(e) {
+                console.error("OneSignal JS: Erro na inicialização (verifique o Dashboard): " + e);
+            });
+        }
+        OneSignal.Notifications.requestPermission();
+      });
+    };
+
+    // Função auxiliar para login via Dart
+    window.flutterOneSignalLogin = function(userId) {
+      window.OneSignalDeferred.push(function(OneSignal) {
+        if (OneSignal.User) {
+            try {
+                // Evita login desnecessário se já estiver logado
+                if (OneSignal.User.externalId === userId) {
+                    return;
+                }
+            } catch (e) {
+                console.warn("OneSignal JS: Erro ao ler externalId (ignorando): " + e);
+            }
+            
+            console.log("OneSignal JS: Realizando login para " + userId);
+            // O login retorna uma Promise, usamos .catch para evitar o erro "Uncaught (in promise)"
+            OneSignal.login(userId).catch(function(e) {
+                console.error("OneSignal JS: Erro ao realizar login (Promise): " + e);
+            });
+        } else {
+            console.warn("OneSignal JS: Objeto User não disponível.");
+        }
+      });
+    };
+
+    // Função auxiliar para logout via Dart
+    window.flutterOneSignalLogout = function() {
+      window.OneSignalDeferred.push(function(OneSignal) {
+        console.log("OneSignal JS: Realizando logout");
+        OneSignal.logout().catch(function(e) {
+            console.error("OneSignal JS: Erro ao realizar logout: " + e);
+        });
+      });
+    };
+  </script>
 </head>
 <body>
   <script src="flutter_bootstrap.js" async></script>
