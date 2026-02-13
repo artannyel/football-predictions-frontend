@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -53,7 +54,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
   late ConfettiController _confettiController;
   late ConfettiController _fireworksController;
   bool _confettiPlayed = false;
-  Timer? _liveUpdateTimer;
+  StreamSubscription? _firestoreSubscription;
 
   @override
   void initState() {
@@ -77,12 +78,18 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
     });
 
     _rulesFuture = repo.getRules();
-    _startLiveTimer();
+    
+    // Configura o listener do Firestore assim que tivermos os detalhes da liga (e o ID da competição)
+    _detailsFuture.then((league) {
+      if (mounted) {
+        _setupFirestoreListener(league.competition.id);
+      }
+    });
   }
 
   @override
   void dispose() {
-    _liveUpdateTimer?.cancel();
+    _firestoreSubscription?.cancel();
     _confettiController.dispose();
     _fireworksController.dispose();
     super.dispose();
@@ -229,25 +236,23 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
     }
   }
 
-  void _startLiveTimer() {
-    _liveUpdateTimer?.cancel();
-    _liveUpdateTimer = Timer.periodic(const Duration(minutes: 1), (timer) {
-      _checkForLiveMatchesAndUpdate();
+  void _setupFirestoreListener(int competitionId) {
+    _firestoreSubscription = FirebaseFirestore.instance
+        .collection('competition_updates')
+        .doc(competitionId.toString())
+        .snapshots()
+        .listen((snapshot) async {
+      // Random delay de 0 a 10 segundos (0 a 10000 ms) para evitar thundering herd
+      final delay = Random().nextInt(10000);
+      await Future.delayed(Duration(milliseconds: delay));
+
+      if (mounted) {
+        _loadRanking(refresh: true, silent: true);
+        _loadHistoryPredictions(refresh: true, silent: true);
+        // O setState fará o rebuild, atualizando também o FutureBuilder dos palpites ativos
+        setState(() {});
+      }
     });
-  }
-
-  void _checkForLiveMatchesAndUpdate() {
-    // Verifica se há algum jogo "IN_PLAY" (Ao vivo) no histórico carregado
-    final hasLiveMatch = _historyPredictions.any(
-      (p) => p.match.status == 'IN_PLAY' || p.match.status == 'PAUSED',
-    );
-
-    if (hasLiveMatch) {
-      _loadRanking(refresh: true, silent: true);
-      _loadHistoryPredictions(refresh: true, silent: true);
-      // O setState fará o rebuild, atualizando também o FutureBuilder dos palpites ativos
-      if (mounted) setState(() {});
-    }
   }
 
   Future<void> _refreshData() async {
