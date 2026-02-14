@@ -14,15 +14,32 @@ class LeaguesRepository {
 
   LeaguesRepository({required this.dioClient});
 
-  Future<List<LeagueModel>> getLeagues() async {
+  Future<({List<LeagueModel> leagues, int lastPage})> getLeagues({
+    int page = 1,
+    int? competitionId,
+    String? name,
+    String? status,
+  }) async {
     try {
-      final response = await dioClient.dio.get('leagues');
+      final queryParameters = <String, dynamic>{'page': page};
+      if (competitionId != null) queryParameters['competition_id'] = competitionId;
+      if (name != null && name.isNotEmpty) queryParameters['name'] = name;
+      if (status != null) queryParameters['status'] = status;
+
+      final response = await dioClient.dio.get(
+        'leagues',
+        queryParameters: queryParameters,
+      );
 
       if (response.statusCode == 200 && response.data != null) {
         final List<dynamic> data = response.data['data'];
-        return data.map((json) => LeagueModel.fromJson(json)).toList();
+        final meta = response.data['meta'] ?? {};
+        return (
+          leagues: data.map((json) => LeagueModel.fromJson(json)).toList(),
+          lastPage: (meta['last_page'] as int?) ?? 1,
+        );
       }
-      return [];
+      return (leagues: <LeagueModel>[], lastPage: 1);
     } catch (e) {
       throw Exception('Falha ao carregar ligas: $e');
     }

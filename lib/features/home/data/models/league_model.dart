@@ -9,6 +9,7 @@ class LeagueModel {
   final int membersCount;
   final int myPoints;
   final bool isActive;
+  final int? pendingPredictionsCount;
 
   LeagueModel({
     required this.id,
@@ -21,6 +22,7 @@ class LeagueModel {
     required this.membersCount,
     required this.myPoints,
     this.isActive = true,
+    this.pendingPredictionsCount,
   });
 
   factory LeagueModel.fromJson(Map<String, dynamic> json) {
@@ -35,6 +37,7 @@ class LeagueModel {
       membersCount: json['members_count'] ?? 0,
       myPoints: json['my_points'] ?? 0,
       isActive: json['is_active'] ?? true,
+      pendingPredictionsCount: json['pending_predictions_count'],
     );
   }
 }
