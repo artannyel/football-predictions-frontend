@@ -33,7 +33,9 @@ GoRouter appRouter(AuthNotifier authNotifier) {
 
       // 0.5. Redirecionamento forçado (ex: Clicou em notificação enquanto logado)
       if (isInitialized && isLoggedIn && authNotifier.redirectPath != null) {
-        return authNotifier.redirectPath;
+        String redirectPath = authNotifier.redirectPath!;
+        authNotifier.setRedirectPath(null);
+        return redirectPath;
       }
 
       // 1. Se ainda não inicializou o Auth
