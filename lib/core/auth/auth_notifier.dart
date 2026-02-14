@@ -67,6 +67,7 @@ class AuthNotifier extends ChangeNotifier {
           // No Mobile, usamos o plugin oficial
           if (_backendUser != null) {
             OneSignal.login(_backendUser!.id.toString());
+            OneSignal.Notifications.requestPermission(true);
             _setupNotificationListeners();
           } else {
             OneSignal.logout();
