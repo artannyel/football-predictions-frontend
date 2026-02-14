@@ -23,6 +23,7 @@ class AuthNotifier extends ChangeNotifier {
 
   bool _isInitialized = false;
   bool get isInitialized => _isInitialized;
+  bool _notificationListenerSet = false;
  
   AuthNotifier(this._auth/*, this._userNotifier*/) {
     // Inicia a escuta do estado de autenticação do Firebase
@@ -66,6 +67,7 @@ class AuthNotifier extends ChangeNotifier {
           // No Mobile, usamos o plugin oficial
           if (_backendUser != null) {
             OneSignal.login(_backendUser!.id.toString());
+            _setupNotificationListeners();
           } else {
             OneSignal.logout();
           }
@@ -86,6 +88,22 @@ class AuthNotifier extends ChangeNotifier {
         //await _userNotifier.loadCurrentUser();
       }
     });
+  }
+
+  void _setupNotificationListeners() {
+    if (kIsWeb || _notificationListenerSet) return;
+
+    OneSignal.Notifications.addClickListener((event) {
+      final data = event.notification.additionalData;
+      if (data != null &&
+          data['type'] == 'match_result' &&
+          data['league_id'] != null) {
+        // Define o caminho e notifica o router
+        setRedirectPath('/liga/${data['league_id']}');
+        notifyListeners();
+      }
+    });
+    _notificationListenerSet = true;
   }
 
   /// Força a atualização do usuário interno e notifica os listeners.

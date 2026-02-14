@@ -31,6 +31,11 @@ GoRouter appRouter(AuthNotifier authNotifier) {
         }
       }
 
+      // 0.5. Redirecionamento forçado (ex: Clicou em notificação enquanto logado)
+      if (isInitialized && isLoggedIn && authNotifier.redirectPath != null) {
+        return authNotifier.redirectPath;
+      }
+
       // 1. Se ainda não inicializou o Auth
       if (!isInitialized) {
         // Se não estamos na raiz (Splash), salvamos onde o usuário queria ir e vamos para a Splash
