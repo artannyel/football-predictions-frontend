@@ -115,6 +115,9 @@ class _HomePageState extends State<HomePage> {
           },
           label: const Text('Ver Competições'),
           icon: const Icon(Icons.sports_soccer),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+          ),
         ),
         body: TabBarView(
           children: [
@@ -226,11 +229,11 @@ class _LeaguesTabState extends State<_LeaguesTab>
 
     try {
       final result = await context.read<LeaguesRepository>().getLeagues(
-            page: _page,
-            competitionId: _selectedCompetitionId,
-            name: _searchName,
-            status: widget.status,
-          );
+        page: _page,
+        competitionId: _selectedCompetitionId,
+        name: _searchName,
+        status: widget.status,
+      );
       if (mounted) {
         setState(() {
           _leagues.addAll(result.leagues);
@@ -304,8 +307,10 @@ class _LeaguesTabState extends State<_LeaguesTab>
                 decoration: const InputDecoration(
                   labelText: 'Competição',
                   border: OutlineInputBorder(),
-                  contentPadding:
-                      EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 0,
+                  ),
                 ),
                 items: [
                   const DropdownMenuItem(
@@ -331,8 +336,11 @@ class _LeaguesTabState extends State<_LeaguesTab>
                             const SizedBox(width: 8),
                           ],
                           Flexible(
-                              child: Text(c.name,
-                                  overflow: TextOverflow.ellipsis)),
+                            child: Text(
+                              c.name,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -362,9 +370,7 @@ class _LeaguesTabState extends State<_LeaguesTab>
           children: [
             SizedBox(
               height: MediaQuery.of(context).size.height * 0.7,
-              child: Center(
-                child: Text('Erro ao carregar ligas: $_error'),
-              ),
+              child: Center(child: Text('Erro ao carregar ligas: $_error')),
             ),
           ],
         ),
@@ -381,7 +387,8 @@ class _LeaguesTabState extends State<_LeaguesTab>
                 height: MediaQuery.of(context).size.height * 0.5,
                 child: const Center(
                   child: Text(
-                      'Nenhuma liga encontrada com os filtros selecionados.'),
+                    'Nenhuma liga encontrada com os filtros selecionados.',
+                  ),
                 ),
               ),
             ],
@@ -397,8 +404,11 @@ class _LeaguesTabState extends State<_LeaguesTab>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.groups_outlined,
-                      size: 64, color: Colors.grey),
+                  const Icon(
+                    Icons.groups_outlined,
+                    size: 64,
+                    color: Colors.grey,
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     widget.status == 'finished'
@@ -466,30 +476,83 @@ class _LeaguesTabState extends State<_LeaguesTab>
                           ),
                   ),
                 ),
-                title: Text(
-                  league.name,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+                title: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        league.name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      '${league.myPoints}',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: league.myPoints > 0 ? Colors.green : null,
+                      ),
+                    ),
+                    Text(' pts', style: TextStyle(fontSize: 16)),
+                  ],
                 ),
                 subtitle: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(league.competition.name),
-                    Text('Criado por: ${league.owner.name}'),
-                    Text('${league.membersCount} participantes'),
+                    Row(
+                      children: [
+                        Card(
+                          color: Colors.grey[850],
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8.0,
+                              vertical: 4,
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.person_rounded),
+                                const SizedBox(width: 4),
+                                Text('${league.membersCount}'),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(child: Text('Por: ${league.owner.name}')),
+                        if (league.pendingPredictionsCount != null &&
+                            league.pendingPredictionsCount! > 0)
+                          Container(
+                            margin: const EdgeInsets.only(top: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.redAccent,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              '${league.pendingPredictionsCount} palpites',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
                   ],
                 ),
-                trailing: Column(
+                /*trailing: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.end,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      '${league.myPoints} pts',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
                     if (league.pendingPredictionsCount != null &&
                         league.pendingPredictionsCount! > 0)
                       Container(
@@ -512,7 +575,7 @@ class _LeaguesTabState extends State<_LeaguesTab>
                         ),
                       ),
                   ],
-                ),
+                ),*/
               ),
             );
           },
