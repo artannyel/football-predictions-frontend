@@ -24,13 +24,15 @@ class UserPredictionsPage extends StatefulWidget {
 }
 
 class _UserPredictionsPageState extends State<UserPredictionsPage> {
-  final List<PredictionModel> _predictions = [];
+  final List<({PredictionModel user, PredictionModel? me})> _predictions = [];
   int _page = 1;
   int _lastPage = 1;
   bool _isLoading = false;
   String? _error;
   RankingStatsModel? _userStats;
   UserModel? _userHistory;
+  RankingStatsModel? _meStats;
+  UserModel? _meHistory;
 
   @override
   void initState() {
@@ -69,8 +71,10 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
           _lastPage = result.lastPage;
           if (_page == 1) {
             _userStats = result.userStats;
+            _meStats = result.meStats;
           }
           _userHistory = result.userModel;
+          _meHistory = result.meModel;
           _page++;
           _isLoading = false;
         });
@@ -218,7 +222,29 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
           itemBuilder: (context, index) {
             // 1. Header de Estatísticas
             if (hasStats && index == 0) {
-              return _buildStatsHeader(_userStats!);
+              if (_meStats != null &&
+                  _meHistory != null &&
+                  _meHistory!.id != _userHistory!.id) {
+                return Column(
+                  children: [
+                    _buildStatsHeader(_userStats!, _userHistory),
+                    Container(
+                      margin: const EdgeInsets.symmetric(vertical: 8.0),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Text("VS",
+                          style: TextStyle(
+                              color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                    ),
+                    _buildStatsHeader(_meStats!, _meHistory),
+                  ],
+                );
+              }
+              return _buildStatsHeader(_userStats!, _userHistory);
             }
 
             // Ajusta o índice considerando o header
@@ -263,8 +289,12 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
             }
 
             // 4. Item da Lista de Palpites
-            final prediction = _predictions[contentIndex];
+            final item = _predictions[contentIndex];
+            final prediction = item.user;
+            final myPrediction = item.me;
             final match = prediction.match;
+            final showComparison = myPrediction != null && myPrediction.id != prediction.id;
+
 
             return GlassCard(
               margin: const EdgeInsets.symmetric(vertical: 4),
@@ -304,14 +334,24 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
                       padding: const EdgeInsets.symmetric(horizontal: 12.0),
                       child: Column(
                         children: [
-                          const Text('Palpite', style: TextStyle(fontSize: 10)),
-                          Text(
-                            '${prediction.homeScore} x ${prediction.awayScore}',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
+                          if (_userHistory != null)
+                            Text(
+                              _userHistory!.name.split(' ').first,
+                              style: const TextStyle(
+                                  fontSize: 8, color: Colors.white70),
                             ),
-                          ),
+                          _buildScore(prediction),
+                          if (showComparison) ...[
+                            const SizedBox(height: 4),
+                            const Divider(height: 4, color: Colors.white24),
+                            const SizedBox(height: 4),
+                            const Text(
+                              "Você",
+                              style:
+                                  TextStyle(fontSize: 8, color: Colors.white70),
+                            ),
+                            _buildScore(myPrediction),
+                          ],
                           if (match.homeScore != null &&
                               match.awayScore != null) ...[
                             const SizedBox(height: 4),
@@ -372,16 +412,6 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
                       match.status == 'IN_PLAY'
                           ? const BlinkingLiveIndicator()
                           : Text(_translateStatus(match.status)),
-                      if (prediction.pointsEarned != null)
-                        Text(
-                          'Pontos ganhos: ${prediction.pointsEarned}',
-                          style: TextStyle(
-                            color: prediction.pointsEarned == 0
-                                ? Colors.red
-                                : Colors.green,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
                     ],
                   ),
                 ),
@@ -393,15 +423,15 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
     );
   }
 
-  Widget _buildStatsHeader(RankingStatsModel stats) {
+  Widget _buildStatsHeader(RankingStatsModel stats, UserModel? user) {
     return GlassCard(
       margin: const EdgeInsets.fromLTRB(4, 0, 4, 12),
       padding: const EdgeInsets.all(12),
       child: Column(
         children: [
-          if (_userHistory != null) ...[
+          if (user != null) ...[
             GestureDetector(
-              onTap: _userHistory!.photoUrl != null
+              onTap: user.photoUrl != null
                   ? () {
                       showDialog(
                         context: context,
@@ -413,7 +443,7 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
                               InteractiveViewer(
                                 child: Center(
                                   child: Image.network(
-                                    _userHistory!.photoUrl!,
+                                      user.photoUrl!,
                                     fit: BoxFit.contain,
                                   ),
                                 ),
@@ -440,13 +470,13 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
                   : null,
               child: CircleAvatar(
                 radius: 40,
-                backgroundImage: _userHistory!.photoUrl != null
-                    ? NetworkImage(_userHistory!.photoUrl!)
+                backgroundImage: user.photoUrl != null
+                    ? NetworkImage(user.photoUrl!)
                     : null,
-                child: _userHistory!.photoUrl == null
+                child: user.photoUrl == null
                     ? Text(
-                        _userHistory!.name.isNotEmpty
-                            ? _userHistory!.name[0].toUpperCase()
+                        user.name.isNotEmpty
+                            ? user.name[0].toUpperCase()
                             : '?',
                         style: const TextStyle(fontSize: 32),
                       )
@@ -509,6 +539,31 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
             color: Colors.white.withValues(alpha: 0.7),
           ),
         ),
+      ],
+    );
+  }
+
+  Widget _buildScore(PredictionModel prediction) {
+    return Column(
+      children: [
+        Text(
+          '${prediction.homeScore} x ${prediction.awayScore}',
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
+        ),
+        if (prediction.pointsEarned != null)
+          Text(
+            '${prediction.pointsEarned} pts',
+            style: TextStyle(
+              fontSize: 10,
+              color: prediction.pointsEarned == 0
+                  ? Colors.redAccent
+                  : Colors.greenAccent,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
       ],
     );
   }

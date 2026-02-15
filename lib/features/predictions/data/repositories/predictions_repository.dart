@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'package:football_predictions/dio_client.dart';
 import 'package:football_predictions/features/auth/data/models/user_model.dart';
 import 'package:football_predictions/features/home/data/models/league_ranking_model.dart';
@@ -103,10 +104,12 @@ class PredictionsRepository {
 
   Future<
     ({
-      List<PredictionModel> predictions,
+      List<({PredictionModel user, PredictionModel? me})> predictions,
       int lastPage,
       RankingStatsModel? userStats,
       UserModel userModel,
+      RankingStatsModel? meStats,
+      UserModel? meModel,
     })
   >
   getUserPredictions({
@@ -132,13 +135,45 @@ class PredictionsRepository {
         userStats = RankingStatsModel.fromJson(statsData);
       }
 
+      final meData = response.data['me'];
+      RankingStatsModel? meStats;
+      UserModel? meModel;
+      if (meData != null) {
+        meModel = UserModel.fromJson(meData);
+        final statsData = meData['stats'] ?? {};
+        meStats = RankingStatsModel.fromJson(statsData);
+      }
+
+      final predictions = data.map<({PredictionModel user, PredictionModel? me})>((json) {
+        final userPred = PredictionModel.fromJson(json);
+        PredictionModel? mePred;
+        if (json['my_prediction'] != null && json['my_prediction'] is Map) {
+          try {
+            final myJson = Map<String, dynamic>.from(json['my_prediction']);
+            
+            // Injeta dados que faltam no my_prediction mas existem no prediction principal
+            if (json['match'] != null) myJson['match'] = json['match'];
+            if (json['match_id'] != null) myJson['match_id'] = json['match_id'];
+            if (json['league_id'] != null) myJson['league_id'] = json['league_id'];
+            if (meModel != null) myJson['user_id'] = meModel.id;
+            if (json['created_at'] != null) myJson['created_at'] = json['created_at'];
+            if (json['updated_at'] != null) myJson['updated_at'] = json['updated_at'];
+
+            mePred = PredictionModel.fromJson(myJson);
+          } catch (e) {
+            debugPrint('Erro ao processar my_prediction: $e');
+          }
+        }
+        return (user: userPred, me: mePred);
+      }).toList();
+
       return (
-        predictions: data
-            .map((json) => PredictionModel.fromJson(json))
-            .toList(),
+        predictions: predictions,
         lastPage: (meta['last_page'] as int?) ?? 1,
         userStats: userStats,
         userModel: userModel,
+        meStats: meStats,
+        meModel: meModel,
       );
     } on DioException catch (e) {
       final errorMessage = e.response?.data is Map
