@@ -89,8 +89,8 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                   ListTile(
-                    leading: const Icon(Icons.edit),
-                    title: const Text('Editar Perfil'),
+                    leading: const Icon(Icons.person),
+                    title: const Text('Perfil'),
                     onTap: () async {
                       Navigator.pop(context); // Fecha o drawer
                       context.go('/perfil');

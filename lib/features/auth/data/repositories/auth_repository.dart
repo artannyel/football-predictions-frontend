@@ -164,6 +164,15 @@ class AuthRepository {
     }
   }
 
+  Future<UserProfileModel> getUserProfile() async {
+    try {
+      final response = await _dioClient.dio.get('user/profile');
+      return UserProfileModel.fromJson(response.data);
+    } catch (e) {
+      throw Exception('Falha ao carregar perfil: $e');
+    }
+  }
+
   String _mapFirebaseError(String code) {
     switch (code) {
       case 'user-not-found':
