@@ -1,3 +1,5 @@
+import 'package:football_predictions/features/auth/data/models/user_model.dart';
+
 class RuleModel {
   final int points;
   final String title;
@@ -44,20 +46,28 @@ class TieBreakerModel {
 class LeagueRulesModel {
   final List<RuleModel> scoring;
   final List<TieBreakerModel> tieBreakers;
+  final List<BadgeModel> badges;
 
   LeagueRulesModel({
     required this.scoring,
     required this.tieBreakers,
+    required this.badges,
   });
 
   factory LeagueRulesModel.fromJson(Map<String, dynamic> json) {
     return LeagueRulesModel(
-      scoring: (json['scoring'] as List)
-          .map((e) => RuleModel.fromJson(e))
-          .toList(),
-      tieBreakers: (json['tie_breakers'] as List)
-          .map((e) => TieBreakerModel.fromJson(e))
-          .toList(),
+      scoring: (json['scoring'] as List?)
+              ?.map((e) => RuleModel.fromJson(e))
+              .toList() ??
+          [],
+      tieBreakers: (json['tie_breakers'] as List?)
+              ?.map((e) => TieBreakerModel.fromJson(e))
+              .toList() ??
+          [],
+      badges: (json['badges'] as List?)
+              ?.map((e) => BadgeModel.fromJson(e))
+              .toList() ??
+          [],
     );
   }
 }

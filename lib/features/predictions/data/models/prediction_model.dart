@@ -3,10 +3,10 @@ import 'package:football_predictions/features/matches/data/models/match_model.da
 class PredictionModel {
   final int id;
   final int matchId;
-  final int homeScore;
-  final int awayScore;
+  final int? homeScore;
+  final int? awayScore;
   final int? pointsEarned;
-  final String createdAt;
+  final String? createdAt;
   final MatchModel match;
 
   PredictionModel({

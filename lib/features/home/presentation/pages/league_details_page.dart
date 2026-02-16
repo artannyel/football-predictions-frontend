@@ -1610,7 +1610,23 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
             child: GlassCard(
               margin: const EdgeInsets.symmetric(vertical: 4),
               padding: EdgeInsets.zero,
-              child: Column(
+              child: InkWell(
+                onTap: () async {
+                  final result = await context.pushNamed(
+                    'Prediction',
+                    pathParameters: {
+                      'id': widget.leagueId,
+                      'matchId': match.id.toString(),
+                    },
+                    queryParameters: {
+                      'predictionId': prediction.id.toString(),
+                    },
+                  );
+                  if (result == true) {
+                    setState(() {});
+                  }
+                },
+                child: Column(
                 children: [
                   // Header: Rodada e Data
                   Padding(
@@ -1712,6 +1728,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                     ),
                   ),
                 ],
+              ),
               ),
             ),
           );
@@ -1923,7 +1940,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
     String label,
     Color color,
   ) {
-    if (prediction == null) {
+    if (prediction == null || prediction.homeScore == null || prediction.awayScore == null) {
       return Container(
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
         decoration: BoxDecoration(
@@ -2136,6 +2153,52 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                             subtitle: Text(tb.description),
                           ),
                           if (tb != rules.tieBreakers.last) const Divider(),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            if (rules.badges.isNotEmpty)
+              GlassCard(
+                margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '🏅 Medalhas e Conquistas',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 16),
+                    ...rules.badges.map(
+                      (badge) => Column(
+                        children: [
+                          ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            leading: SizedBox(
+                              width: 48,
+                              height: 48,
+                              child: badge.iconUrl != null
+                                  ? AppNetworkImage(
+                                      url: badge.iconUrl!,
+                                      fit: BoxFit.contain,
+                                    )
+                                  : const Icon(
+                                      Icons.military_tech,
+                                      size: 32,
+                                      color: Colors.amber,
+                                    ),
+                            ),
+                            title: Text(
+                              badge.name,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            subtitle: Text(badge.description),
+                          ),
+                          if (badge != rules.badges.last) const Divider(),
                         ],
                       ),
                     ),

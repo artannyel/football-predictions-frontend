@@ -28,7 +28,9 @@ class PredictionsRepository {
       );
     } on DioException catch (e) {
       final errorMessage = e.response?.data is Map
-          ? (e.response?.data['message'] ?? e.response?.data['error'] ?? 'Erro ao salvar palpite')
+          ? (e.response?.data['message'] ??
+                e.response?.data['error'] ??
+                'Erro ao salvar palpite')
           : 'Erro ao salvar palpite (${e.response?.statusCode})';
       throw Exception(errorMessage);
     } catch (e) {
@@ -49,7 +51,9 @@ class PredictionsRepository {
       return data.map((json) => PredictionModel.fromJson(json)).toList();
     } on DioException catch (e) {
       final errorMessage = e.response?.data is Map
-          ? (e.response?.data['message'] ?? e.response?.data['error'] ?? 'Erro ao carregar palpites ativos')
+          ? (e.response?.data['message'] ??
+                e.response?.data['error'] ??
+                'Erro ao carregar palpites ativos')
           : 'Erro ao carregar palpites ativos (${e.response?.statusCode})';
       throw Exception(errorMessage);
     } catch (e) {
@@ -80,7 +84,9 @@ class PredictionsRepository {
       );
     } on DioException catch (e) {
       final errorMessage = e.response?.data is Map
-          ? (e.response?.data['message'] ?? e.response?.data['error'] ?? 'Erro ao carregar histórico de palpites')
+          ? (e.response?.data['message'] ??
+                e.response?.data['error'] ??
+                'Erro ao carregar histórico de palpites')
           : 'Erro ao carregar histórico de palpites (${e.response?.statusCode})';
       throw Exception(errorMessage);
     } catch (e) {
@@ -94,7 +100,9 @@ class PredictionsRepository {
       return PredictionModel.fromJson(response.data['data']);
     } on DioException catch (e) {
       final errorMessage = e.response?.data is Map
-          ? (e.response?.data['message'] ?? e.response?.data['error'] ?? 'Erro ao carregar palpite')
+          ? (e.response?.data['message'] ??
+                e.response?.data['error'] ??
+                'Erro ao carregar palpite')
           : 'Erro ao carregar palpite (${e.response?.statusCode})';
       throw Exception(errorMessage);
     } catch (e) {
@@ -144,13 +152,24 @@ class PredictionsRepository {
         meStats = RankingStatsModel.fromJson(statsData);
       }
 
-      final predictions = data.map<({PredictionModel user, PredictionModel? me})>((json) {
-        final userPred = PredictionModel.fromJson(json);
+      final predictions = data.map<({PredictionModel user, PredictionModel? me})>((
+        json,
+      ) {
+        // Cria uma cópia mutável do JSON para tratar dados nulos sem alterar o original
+        final userJson = Map<String, dynamic>.from(json);
+
+        // Se o id for nulo (usuário não palpitou), gera um ID temporário negativo baseado no match_id
+        // Isso evita que o PredictionModel.fromJson quebre se o ID for obrigatório
+        if (userJson['id'] == null) {
+          userJson['id'] = -((userJson['match_id'] as int?) ?? 0);
+        }
+
+        final userPred = PredictionModel.fromJson(userJson);
         PredictionModel? mePred;
         if (json['my_prediction'] != null && json['my_prediction'] is Map) {
           try {
             final myJson = Map<String, dynamic>.from(json['my_prediction']);
-            
+
             // Injeta dados que faltam no my_prediction mas existem no prediction principal
             if (json['match'] != null) myJson['match'] = json['match'];
             if (json['match_id'] != null) myJson['match_id'] = json['match_id'];
@@ -177,7 +196,9 @@ class PredictionsRepository {
       );
     } on DioException catch (e) {
       final errorMessage = e.response?.data is Map
-          ? (e.response?.data['message'] ?? e.response?.data['error'] ?? 'Erro ao carregar palpites do usuário')
+          ? (e.response?.data['message'] ??
+                e.response?.data['error'] ??
+                'Erro ao carregar palpites do usuário')
           : 'Erro ao carregar palpites do usuário (${e.response?.statusCode})';
       throw Exception(errorMessage);
     } catch (e) {
