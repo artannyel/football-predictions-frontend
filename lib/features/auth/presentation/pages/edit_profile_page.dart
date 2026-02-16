@@ -34,7 +34,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   }
 
   void _onBackPage(BuildContext context) {
-    context.go('/ligas');
+    context.go('/perfil');
   }
 
   Future<void> _updateProfile() async {

@@ -3,6 +3,7 @@ import 'package:football_predictions/core/auth/auth_notifier.dart';
 import 'package:football_predictions/features/auth/presentation/pages/login_page.dart';
 import 'package:football_predictions/features/auth/presentation/pages/splash_page.dart';
 import 'package:football_predictions/features/auth/presentation/pages/edit_profile_page.dart';
+import 'package:football_predictions/features/auth/presentation/pages/profile_page.dart';
 import 'package:football_predictions/features/competitions/presentation/pages/competitions_page.dart';
 import 'package:football_predictions/features/home/presentation/pages/home_page.dart';
 import 'package:football_predictions/features/home/presentation/pages/league_details_page.dart';
@@ -90,8 +91,15 @@ GoRouter appRouter(AuthNotifier authNotifier) {
       ),
       GoRoute(
         path: '/perfil',
-        name: 'EditProfile',
-        builder: (context, state) => const EditProfilePage(),
+        name: 'Profile',
+        builder: (context, state) => const ProfilePage(),
+        routes: [
+          GoRoute(
+            path: 'editar',
+            name: 'EditProfile',
+            builder: (context, state) => const EditProfilePage(),
+          ),
+        ],
       ),
       GoRoute(
         path: '/ligas',
