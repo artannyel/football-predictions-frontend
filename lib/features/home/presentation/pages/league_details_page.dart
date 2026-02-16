@@ -29,7 +29,8 @@ class LeagueDetailsPage extends StatefulWidget {
   State<LeagueDetailsPage> createState() => _LeagueDetailsPageState();
 }
 
-class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
+class _LeagueDetailsPageState extends State<LeagueDetailsPage>
+    with SingleTickerProviderStateMixin {
   late Future<LeagueDetailsModel> _detailsFuture;
   late Future<LeagueRulesModel> _rulesFuture;
   late Future<String> _userIdFuture;
@@ -53,6 +54,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
 
   late ConfettiController _confettiController;
   late ConfettiController _fireworksController;
+  late AnimationController _pulseController;
   bool _confettiPlayed = false;
   StreamSubscription? _firestoreSubscription;
 
@@ -69,6 +71,10 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
     _fireworksController = ConfettiController(
       duration: const Duration(seconds: 10),
     );
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    )..repeat(reverse: true);
 
     // Carrega ranking inicial e usuário
     _loadRanking();
@@ -78,7 +84,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
     });
 
     _rulesFuture = repo.getRules();
-    
+
     // Configura o listener do Firestore assim que tivermos os detalhes da liga (e o ID da competição)
     _detailsFuture.then((league) {
       if (mounted) {
@@ -92,6 +98,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
     _firestoreSubscription?.cancel();
     _confettiController.dispose();
     _fireworksController.dispose();
+    _pulseController.dispose();
     super.dispose();
   }
 
@@ -179,7 +186,10 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
     } catch (_) {}
   }
 
-  Future<void> _loadHistoryPredictions({bool refresh = false, bool silent = false}) async {
+  Future<void> _loadHistoryPredictions({
+    bool refresh = false,
+    bool silent = false,
+  }) async {
     if (_isHistoryLoading || _isSilentHistoryLoading) return;
 
     if (refresh) {
@@ -242,17 +252,17 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
         .doc(competitionId.toString())
         .snapshots()
         .listen((snapshot) async {
-      // Random delay de 0 a 10 segundos (0 a 10000 ms) para evitar thundering herd
-      final delay = math.Random().nextInt(10000);
-      await Future.delayed(Duration(milliseconds: delay));
+          // Random delay de 0 a 10 segundos (0 a 10000 ms) para evitar thundering herd
+          final delay = math.Random().nextInt(10000);
+          await Future.delayed(Duration(milliseconds: delay));
 
-      if (mounted) {
-        _loadRanking(refresh: true, silent: true);
-        _loadHistoryPredictions(refresh: true, silent: true);
-        // O setState fará o rebuild, atualizando também o FutureBuilder dos palpites ativos
-        setState(() {});
-      }
-    });
+          if (mounted) {
+            _loadRanking(refresh: true, silent: true);
+            _loadHistoryPredictions(refresh: true, silent: true);
+            // O setState fará o rebuild, atualizando também o FutureBuilder dos palpites ativos
+            setState(() {});
+          }
+        });
   }
 
   Future<void> _refreshData() async {
@@ -359,10 +369,14 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
     path.moveTo(size.width, halfWidth);
 
     for (double step = 0; step < fullAngle; step += degreesPerStep) {
-      path.lineTo(halfWidth + externalRadius * math.cos(step),
-          halfWidth + externalRadius * math.sin(step));
-      path.lineTo(halfWidth + internalRadius * math.cos(step + halfDegreesPerStep),
-          halfWidth + internalRadius * math.sin(step + halfDegreesPerStep));
+      path.lineTo(
+        halfWidth + externalRadius * math.cos(step),
+        halfWidth + externalRadius * math.sin(step),
+      );
+      path.lineTo(
+        halfWidth + internalRadius * math.cos(step + halfDegreesPerStep),
+        halfWidth + internalRadius * math.sin(step + halfDegreesPerStep),
+      );
     }
     path.close();
     return path;
@@ -674,8 +688,10 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
                                   right: 16,
                                   child: SafeArea(
                                     child: IconButton(
-                                      icon: const Icon(Icons.close,
-                                          color: Colors.white),
+                                      icon: const Icon(
+                                        Icons.close,
+                                        color: Colors.white,
+                                      ),
                                       onPressed: () =>
                                           Navigator.of(context).pop(),
                                     ),
@@ -687,9 +703,14 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
                         );
                       }
                     : null,
-                child: SizedBox(
+                child: Container(
                   width: 120,
                   height: 120,
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.amber, width: 4),
+                  ),
                   child: ClipOval(
                     child: champion.photoUrl != null
                         ? AppNetworkImage(
@@ -749,26 +770,26 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
             ],
           ],
           SizedBox(
-            width: 80,
-            height: 80,
+            width: 110,
+            height: 110,
             child: ClipOval(
               child: league.avatar != null
                   ? AppNetworkImage(
                       url: league.avatar!,
                       fit: BoxFit.cover,
                       errorWidget: CircleAvatar(
-                        radius: 40,
+                        radius: 55,
                         child: Text(
                           league.name[0].toUpperCase(),
-                          style: const TextStyle(fontSize: 32),
+                          style: const TextStyle(fontSize: 48),
                         ),
                       ),
                     )
                   : CircleAvatar(
-                      radius: 40,
+                      radius: 55,
                       child: Text(
                         league.name[0].toUpperCase(),
-                        style: const TextStyle(fontSize: 32),
+                        style: const TextStyle(fontSize: 48),
                       ),
                     ),
             ),
@@ -782,60 +803,199 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
           const SizedBox(height: 8),
           Text(league.description, textAlign: TextAlign.center),
           const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: _buildInfoItem(
-                  'Competição',
-                  league.competition.name,
-                  imageUrl: league.competition.emblem,
+          GlassCard(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Competição (Esquerda)
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Competição',
+                            style: TextStyle(fontSize: 10, color: Colors.grey),
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              if (league.competition.emblem != null) ...[
+                                ClipOval(
+                                  child: AppNetworkImage(
+                                    url: league.competition.emblem!,
+                                    width: 24,
+                                    height: 24,
+                                    errorWidget: const Icon(
+                                      Icons.sports_soccer,
+                                      size: 24,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                              ],
+                              Flexible(
+                                child: Text(
+                                  league.competition.name,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                  //overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    // Criador (Direita)
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          const Text(
+                            'Criador',
+                            style: TextStyle(fontSize: 10, color: Colors.grey),
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  league.owner.name,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                  //overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              ClipOval(
+                                child: league.owner.photoUrl != null
+                                    ? AppNetworkImage(
+                                        url: league.owner.photoUrl!,
+                                        width: 24,
+                                        height: 24,
+                                        errorWidget: const Icon(
+                                          Icons.person,
+                                          size: 24,
+                                        ),
+                                      )
+                                    : const Icon(Icons.person, size: 24),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              Expanded(
-                child: _buildInfoItem(
-                  'Criador',
-                  league.owner.name,
-                  imageUrl: league.owner.photoUrl,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          InkWell(
-            onTap: () {
-              Clipboard.setData(ClipboardData(text: league.code));
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Código copiado para a área de transferência!'),
-                ),
-              );
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Código: ${league.code}',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                if (league.isActive) ...[
+                  const SizedBox(height: 16),
+                  InkWell(
+                    onTap: () {
+                      Clipboard.setData(ClipboardData(text: league.code));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Código copiado para a área de transferência!',
+                          ),
+                        ),
+                      );
+                    },
+                    child: ScaleTransition(
+                      scale: Tween<double>(begin: 1.0, end: 1.05).animate(
+                        CurvedAnimation(
+                          parent: _pulseController,
+                          curve: Curves.easeInOut,
+                        ),
+                      ),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.primaryContainer.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.primaryContainer,
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.vpn_key,
+                                  size: 18,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.primaryContainer,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  league.code,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                    letterSpacing: 1,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.primaryContainer,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                children: [
+                                  Text(
+                                    'COPIAR CÓDIGO',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white.withValues(
+                                        alpha: 0.8,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Icon(
+                                    Icons.copy,
+                                    size: 14,
+                                    color: Colors.white.withValues(alpha: 0.8),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Icon(
-                    Icons.copy,
-                    size: 16,
-                    color: Theme.of(context).colorScheme.onPrimaryContainer,
-                  ),
                 ],
-              ),
+              ],
             ),
           ),
         ],
@@ -881,10 +1041,11 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
                             right: 16,
                             child: SafeArea(
                               child: IconButton(
-                                icon: const Icon(Icons.close,
-                                    color: Colors.white),
-                                onPressed: () =>
-                                    Navigator.of(context).pop(),
+                                icon: const Icon(
+                                  Icons.close,
+                                  color: Colors.white,
+                                ),
+                                onPressed: () => Navigator.of(context).pop(),
                               ),
                             ),
                           ),
@@ -894,9 +1055,14 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
                   );
                 }
               : null,
-          child: SizedBox(
+          child: Container(
             width: 80,
             height: 80,
+            padding: const EdgeInsets.all(3),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: color, width: 3),
+            ),
             child: ClipOval(
               child: member.photoUrl != null
                   ? AppNetworkImage(
@@ -927,18 +1093,12 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
         const SizedBox(height: 8),
         Text(
           member.name,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           textAlign: TextAlign.center,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),
-        Text(
-          '${member.points} pts',
-          style: const TextStyle(fontSize: 12),
-        ),
+        Text('${member.points} pts', style: const TextStyle(fontSize: 12)),
       ],
     );
   }
@@ -1105,9 +1265,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
                         DataCell(
                           Row(
                             mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text('${member.rank}'),
-                            ],
+                            children: [Text('${member.rank}')],
                           ),
                         ),
                         DataCell(
@@ -1159,14 +1317,12 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
                                   member.rank >= 1 &&
                                   member.rank <= 3) ...[
                                 const SizedBox(width: 8),
-                                Icon(
-                                  Icons.emoji_events,
-                                  size: 20,
-                                  color: member.rank == 1
-                                      ? const Color(0xFFFFD700) // Ouro
+                                Text(
+                                  member.rank == 1
+                                      ? '🏆'
                                       : member.rank == 2
-                                      ? const Color(0xFFC0C0C0) // Prata
-                                      : const Color(0xFFCD7F32), // Bronze
+                                      ? '🥈'
+                                      : '🥉',
                                 ),
                               ],
                             ],
@@ -1252,35 +1408,41 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
                 padding: EdgeInsets.zero,
                 child: InkWell(
                   onTap: () async {
-                  final result = await context.pushNamed(
-                    'Prediction',
-                    pathParameters: {
-                      'id': widget.leagueId,
-                      'matchId': match.id.toString(),
-                    },
-                  );
-                  if (result == true) {
-                    setState(() {});
-                  }
-                },
+                    final result = await context.pushNamed(
+                      'Prediction',
+                      pathParameters: {
+                        'id': widget.leagueId,
+                        'matchId': match.id.toString(),
+                      },
+                    );
+                    if (result == true) {
+                      setState(() {});
+                    }
+                  },
                   child: Column(
                     children: [
                       // Header: Rodada e Data
                       Padding(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 8),
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
                               '${_translateStage(match.stage)} • ${_formatMatchday(match.stage, match.matchday)}',
                               style: const TextStyle(
-                                  fontSize: 12, fontWeight: FontWeight.bold),
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             Text(
                               _formatDate(match.utcDate),
                               style: const TextStyle(
-                                  fontSize: 12, color: Colors.white70),
+                                fontSize: 12,
+                                color: Colors.white70,
+                              ),
                             ),
                           ],
                         ),
@@ -1326,8 +1488,9 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
                                       : Text(
                                           _translateStatus(match.status),
                                           style: const TextStyle(
-                                              fontSize: 10,
-                                              color: Colors.white70),
+                                            fontSize: 10,
+                                            color: Colors.white70,
+                                          ),
                                         ),
                                 ],
                               ),
@@ -1356,7 +1519,10 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
                         padding: EdgeInsets.only(bottom: 12.0),
                         child: Text(
                           "Toque para palpitar",
-                          style: TextStyle(fontSize: 10, color: Colors.greenAccent),
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: Colors.greenAccent,
+                          ),
                         ),
                       ),
                     ],
@@ -1448,20 +1614,26 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
                 children: [
                   // Header: Rodada e Data
                   Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
                           '${_translateStage(match.stage)} • ${_formatMatchday(match.stage, match.matchday)}',
                           style: const TextStyle(
-                              fontSize: 12, fontWeight: FontWeight.bold),
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         Text(
                           _formatDate(match.utcDate),
                           style: const TextStyle(
-                              fontSize: 12, color: Colors.white70),
+                            fontSize: 12,
+                            color: Colors.white70,
+                          ),
                         ),
                       ],
                     ),
@@ -1505,7 +1677,9 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
                                   : Text(
                                       _translateStatus(match.status),
                                       style: const TextStyle(
-                                          fontSize: 10, color: Colors.white70),
+                                        fontSize: 10,
+                                        color: Colors.white70,
+                                      ),
                                     ),
                             ],
                           ),
@@ -1601,41 +1775,47 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
                 margin: const EdgeInsets.symmetric(vertical: 4),
                 padding: EdgeInsets.zero,
                 child: InkWell(
-                onTap: isEditable
-                    ? () async {
-                        final result = await context.pushNamed(
-                          'Prediction',
-                          pathParameters: {
-                            'id': widget.leagueId,
-                            'matchId': match.id.toString(),
-                          },
-                          queryParameters: {
-                            'predictionId': prediction.id.toString(),
-                          },
-                        );
-                        if (result == true) {
-                          setState(() {});
+                  onTap: isEditable
+                      ? () async {
+                          final result = await context.pushNamed(
+                            'Prediction',
+                            pathParameters: {
+                              'id': widget.leagueId,
+                              'matchId': match.id.toString(),
+                            },
+                            queryParameters: {
+                              'predictionId': prediction.id.toString(),
+                            },
+                          );
+                          if (result == true) {
+                            setState(() {});
+                          }
                         }
-                      }
-                    : null,
+                      : null,
                   child: Column(
                     children: [
                       // Header: Rodada e Data
                       Padding(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 8),
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
                               '${_translateStage(match.stage)} • ${_formatMatchday(match.stage, match.matchday)}',
                               style: const TextStyle(
-                                  fontSize: 12, fontWeight: FontWeight.bold),
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             Text(
                               _formatDate(match.utcDate),
                               style: const TextStyle(
-                                  fontSize: 12, color: Colors.white70),
+                                fontSize: 12,
+                                color: Colors.white70,
+                              ),
                             ),
                           ],
                         ),
@@ -1679,8 +1859,9 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
                                       : Text(
                                           _translateStatus(match.status),
                                           style: const TextStyle(
-                                              fontSize: 10,
-                                              color: Colors.white70),
+                                            fontSize: 10,
+                                            color: Colors.white70,
+                                          ),
                                         ),
                                 ],
                               ),
@@ -1738,17 +1919,17 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
   }
 
   Widget _buildPredictionCard(
-      PredictionModel? prediction, String label, Color color) {
+    PredictionModel? prediction,
+    String label,
+    Color color,
+  ) {
     if (prediction == null) {
       return Container(
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: Colors.white10,
-            width: 1,
-          ),
+          border: Border.all(color: Colors.white10, width: 1),
         ),
         child: Column(
           children: [
@@ -1812,8 +1993,10 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage> {
               if (prediction.pointsEarned != null) ...[
                 const SizedBox(width: 8),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: isWin ? color : Colors.grey,
                     borderRadius: BorderRadius.circular(8),
