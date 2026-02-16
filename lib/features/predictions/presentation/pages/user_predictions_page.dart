@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:football_predictions/core/presentation/widgets/app_network_image.dart';
 import 'package:football_predictions/core/presentation/widgets/blinking_live_indicator.dart';
@@ -122,8 +123,30 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
     }
   }
 
+  String _translateStage(String stage) {
+    switch (stage) {
+      case 'REGULAR_SEASON':
+        return 'Temporada Regular';
+      case 'GROUP_STAGE':
+        return 'Fase de Grupos';
+      case 'PLAYOFFS':
+        return 'Playoffs';
+      case 'LAST_16':
+        return 'Oitavas de Final';
+      case 'QUARTER_FINALS':
+        return 'Quartas de Final';
+      case 'SEMI_FINALS':
+        return 'Semifinais';
+      case 'FINAL':
+        return 'Final';
+      default:
+        return stage.replaceAll('_', ' ');
+    }
+  }
+
   String _formatMatchday(String stage, int matchday) {
     const knockoutStages = [
+      'PLAYOFFS',
       'LAST_16',
       'QUARTER_FINALS',
       'SEMI_FINALS',
@@ -225,24 +248,7 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
               if (_meStats != null &&
                   _meHistory != null &&
                   _meHistory!.id != _userHistory!.id) {
-                return Column(
-                  children: [
-                    _buildStatsHeader(_userStats!, _userHistory),
-                    Container(
-                      margin: const EdgeInsets.symmetric(vertical: 8.0),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Text("VS",
-                          style: TextStyle(
-                              color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
-                    ),
-                    _buildStatsHeader(_meStats!, _meHistory),
-                  ],
-                );
+                return _buildRadarComparison();
               }
               return _buildStatsHeader(_userStats!, _userHistory);
             }
@@ -293,131 +299,539 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
             final prediction = item.user;
             final myPrediction = item.me;
             final match = prediction.match;
-            final showComparison = myPrediction != null && myPrediction.id != prediction.id;
+            final isComparing = _userHistory != null &&
+                _meHistory != null &&
+                _userHistory!.id != _meHistory!.id;
 
-
-            return GlassCard(
-              margin: const EdgeInsets.symmetric(vertical: 4),
-              child: ListTile(
-                title: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            return TweenAnimationBuilder<double>(
+              key: ValueKey(prediction.id),
+              tween: Tween<double>(begin: 0.0, end: 1.0),
+              duration: const Duration(milliseconds: 600),
+              curve: Curves.easeOutBack,
+              builder: (context, value, child) {
+                return Opacity(
+                  opacity: value.clamp(0.0, 1.0),
+                  child: Transform(
+                    alignment: Alignment.center,
+                    transform: Matrix4.identity()
+                      ..setEntry(3, 2, 0.001)
+                      ..rotateX(math.pi / 2 * (1 - value)),
+                    child: child,
+                  ),
+                );
+              },
+              child: GlassCard(
+                margin: const EdgeInsets.symmetric(vertical: 4),
+                padding: EdgeInsets.zero,
+                child: Column(
                   children: [
-                    Expanded(
+                    // Header: Rodada e Data
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Flexible(
-                            child: Text(
-                              match.homeTeamName,
-                              textAlign: TextAlign.end,
-                              overflow: TextOverflow.ellipsis,
+                          Text(
+                            '${_translateStage(match.stage)} • ${_formatMatchday(match.stage, match.matchday)}',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                          Padding(
-                            padding: const EdgeInsets.only(left: 8.0),
-                            child: match.homeTeamCrest != null
-                                ? AppNetworkImage(
-                                    url: match.homeTeamCrest!,
-                                    width: 20,
-                                    height: 20,
-                                    errorWidget: const Icon(
-                                      Icons.sports_soccer,
-                                      size: 20,
-                                    ),
-                                  )
-                                : const Icon(Icons.sports_soccer, size: 20),
+                          Text(
+                            _formatDate(match.utcDate),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.white70,
+                            ),
                           ),
                         ],
                       ),
                     ),
+                    const Divider(height: 1, color: Colors.white10),
+                    // Corpo: Times e Placar
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                      child: Column(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          if (_userHistory != null)
-                            Text(
-                              _userHistory!.name.split(' ').first,
-                              style: const TextStyle(
-                                  fontSize: 8, color: Colors.white70),
+                          // Mandante
+                          Expanded(
+                            child: Column(
+                              children: [
+                                _buildTeamLogo(match.homeTeamCrest),
+                                const SizedBox(height: 8),
+                                Text(
+                                  match.homeTeamName,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(fontSize: 12),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
                             ),
-                          _buildScore(prediction),
-                          if (showComparison) ...[
-                            const SizedBox(height: 4),
-                            const Divider(height: 4, color: Colors.white24),
-                            const SizedBox(height: 4),
-                            const Text(
-                              "Você",
-                              style:
-                                  TextStyle(fontSize: 8, color: Colors.white70),
+                          ),
+                          // Placar e Status
+                          Expanded(
+                            child: Column(
+                              children: [
+                                const SizedBox(height: 8),
+                                Text(
+                                  '${match.homeScore ?? '-'} - ${match.awayScore ?? '-'}',
+                                  style: const TextStyle(
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                match.status == 'IN_PLAY'
+                                    ? const BlinkingLiveIndicator()
+                                    : Text(
+                                        _translateStatus(match.status),
+                                        style: const TextStyle(
+                                          fontSize: 10,
+                                          color: Colors.white70,
+                                        ),
+                                      ),
+                              ],
                             ),
-                            _buildScore(myPrediction),
-                          ],
-                          if (match.homeScore != null &&
-                              match.awayScore != null) ...[
-                            const SizedBox(height: 4),
-                            const Text(
-                              'Placar',
-                              style: TextStyle(fontSize: 10),
+                          ),
+                          // Visitante
+                          Expanded(
+                            child: Column(
+                              children: [
+                                _buildTeamLogo(match.awayTeamCrest),
+                                const SizedBox(height: 8),
+                                Text(
+                                  match.awayTeamName,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(fontSize: 12),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
                             ),
-                            Text(
-                              '${match.homeScore} x ${match.awayScore}',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Footer: Palpites
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: _buildPredictionCard(
+                              prediction,
+                              _userHistory?.name.split(' ').first ?? 'Usuário',
+                              Colors.cyanAccent,
+                            ),
+                          ),
+                          if (isComparing) ...[
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: _buildPredictionCard(
+                                myPrediction,
+                                'Seu palpite',
+                                Colors.amberAccent,
                               ),
                             ),
                           ],
                         ],
                       ),
                     ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRadarComparison() {
+    final userStats = _userStats!;
+    final meStats = _meStats!;
+
+    // Dados para o gráfico
+    final rawLabels = ['Exato', 'Saldo', 'Gols', 'Vencedor', 'Erros'];
+    final userValues = [
+      userStats.exactScore.toDouble(),
+      userStats.winnerDiff.toDouble(),
+      userStats.winnerGoal.toDouble(),
+      userStats.winnerOnly.toDouble(),
+      userStats.errors.toDouble(),
+    ];
+    final meValues = [
+      meStats.exactScore.toDouble(),
+      meStats.winnerDiff.toDouble(),
+      meStats.winnerGoal.toDouble(),
+      meStats.winnerOnly.toDouble(),
+      meStats.errors.toDouble(),
+    ];
+
+    final labels = List<String>.generate(rawLabels.length, (i) {
+      return '${rawLabels[i]}\n(${userValues[i].toInt()} / ${meValues[i].toInt()})';
+    });
+
+    // Calcula o valor máximo para escala
+    double maxValue = 0;
+    for (final v in [...userValues, ...meValues]) {
+      if (v > maxValue) maxValue = v;
+    }
+    if (maxValue == 0) maxValue = 10; // Evita divisão por zero
+
+    return Column(
+      children: [
+        GlassCard(
+          margin: const EdgeInsets.fromLTRB(4, 0, 4, 8),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              // Legenda (Placar)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // User (Left)
                     Expanded(
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
                         children: [
-                          Padding(
-                            padding: const EdgeInsets.only(right: 8.0),
-                            child: match.awayTeamCrest != null
-                                ? AppNetworkImage(
-                                    url: match.awayTeamCrest!,
-                                    width: 20,
-                                    height: 20,
-                                    errorWidget: const Icon(
-                                      Icons.sports_soccer,
-                                      size: 20,
-                                    ),
-                                  )
-                                : const Icon(Icons.sports_soccer, size: 20),
-                          ),
-                          Flexible(
+                          _buildAvatar(_userHistory, Colors.cyanAccent),
+                          const SizedBox(width: 8),
+                          Expanded(
                             child: Text(
-                              match.awayTeamName,
+                              _userHistory?.name.split(' ').first ?? 'Usuário',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],
                       ),
                     ),
+                    // Score (Center)
+                    Column(
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.baseline,
+                          textBaseline: TextBaseline.alphabetic,
+                          children: [
+                            TweenAnimationBuilder<double>(
+                              tween: Tween<double>(
+                                begin: 0,
+                                end: (userStats.points ?? 0).toDouble(),
+                              ),
+                              duration: const Duration(seconds: 1),
+                              curve: Curves.easeOut,
+                              builder: (context, value, child) {
+                                return Text(
+                                  '${value.toInt()}',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                    color: Colors.cyanAccent,
+                                  ),
+                                );
+                              },
+                            ),
+                            const Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 4.0),
+                              child: Text(
+                                'x',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.white54,
+                                ),
+                              ),
+                            ),
+                            TweenAnimationBuilder<double>(
+                              tween: Tween<double>(
+                                begin: 0,
+                                end: (meStats.points ?? 0).toDouble(),
+                              ),
+                              duration: const Duration(seconds: 1),
+                              curve: Curves.easeOut,
+                              builder: (context, value, child) {
+                                return Text(
+                                  '${value.toInt()}',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                    color: Colors.amberAccent,
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                        const Text(
+                          'pts',
+                          style: TextStyle(fontSize: 10, color: Colors.white54),
+                        ),
+                      ],
+                    ),
+                    // Me (Right)
+                    Expanded(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              _meHistory?.name.split(' ').first ?? 'Você',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.end,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          _buildAvatar(_meHistory, Colors.amberAccent),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
-                subtitle: Center(
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 4),
-                      Text(
-                        _formatMatchday(match.stage, match.matchday),
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 24),
+              // Gráfico
+              SizedBox(
+                height: 220,
+                width: double.infinity,
+                child: TweenAnimationBuilder<double>(
+                  tween: Tween<double>(begin: 0.0, end: 1.0),
+                  duration: const Duration(milliseconds: 1200),
+                  curve: Curves.easeOutBack,
+                  builder: (context, value, child) {
+                    return CustomPaint(
+                      painter: _RadarChartPainter(
+                        values1: userValues,
+                        values2: meValues,
+                        labels: labels,
+                        maxValue: maxValue,
+                        color1: Colors.cyanAccent,
+                        color2: Colors.amberAccent,
+                        animationValue: value,
                       ),
-                      Text(_formatDate(match.utcDate)),
-                      const SizedBox(height: 4),
-                      match.status == 'IN_PLAY'
-                          ? const BlinkingLiveIndicator()
-                          : Text(_translateStatus(match.status)),
-                    ],
-                  ),
+                    );
+                  },
                 ),
               ),
-            );
-          },
+              const SizedBox(height: 16),
+              Text(
+                'Comparativo de desempenho',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.7),
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(4, 0, 4, 12),
+          child: Row(
+            children: [
+              Expanded(
+                child: _buildComparisonStatCard(
+                  'Total de Palpites',
+                  userStats.total,
+                  meStats.total,
+                  Colors.cyanAccent,
+                  Colors.amberAccent,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildComparisonStatCard(
+                  'Acurácia',
+                  _calculateAccuracy(userStats),
+                  _calculateAccuracy(meStats),
+                  Colors.cyanAccent,
+                  Colors.amberAccent,
+                  isPercentage: true,
+                  tooltip:
+                      'Considera acerto qualquer palpite que pontuou.\nFórmula: ((Total - Erros) / Total) * 100',
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  double _calculateAccuracy(RankingStatsModel stats) {
+    if (stats.total == 0) return 0.0;
+    final hits = stats.total - stats.errors;
+    return (hits / stats.total) * 100;
+  }
+
+  Widget _buildComparisonStatCard(
+    String title,
+    num val1,
+    num val2,
+    Color color1,
+    Color color2, {
+    bool isPercentage = false,
+    String? tooltip,
+  }) {
+    String format(num v) =>
+        isPercentage ? '${v.toStringAsFixed(0)}%' : '${v.toInt()}';
+
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0.0, end: 1.0),
+      duration: const Duration(milliseconds: 800),
+      curve: Curves.easeOutQuad,
+      builder: (context, value, child) {
+        return Opacity(
+          opacity: value,
+          child: Transform.translate(
+            offset: Offset(0, 20 * (1 - value)),
+            child: child,
+          ),
+        );
+      },
+      child: GlassCard(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        child: Column(
+          children: [
+            if (tooltip != null)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(color: Colors.white70, fontSize: 12),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(width: 4),
+                  Tooltip(
+                    message: tooltip,
+                    triggerMode: TooltipTriggerMode.tap,
+                    child: const Icon(
+                      Icons.info_outline,
+                      size: 14,
+                      color: Colors.white54,
+                    ),
+                  ),
+                ],
+              )
+            else
+              Text(
+                title,
+                style: const TextStyle(color: Colors.white70, fontSize: 12),
+                textAlign: TextAlign.center,
+              ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Column(
+                  children: [
+                    TweenAnimationBuilder<double>(
+                      tween: Tween<double>(begin: 0, end: val1.toDouble()),
+                      duration: const Duration(seconds: 1),
+                      curve: Curves.easeOut,
+                      builder: (context, value, child) {
+                        return Text(
+                          format(value),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        );
+                      },
+                    ),
+                    Container(
+                      margin: const EdgeInsets.only(top: 2),
+                      height: 2,
+                      width: 24,
+                      color: color1,
+                    ),
+                  ],
+                ),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 8.0),
+                  child: Text(
+                    'vs',
+                    style: TextStyle(fontSize: 12, color: Colors.white54),
+                  ),
+                ),
+                Column(
+                  children: [
+                    TweenAnimationBuilder<double>(
+                      tween: Tween<double>(begin: 0, end: val2.toDouble()),
+                      duration: const Duration(seconds: 1),
+                      curve: Curves.easeOut,
+                      builder: (context, value, child) {
+                        return Text(
+                          format(value),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        );
+                      },
+                    ),
+                    Container(
+                      margin: const EdgeInsets.only(top: 2),
+                      height: 2,
+                      width: 24,
+                      color: color2,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAvatar(UserModel? user, Color color) {
+    final name = user?.name ?? '?';
+    final photoUrl = user?.photoUrl;
+
+    return Container(
+      padding: const EdgeInsets.all(2),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: color, width: 2),
+      ),
+      child: SizedBox(
+        width: 32,
+        height: 32,
+        child: ClipOval(
+          child: photoUrl != null
+              ? AppNetworkImage(
+                  url: photoUrl,
+                  fit: BoxFit.cover,
+                  errorWidget: Container(color: Colors.grey),
+                )
+              : Container(
+                  color: Colors.grey,
+                  child: Center(
+                    child: Text(
+                      name.isNotEmpty ? name[0].toUpperCase() : '?',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
         ),
       ),
     );
@@ -443,7 +857,7 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
                               InteractiveViewer(
                                 child: Center(
                                   child: Image.network(
-                                      user.photoUrl!,
+                                    user.photoUrl!,
                                     fit: BoxFit.contain,
                                   ),
                                 ),
@@ -475,9 +889,7 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
                     : null,
                 child: user.photoUrl == null
                     ? Text(
-                        user.name.isNotEmpty
-                            ? user.name[0].toUpperCase()
-                            : '?',
+                        user.name.isNotEmpty ? user.name[0].toUpperCase() : '?',
                         style: const TextStyle(fontSize: 32),
                       )
                     : null,
@@ -543,28 +955,234 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
     );
   }
 
-  Widget _buildScore(PredictionModel prediction) {
-    return Column(
-      children: [
-        Text(
-          '${prediction.homeScore} x ${prediction.awayScore}',
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-          ),
-        ),
-        if (prediction.pointsEarned != null)
-          Text(
-            '${prediction.pointsEarned} pts',
-            style: TextStyle(
-              fontSize: 10,
-              color: prediction.pointsEarned == 0
-                  ? Colors.redAccent
-                  : Colors.greenAccent,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-      ],
+  Widget _buildTeamLogo(String? url) {
+    return SizedBox(
+      width: 48,
+      height: 48,
+      child: url != null
+          ? AppNetworkImage(
+              url: url,
+              fit: BoxFit.contain,
+              errorWidget: const Icon(Icons.sports_soccer, size: 32),
+            )
+          : const Icon(Icons.sports_soccer, size: 32),
     );
   }
+
+  Widget _buildPredictionCard(
+    PredictionModel? prediction,
+    String label,
+    Color color,
+  ) {
+    if (prediction == null) {
+      return Container(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: Colors.white10,
+            width: 1,
+          ),
+        ),
+        child: Column(
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 10,
+                color: Colors.white.withValues(alpha: 0.7),
+              ),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              '-',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                color: Colors.white54,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final points = prediction.pointsEarned ?? 0;
+    final isWin = points > 0;
+    final pointsText = points > 0 ? '+$points' : '$points';
+
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+      decoration: BoxDecoration(
+        color: isWin
+            ? color.withValues(alpha: 0.15)
+            : Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isWin ? color.withValues(alpha: 0.6) : Colors.white10,
+          width: 1,
+        ),
+      ),
+      child: Column(
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              color: Colors.white.withValues(alpha: 0.7),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                '${prediction.homeScore} - ${prediction.awayScore}',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+              ),
+              if (prediction.pointsEarned != null) ...[
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isWin ? color : Colors.grey,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    pointsText,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: isWin ? Colors.black : Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RadarChartPainter extends CustomPainter {
+  final List<double> values1;
+  final List<double> values2;
+  final List<String> labels;
+  final double maxValue;
+  final Color color1;
+  final Color color2;
+  final double animationValue;
+
+  _RadarChartPainter({
+    required this.values1,
+    required this.values2,
+    required this.labels,
+    required this.maxValue,
+    required this.color1,
+    required this.color2,
+    required this.animationValue,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final maxRadius = math.min(size.width, size.height) / 2 * 0.8;
+    final radius = maxRadius * animationValue;
+    final angleStep = (2 * math.pi) / labels.length;
+
+    final paintWeb = Paint()
+      ..color = Colors.white.withValues(alpha: 0.2)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+
+    // Desenha a teia (background)
+    for (int i = 1; i <= 4; i++) {
+      final r = radius * (i / 4);
+      final path = Path();
+      for (int j = 0; j < labels.length; j++) {
+        final angle = j * angleStep - math.pi / 2;
+        final x = center.dx + r * math.cos(angle);
+        final y = center.dy + r * math.sin(angle);
+        if (j == 0) {
+          path.moveTo(x, y);
+        } else {
+          path.lineTo(x, y);
+        }
+      }
+      path.close();
+      canvas.drawPath(path, paintWeb);
+    }
+
+    // Desenha as linhas dos eixos e labels
+    final textPainter = TextPainter(
+      textDirection: TextDirection.ltr,
+      textAlign: TextAlign.center,
+    );
+    for (int i = 0; i < labels.length; i++) {
+      final angle = i * angleStep - math.pi / 2;
+      final x = center.dx + radius * math.cos(angle);
+      final y = center.dy + radius * math.sin(angle);
+      canvas.drawLine(center, Offset(x, y), paintWeb);
+
+      // Labels
+      textPainter.text = TextSpan(
+        text: labels[i],
+        style: const TextStyle(color: Colors.white70, fontSize: 10),
+      );
+      textPainter.layout();
+
+      // Ajuste fino da posição do texto
+      final textOffset = Offset(
+        x + (math.cos(angle) * 15) - textPainter.width / 2,
+        y + (math.sin(angle) * 15) - textPainter.height / 2,
+      );
+      textPainter.paint(canvas, textOffset);
+    }
+
+    // Função auxiliar para desenhar os dados
+    void drawData(List<double> values, Color color) {
+      final path = Path();
+      for (int i = 0; i < values.length; i++) {
+        final r = (values[i] / maxValue) * radius;
+        final angle = i * angleStep - math.pi / 2;
+        final x = center.dx + r * math.cos(angle);
+        final y = center.dy + r * math.sin(angle);
+        if (i == 0) {
+          path.moveTo(x, y);
+        } else {
+          path.lineTo(x, y);
+        }
+      }
+      path.close();
+
+      canvas.drawPath(
+        path,
+        Paint()
+          ..color = color.withValues(alpha: 0.3)
+          ..style = PaintingStyle.fill,
+      );
+      canvas.drawPath(
+        path,
+        Paint()
+          ..color = color
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2,
+      );
+    }
+
+    drawData(values1, color1);
+    drawData(values2, color2);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
