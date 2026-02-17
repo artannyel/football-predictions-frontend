@@ -15,6 +15,7 @@ class PredictionsRepository {
     required int homeScore,
     required int awayScore,
     required String leagueId,
+    bool usePowerup = false,
   }) async {
     try {
       await dioClient.dio.post(
@@ -24,6 +25,7 @@ class PredictionsRepository {
           'home_score': homeScore,
           'away_score': awayScore,
           'league_id': leagueId,
+          'use_powerup': usePowerup,
         },
       );
     } on DioException catch (e) {

@@ -1133,6 +1133,7 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
     final points = prediction.pointsEarned ?? 0;
     final isWin = points > 0;
     final pointsText = points > 0 ? '+$points' : '$points';
+    final powerupUsed = prediction.powerupUsed != null;
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
@@ -1184,6 +1185,34 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
                       fontWeight: FontWeight.bold,
                       color: isWin ? Colors.black : Colors.white,
                     ),
+                  ),
+                ),
+              ],
+              if (powerupUsed) ...[
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.deepPurpleAccent,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.style, size: 10, color: Colors.white),
+                      SizedBox(width: 2),
+                      Text(
+                        'x2',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],

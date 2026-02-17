@@ -37,6 +37,8 @@ class _PredictionPageState extends State<PredictionPage> {
   PredictionModel? _prediction;
   MatchStatsModel? _stats;
   String? _errorMessage;
+  bool _usePowerup = false;
+  int _availablePowerups = 0;
 
   @override
   void initState() {
@@ -52,9 +54,15 @@ class _PredictionPageState extends State<PredictionPage> {
     });
     try {
       final leaguesRepo = context.read<LeaguesRepository>();
+      final predictionsRepo = context.read<PredictionsRepository>();
 
       // Carrega a partida
       final match = await leaguesRepo.getMatch(widget.matchId);
+
+      if (!mounted) return;
+      // Carrega detalhes da liga para saber saldo de powerups
+      final league = await leaguesRepo.getLeagueDetails(widget.leagueId);
+      _availablePowerups = league.myPowerups;
 
       // Tenta carregar as estatísticas (não impede o carregamento da página em caso de erro)
       MatchStatsModel? stats;
@@ -64,11 +72,11 @@ class _PredictionPageState extends State<PredictionPage> {
         debugPrint('Erro ao carregar estatísticas: $e');
       }
 
+      if (!mounted) return;
       // Se tiver ID de palpite, carrega o palpite também
       if (widget.predictionId != null) {
-        final prediction = await context
-            .read<PredictionsRepository>()
-            .getPrediction(widget.predictionId!);
+        final prediction =
+            await predictionsRepo.getPrediction(widget.predictionId!);
 
         if (prediction.match.id != match.id) {
           throw Exception('O palpite não corresponde à partida selecionada.');
@@ -78,6 +86,7 @@ class _PredictionPageState extends State<PredictionPage> {
           _prediction = prediction;
           _homeScoreController.text = prediction.homeScore.toString();
           _awayScoreController.text = prediction.awayScore.toString();
+          _usePowerup = prediction.powerupUsed != null;
         }
       }
 
@@ -138,32 +147,37 @@ class _PredictionPageState extends State<PredictionPage> {
 
     setState(() => _isLoading = true);
 
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+    final repo = context.read<PredictionsRepository>();
+
     try {
-      await context.read<PredictionsRepository>().savePrediction(
+      await repo.savePrediction(
         matchId: widget.matchId,
         homeScore: homeScore,
         awayScore: awayScore,
         leagueId: widget.leagueId,
+        usePowerup: _usePowerup,
       );
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           const SnackBar(content: Text('Palpite salvo com sucesso!')),
         );
-        Navigator.of(context).pop(true);
+        navigator.pop(true);
       }
     } on DioException catch (e) {
       if (mounted) {
         final message = e.response?.data is Map
             ? (e.response?.data['message'] ?? e.message ?? 'Erro desconhecido')
             : (e.message ?? 'Erro desconhecido');
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           SnackBar(content: Text(message), backgroundColor: Colors.red),
         );
       }
     } catch (e) {
       if (mounted) {
         final message = e.toString().replaceAll('Exception: ', '');
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           SnackBar(content: Text(message), backgroundColor: Colors.red),
         );
       }
@@ -371,6 +385,9 @@ class _PredictionPageState extends State<PredictionPage> {
       final points = _prediction!.pointsEarned;
       final isWin = points != null && points > 0;
 
+      // Verifica se usou coringa (baseado no model ou no estado local se acabou de salvar)
+      final powerupUsed = _prediction!.powerupUsed != null;
+
       return Column(
         children: [
           const Text(
@@ -414,19 +431,87 @@ class _PredictionPageState extends State<PredictionPage> {
               ],
             ],
           ),
+          if (powerupUsed) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.deepPurple.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.deepPurpleAccent),
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.style, color: Colors.deepPurpleAccent, size: 16),
+                  SizedBox(width: 8),
+                  Text(
+                    'Coringa Ativo (x2)',
+                    style: TextStyle(
+                      color: Colors.deepPurpleAccent,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
       );
     }
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+    return Column(
       children: [
-        _buildScoreInput(_homeScoreController, true),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16.0),
-          child: Text('-', style: TextStyle(fontSize: 24)),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _buildScoreInput(_homeScoreController, true),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.0),
+              child: Text('-', style: TextStyle(fontSize: 24)),
+            ),
+            _buildScoreInput(_awayScoreController, true),
+          ],
         ),
-        _buildScoreInput(_awayScoreController, true),
+        const SizedBox(height: 24),
+        SwitchListTile(
+          value: _usePowerup,
+          onChanged: (value) {
+            // Só permite ativar se tiver saldo. Desativar é sempre permitido.
+            if (value && _availablePowerups <= 0) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Você não possui Coringas disponíveis.'),
+                ),
+              );
+              return;
+            }
+            setState(() => _usePowerup = value);
+          },
+          title: const Text(
+            'Usar Coringa (x2)',
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+          ),
+          subtitle: Text(
+            'Dobra a pontuação deste palpite.\nDisponíveis: $_availablePowerups',
+            style: const TextStyle(fontSize: 12, color: Colors.white70),
+          ),
+          secondary: const Icon(Icons.style, color: Colors.deepPurpleAccent),
+          activeColor: Colors.deepPurpleAccent,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(
+              color: _usePowerup
+                  ? Colors.deepPurpleAccent
+                  : Colors.transparent,
+            ),
+          ),
+          tileColor: _usePowerup
+              ? Colors.deepPurple.withValues(alpha: 0.1)
+              : Colors.transparent,
+        ),
       ],
     );
   }

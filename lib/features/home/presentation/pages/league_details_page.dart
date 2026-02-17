@@ -805,6 +805,30 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
           const SizedBox(height: 8),
           Text(league.description, textAlign: TextAlign.center),
           const SizedBox(height: 16),
+          if (league.isActive)
+            Container(
+              margin: const EdgeInsets.only(bottom: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.deepPurple.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.deepPurpleAccent),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.style, color: Colors.deepPurpleAccent),
+                  const SizedBox(width: 8),
+                  Text(
+                    '${league.myPowerups} Coringas disponíveis',
+                    style: const TextStyle(
+                      color: Colors.deepPurpleAccent,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           GlassCard(
             padding: const EdgeInsets.all(12),
             child: Column(
@@ -1410,6 +1434,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                 padding: EdgeInsets.zero,
                 child: InkWell(
                   onTap: () async {
+                    final leaguesRepo = context.read<LeaguesRepository>();
                     final result = await context.pushNamed(
                       'Prediction',
                       pathParameters: {
@@ -1417,8 +1442,10 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                         'matchId': match.id.toString(),
                       },
                     );
-                    if (result == true) {
-                      setState(() {});
+                    if (result == true && mounted) {
+                      setState(() {
+                        _detailsFuture = leaguesRepo.getLeagueDetails(widget.leagueId);
+                      });
                     }
                   },
                   child: Column(
@@ -1632,6 +1659,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
               padding: EdgeInsets.zero,
               child: InkWell(
                 onTap: () async {
+                  final leaguesRepo = context.read<LeaguesRepository>();
                   final result = await context.pushNamed(
                     'Prediction',
                     pathParameters: {
@@ -1642,8 +1670,11 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                       'predictionId': prediction.id.toString(),
                     },
                   );
-                  if (result == true) {
-                    setState(() {});
+                  if (result == true && mounted) {
+                    _loadHistoryPredictions(refresh: true);
+                    setState(() {
+                      _detailsFuture = leaguesRepo.getLeagueDetails(widget.leagueId);
+                    });
                   }
                 },
                 child: Column(
@@ -1832,6 +1863,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                 child: InkWell(
                   onTap: isEditable
                       ? () async {
+                          final leaguesRepo = context.read<LeaguesRepository>();
                           final result = await context.pushNamed(
                             'Prediction',
                             pathParameters: {
@@ -1842,8 +1874,10 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                               'predictionId': prediction.id.toString(),
                             },
                           );
-                          if (result == true) {
-                            setState(() {});
+                          if (result == true && mounted) {
+                            setState(() {
+                              _detailsFuture = leaguesRepo.getLeagueDetails(widget.leagueId);
+                            });
                           }
                         }
                       : null,
@@ -2030,6 +2064,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
     final points = prediction.pointsEarned ?? 0;
     final isWin = points > 0;
     final pointsText = points > 0 ? '+$points' : '$points';
+    final powerupUsed = prediction.powerupUsed != null;
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
@@ -2081,6 +2116,34 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                       fontWeight: FontWeight.bold,
                       color: isWin ? Colors.black : Colors.white,
                     ),
+                  ),
+                ),
+              ],
+              if (powerupUsed) ...[
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.deepPurpleAccent,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.style, size: 10, color: Colors.white),
+                      SizedBox(width: 2),
+                      Text(
+                        'x2',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
