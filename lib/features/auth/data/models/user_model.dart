@@ -75,9 +75,9 @@ class RadarModel {
 
   factory RadarModel.fromJson(Map<String, dynamic> json) {
     return RadarModel(
-      precision: json['precision'] ?? 0,
-      technique: json['technique'] ?? 0,
-      safety: json['safety'] ?? 0,
+      precision: (json['precision'] ?? 0).toDouble(),
+      technique: (json['technique'] ?? 0).toDouble(),
+      safety: (json['safety'] ?? 0).toDouble(),
     );
   }
 }
