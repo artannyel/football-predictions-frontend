@@ -1,3 +1,6 @@
+import 'package:flutter/material.dart';
+import 'package:football_predictions/features/matches/data/models/match_model.dart';
+
 class LeagueModel {
   final String id;
   final String name;
@@ -10,6 +13,7 @@ class LeagueModel {
   final int myPoints;
   final bool isActive;
   final int? pendingPredictionsCount;
+  final MatchModel? nextMatch;
 
   LeagueModel({
     required this.id,
@@ -23,6 +27,7 @@ class LeagueModel {
     required this.myPoints,
     this.isActive = true,
     this.pendingPredictionsCount,
+    this.nextMatch,
   });
 
   factory LeagueModel.fromJson(Map<String, dynamic> json) {
@@ -38,6 +43,9 @@ class LeagueModel {
       myPoints: json['my_points'] ?? 0,
       isActive: json['is_active'] ?? true,
       pendingPredictionsCount: json['pending_predictions_count'],
+      nextMatch: json['next_match'] != null
+          ? MatchModel.fromJson(json['next_match'])
+          : null,
     );
   }
 }
