@@ -164,9 +164,9 @@ class AuthRepository {
     }
   }
 
-  Future<UserProfileModel> getUserProfile() async {
+  Future<UserProfileModel> getUserProfile({String? userId}) async {
     try {
-      final response = await _dioClient.dio.get('user/profile');
+      final response = await _dioClient.dio.get(userId != null ? 'users/$userId/profile' :'user/profile');
       return UserProfileModel.fromJson(response.data);
     } catch (e) {
       throw Exception('Falha ao carregar perfil: $e');

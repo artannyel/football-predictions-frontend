@@ -9,7 +9,9 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 class ProfilePage extends StatefulWidget {
-  const ProfilePage({super.key});
+  final String? userId;
+
+  const ProfilePage({super.key, this.userId});
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -29,7 +31,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _loadProfile() async {
     try {
       final repo = context.read<AuthRepository>();
-      final profile = await repo.getUserProfile();
+      final profile = await repo.getUserProfile(userId: widget.userId);
       if (mounted) {
         setState(() {
           _profile = profile;
@@ -53,7 +55,9 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return PopScope(
+      canPop: false,
       onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
         _onBackPage(context);
       },
       child: Scaffold(
@@ -124,8 +128,8 @@ class _ProfilePageState extends State<ProfilePage> {
                       _buildUserInfo(context, _profile!.user),
                       const SizedBox(height: 16),
                       _buildCareerStats(context, _profile!.career),
-                      if (_profile!.hallOfFame.isNotEmpty)
-                        _buildHallOfFame(context, _profile!.hallOfFame),
+                      const SizedBox(height: 16),
+                      _buildHallOfFame(context, _profile!.hallOfFame),
                       const SizedBox(height: 16),
                       _buildBadgesSection(context, _profile!.user.badges),
                     ],
@@ -203,12 +207,14 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 8),
-            Text(
-              user.email,
-              style: const TextStyle(fontSize: 14, color: Colors.white70),
-              textAlign: TextAlign.center,
-            ),
+            if (widget.userId == null) ...[
+              const SizedBox(height: 8),
+              Text(
+                user.email,
+                style: const TextStyle(fontSize: 14, color: Colors.white70),
+                textAlign: TextAlign.center,
+              ),
+            ],
           ],
         ),
       ),
@@ -253,11 +259,19 @@ class _ProfilePageState extends State<ProfilePage> {
                     career.averagePoints,
                     formatter: (v) => v.toStringAsFixed(2),
                   ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
                   _buildStatItem(
                     'Win Rate',
                     career.winRate,
                     formatter: (v) => '${v.toStringAsFixed(1)}%',
                   ),
+                  _buildStatItem('Ligas Ativas', career.activeLeaguesCount),
+                  _buildStatItem('Ligas Final.', career.finishedLeaguesCount),
                 ],
               ),
               const Divider(height: 32, color: Colors.white24),
@@ -361,54 +375,93 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           ),
           const SizedBox(height: 16),
-          SizedBox(
-            height: 160,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: hallOfFame.length,
-              itemBuilder: (context, index) {
-                final item = hallOfFame[index];
-                Color trophyColor;
-                String trophyIcon;
-                if (item.position == 1) {
-                  trophyColor = Colors.amber;
-                  trophyIcon = '🏆';
-                } else if (item.position == 2) {
-                  trophyColor = const Color(0xFFC0C0C0);
-                  trophyIcon = '🥈';
-                } else {
-                  trophyColor = const Color(0xFFCD7F32);
-                  trophyIcon = '🥉';
-                }
+          if (hallOfFame.isEmpty)
+            Center(
+              child: Column(
+                children: [
+                  const Icon(
+                    Icons.emoji_events_outlined,
+                    size: 48,
+                    color: Colors.white54,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    widget.userId == null
+                        ? 'Seu Hall da Fama está vazio.'
+                        : 'Hall da Fama está vazio.',
+                    style: const TextStyle(color: Colors.white70),
+                  ),
+                  if (widget.userId == null)
+                    const Text(
+                      'Continue disputando as ligas para conquistar troféus!',
+                      style: TextStyle(color: Colors.white54, fontSize: 12),
+                      textAlign: TextAlign.center,
+                    ),
+                ],
+              ),
+            )
+          else
+            SizedBox(
+              height: 160,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: hallOfFame.length,
+                itemBuilder: (context, index) {
+                  final item = hallOfFame[index];
+                  Color trophyColor;
+                  String trophyIcon;
+                  if (item.position == 1) {
+                    trophyColor = Colors.amber;
+                    trophyIcon = '🏆';
+                  } else if (item.position == 2) {
+                    trophyColor = const Color(0xFFC0C0C0);
+                    trophyIcon = '🥈';
+                  } else {
+                    trophyColor = const Color(0xFFCD7F32);
+                    trophyIcon = '🥉';
+                  }
 
-                return Container(
-                  width: 140,
-                  margin: const EdgeInsets.only(right: 8),
-                  child: GlassCard(
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Stack(
-                          alignment: Alignment.topRight,
-                          children: [
-                            Container(
-                              margin: const EdgeInsets.only(top: 4, right: 4),
-                              width: 48,
-                              height: 48,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: trophyColor,
-                                  width: 2,
+                  return Container(
+                    width: 140,
+                    margin: const EdgeInsets.only(right: 8),
+                    child: GlassCard(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Stack(
+                            alignment: Alignment.topRight,
+                            children: [
+                              Container(
+                                margin: const EdgeInsets.only(top: 4, right: 4),
+                                width: 48,
+                                height: 48,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: trophyColor,
+                                    width: 2,
+                                  ),
                                 ),
-                              ),
-                              child: ClipOval(
-                                child: item.avatarUrl != null
-                                    ? AppNetworkImage(
-                                        url: item.avatarUrl!,
-                                        fit: BoxFit.cover,
-                                        errorWidget: CircleAvatar(
+                                child: ClipOval(
+                                  child: item.avatarUrl != null
+                                      ? AppNetworkImage(
+                                          url: item.avatarUrl!,
+                                          fit: BoxFit.cover,
+                                          errorWidget: CircleAvatar(
+                                            backgroundColor:
+                                                Colors.grey.shade800,
+                                            child: Text(
+                                              item.name.isNotEmpty
+                                                  ? item.name[0].toUpperCase()
+                                                  : '?',
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          ),
+                                        )
+                                      : CircleAvatar(
                                           backgroundColor: Colors.grey.shade800,
                                           child: Text(
                                             item.name.isNotEmpty
@@ -419,64 +472,52 @@ class _ProfilePageState extends State<ProfilePage> {
                                             ),
                                           ),
                                         ),
-                                      )
-                                    : CircleAvatar(
-                                        backgroundColor: Colors.grey.shade800,
-                                        child: Text(
-                                          item.name.isNotEmpty
-                                              ? item.name[0].toUpperCase()
-                                              : '?',
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      ),
+                                ),
                               ),
+                              Text(
+                                trophyIcon,
+                                style: const TextStyle(fontSize: 20),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            item.name,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                              color: Colors.white,
                             ),
-                            Text(
-                              trophyIcon,
-                              style: const TextStyle(fontSize: 20),
+                            textAlign: TextAlign.center,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            item.competitionName,
+                            style: const TextStyle(
+                              fontSize: 10,
+                              color: Colors.white70,
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          item.name,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                            color: Colors.white,
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          textAlign: TextAlign.center,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        Text(
-                          item.competitionName,
-                          style: const TextStyle(
-                            fontSize: 10,
-                            color: Colors.white70,
+                          const SizedBox(height: 4),
+                          Text(
+                            item.year,
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: trophyColor,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                          textAlign: TextAlign.center,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          item.year,
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: trophyColor,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
-          ),
         ],
       ),
     );
@@ -498,24 +539,27 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           const SizedBox(height: 16),
           if (badges.isEmpty)
-            const Center(
+            Center(
               child: Column(
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.emoji_events_outlined,
                     size: 48,
                     color: Colors.white54,
                   ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   Text(
-                    'Você ainda não possui medalhas.',
-                    style: TextStyle(color: Colors.white70),
+                    widget.userId == null
+                        ? 'Você ainda não possui medalhas.'
+                        : 'Não possui medalhas',
+                    style: const TextStyle(color: Colors.white70),
                   ),
-                  Text(
-                    'Participe das ligas e acerte palpites para ganhar!',
-                    style: TextStyle(color: Colors.white54, fontSize: 12),
-                    textAlign: TextAlign.center,
-                  ),
+                  if (widget.userId == null)
+                    const Text(
+                      'Participe das ligas e acerte palpites para ganhar!',
+                      style: TextStyle(color: Colors.white54, fontSize: 12),
+                      textAlign: TextAlign.center,
+                    ),
                 ],
               ),
             )
@@ -551,48 +595,55 @@ class _ProfilePageState extends State<ProfilePage> {
                                     ),
                             ),
                             const SizedBox(height: 8),
-                            Text(
-                              badge.name,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                              textAlign: TextAlign.center,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            if (badge.count > 1) ...[
-                              const SizedBox(height: 4),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.amber,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: TweenAnimationBuilder<double>(
-                                  tween: Tween<double>(
-                                    begin: 0,
-                                    end: badge.count.toDouble(),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    badge.name,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                  duration: const Duration(seconds: 1),
-                                  curve: Curves.easeOut,
-                                  builder: (context, val, child) {
-                                    return Text(
-                                      'x${val.toInt()}',
-                                      style: const TextStyle(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.black,
-                                      ),
-                                    );
-                                  },
                                 ),
-                              ),
-                            ],
+                                if (badge.count > 1) ...[
+                                  const SizedBox(width: 4),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.amber,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: TweenAnimationBuilder<double>(
+                                      tween: Tween<double>(
+                                        begin: 0,
+                                        end: badge.count.toDouble(),
+                                      ),
+                                      duration: const Duration(seconds: 1),
+                                      curve: Curves.easeOut,
+                                      builder: (context, val, child) {
+                                        return Text(
+                                          'x${val.toInt()}',
+                                          style: const TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.black,
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
                           ],
                         ),
                       ),

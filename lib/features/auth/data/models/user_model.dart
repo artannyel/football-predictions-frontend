@@ -87,6 +87,8 @@ class CareerModel {
   final int totalPredictions;
   final double averagePoints;
   final double winRate;
+  final int activeLeaguesCount;
+  final int finishedLeaguesCount;
   final RadarModel radar;
   final List<String> recentForm;
 
@@ -95,6 +97,8 @@ class CareerModel {
     required this.totalPredictions,
     required this.averagePoints,
     required this.winRate,
+    required this.activeLeaguesCount,
+    required this.finishedLeaguesCount,
     required this.radar,
     required this.recentForm,
   });
@@ -105,6 +109,8 @@ class CareerModel {
       totalPredictions: json['total_predictions'] ?? 0,
       averagePoints: (json['average_points'] ?? 0).toDouble(),
       winRate: (json['win_rate'] ?? 0).toDouble(),
+      activeLeaguesCount: json['active_leagues_count'] ?? 0,
+      finishedLeaguesCount: json['finished_leagues_count'] ?? 0,
       radar: RadarModel.fromJson(json['radar'] ?? {}),
       recentForm: List<String>.from(json['recent_form'] ?? []),
     );

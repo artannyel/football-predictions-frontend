@@ -75,7 +75,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final user = context.read<AuthRepository>().backendUser;
 
     return PopScope(
+      canPop: false,
       onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
         _onBackPage(context);
       },
       child: Scaffold(

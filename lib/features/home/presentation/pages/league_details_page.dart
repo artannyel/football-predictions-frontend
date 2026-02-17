@@ -385,7 +385,9 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      onPopInvokedWithResult: (canPop, _) {
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
         _onBackPage(context);
       },
       child: Scaffold(

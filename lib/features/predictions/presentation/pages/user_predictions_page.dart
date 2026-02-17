@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:football_predictions/core/auth/auth_notifier.dart';
 import 'package:football_predictions/core/presentation/widgets/app_network_image.dart';
 import 'package:football_predictions/core/presentation/widgets/blinking_live_indicator.dart';
 import 'package:football_predictions/core/presentation/widgets/loading_widget.dart';
@@ -9,6 +10,7 @@ import 'package:football_predictions/features/home/presentation/widgets/glass_ca
 import 'package:football_predictions/core/presentation/widgets/radar_chart.dart';
 import 'package:football_predictions/features/predictions/data/models/prediction_model.dart';
 import 'package:football_predictions/features/predictions/data/repositories/predictions_repository.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 class UserPredictionsPage extends StatefulWidget {
@@ -162,6 +164,16 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
     return 'Rodada $matchday';
   }
 
+  void _navigateToProfile(UserModel? user) {
+    if (user == null) return;
+    final currentUser = context.read<AuthNotifier>().backendUser;
+    if (currentUser != null && currentUser.id == user.id) {
+      context.pushNamed('Profile');
+    } else {
+      context.pushNamed('UserProfile', pathParameters: {'userId': user.id});
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -300,7 +312,8 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
             final prediction = item.user;
             final myPrediction = item.me;
             final match = prediction.match;
-            final isComparing = _userHistory != null &&
+            final isComparing =
+                _userHistory != null &&
                 _meHistory != null &&
                 _userHistory!.id != _meHistory!.id;
 
@@ -501,21 +514,25 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
                   children: [
                     // User (Left)
                     Expanded(
-                      child: Row(
-                        children: [
-                          _buildAvatar(_userHistory, Colors.cyanAccent),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              _userHistory?.name.split(' ').first ?? 'Usuário',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
+                      child: GestureDetector(
+                        onTap: () => _navigateToProfile(_userHistory),
+                        child: Row(
+                          children: [
+                            _buildAvatar(_userHistory, Colors.cyanAccent),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                _userHistory?.name.split(' ').first ??
+                                    'Usuário',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              overflow: TextOverflow.ellipsis,
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                     // Score (Center)
@@ -581,23 +598,26 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
                     ),
                     // Me (Right)
                     Expanded(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              _meHistory?.name.split(' ').first ?? 'Você',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
+                      child: GestureDetector(
+                        onTap: () => _navigateToProfile(_meHistory),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                _meHistory?.name.split(' ').first ?? 'Você',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.end,
                               ),
-                              overflow: TextOverflow.ellipsis,
-                              textAlign: TextAlign.end,
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                          _buildAvatar(_meHistory, Colors.amberAccent),
-                        ],
+                            const SizedBox(width: 8),
+                            _buildAvatar(_meHistory, Colors.amberAccent),
+                          ],
+                        ),
                       ),
                     ),
                   ],
@@ -614,13 +634,13 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
                   curve: Curves.easeOutBack,
                   builder: (context, value, child) {
                     return RadarChart(
-                        values1: userValues,
-                        values2: meValues,
-                        labels: labels,
-                        maxValue: maxValue,
-                        color1: Colors.cyanAccent,
-                        color2: Colors.amberAccent,
-                        animationValue: value,
+                      values1: userValues,
+                      values2: meValues,
+                      labels: labels,
+                      maxValue: maxValue,
+                      color1: Colors.cyanAccent,
+                      color2: Colors.amberAccent,
+                      animationValue: value,
                     );
                   },
                 ),
@@ -637,7 +657,7 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(4, 0, 4, 12),
+          padding: const EdgeInsets.fromLTRB(0, 0, 0, 12),
           child: Row(
             children: [
               Expanded(
@@ -665,6 +685,7 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
             ],
           ),
         ),
+        _buildBadgesComparison(_userHistory!.badges, _meHistory!.badges),
       ],
     );
   }
@@ -799,6 +820,127 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
     );
   }
 
+  Widget _buildBadgesComparison(
+    List<BadgeModel> userBadges,
+    List<BadgeModel> meBadges,
+  ) {
+    if (userBadges.isEmpty && meBadges.isEmpty) return const SizedBox();
+
+    return GlassCard(
+      margin: const EdgeInsets.fromLTRB(4, 0, 4, 12),
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        children: [
+          const Text(
+            'Medalhas da Liga',
+            style: TextStyle(color: Colors.white70, fontSize: 12),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 12),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: _buildBadgesList(userBadges, Colors.cyanAccent)),
+              Container(
+                width: 1,
+                color: Colors.white10,
+                margin: const EdgeInsets.symmetric(horizontal: 12),
+                height: 32,
+              ),
+              Expanded(child: _buildBadgesList(meBadges, Colors.amberAccent)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBadgesList(List<BadgeModel> badges, Color color) {
+    if (badges.isEmpty) {
+      return const Center(
+        child: Text('-', style: TextStyle(color: Colors.white30, fontSize: 24)),
+      );
+    }
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: 8,
+      runSpacing: 8,
+      children: badges
+          .asMap()
+          .entries
+          .map((entry) => _buildBadgeItem(entry.value, entry.key, color))
+          .toList(),
+    );
+  }
+
+  Widget _buildBadgeItem(BadgeModel badge, int index, Color color) {
+    return TweenAnimationBuilder<double>(
+      key: ValueKey('${badge.slug}_$index'),
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: Duration(milliseconds: 500 + (index * 100)),
+      curve: Curves.elasticOut,
+      builder: (context, value, child) {
+        return Transform.scale(scale: value, child: child);
+      },
+      child: Tooltip(
+        message: '${badge.name}\n${badge.description}',
+        triggerMode: TooltipTriggerMode.tap,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: color.withValues(alpha: 0.3),
+                    blurRadius: 8,
+                    spreadRadius: 0,
+                  ),
+                ],
+              ),
+              child: SizedBox(
+                width: 32,
+                height: 32,
+                child: badge.iconUrl != null
+                    ? AppNetworkImage(url: badge.iconUrl!, fit: BoxFit.contain)
+                    : Icon(
+                        Icons.military_tech,
+                        size: 32,
+                        color: color,
+                      ),
+              ),
+            ),
+            if (badge.count > 1)
+              Positioned(
+                right: -4,
+                bottom: -4,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 1,
+                  ),
+                  decoration: BoxDecoration(
+                    color: color,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.black, width: 1),
+                  ),
+                  child: Text(
+                    'x${badge.count}',
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontSize: 8,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildAvatar(UserModel? user, Color color) {
     final name = user?.name ?? '?';
     final photoUrl = user?.photoUrl;
@@ -844,43 +986,7 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
         children: [
           if (user != null) ...[
             GestureDetector(
-              onTap: user.photoUrl != null
-                  ? () {
-                      showDialog(
-                        context: context,
-                        builder: (context) => Dialog(
-                          backgroundColor: Colors.black.withValues(alpha: 0.9),
-                          insetPadding: EdgeInsets.zero,
-                          child: Stack(
-                            children: [
-                              InteractiveViewer(
-                                child: Center(
-                                  child: Image.network(
-                                    user.photoUrl!,
-                                    fit: BoxFit.contain,
-                                  ),
-                                ),
-                              ),
-                              Positioned(
-                                top: 16,
-                                right: 16,
-                                child: SafeArea(
-                                  child: IconButton(
-                                    icon: const Icon(
-                                      Icons.close,
-                                      color: Colors.white,
-                                    ),
-                                    onPressed: () =>
-                                        Navigator.of(context).pop(),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    }
-                  : null,
+              onTap: () => _navigateToProfile(user),
               child: CircleAvatar(
                 radius: 40,
                 backgroundImage: user.photoUrl != null
@@ -973,16 +1079,15 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
     String label,
     Color color,
   ) {
-    if (prediction == null || prediction.homeScore == null || prediction.awayScore == null) {
+    if (prediction == null ||
+        prediction.homeScore == null ||
+        prediction.awayScore == null) {
       return Container(
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: Colors.white10,
-            width: 1,
-          ),
+          border: Border.all(color: Colors.white10, width: 1),
         ),
         child: Column(
           children: [

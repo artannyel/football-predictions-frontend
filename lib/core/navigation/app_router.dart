@@ -99,6 +99,12 @@ GoRouter appRouter(AuthNotifier authNotifier) {
             name: 'EditProfile',
             builder: (context, state) => const EditProfilePage(),
           ),
+          GoRoute(
+            path: '/usuario/:userId',
+            name: 'UserProfile',
+            builder: (context, state) =>
+                ProfilePage(userId: state.pathParameters['userId']),
+          ),
         ],
       ),
       GoRoute(
