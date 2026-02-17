@@ -24,106 +24,108 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: 2,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Minhas Ligas'),
-          bottom: const TabBar(
-            tabs: [
-              Tab(text: 'Ativas'),
-              Tab(text: 'Finalizadas'),
+      child: SafeArea(
+        child: Scaffold(
+          appBar: AppBar(
+            title: const Text('Minhas Ligas'),
+            bottom: const TabBar(
+              tabs: [
+                Tab(text: 'Ativas'),
+                Tab(text: 'Finalizadas'),
+              ],
+            ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.add),
+                onPressed: () => _showAddOptions(context),
+              ),
             ],
           ),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.add),
-              onPressed: () => _showAddOptions(context),
-            ),
-          ],
-        ),
-        drawer: Drawer(
-          child: Consumer<AuthNotifier>(
-            builder: (context, authNotifier, child) {
-              // Obtém o usuário já carregado no AuthNotifier
-              final user = authNotifier.backendUser;
-              return ListView(
-                padding: EdgeInsets.zero,
-                children: [
-                  UserAccountsDrawerHeader(
-                    accountName: Text(
-                      user?.name ?? 'Usuário',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onPrimary,
-                        fontWeight: FontWeight.bold,
+          drawer: Drawer(
+            child: Consumer<AuthNotifier>(
+              builder: (context, authNotifier, child) {
+                // Obtém o usuário já carregado no AuthNotifier
+                final user = authNotifier.backendUser;
+                return ListView(
+                  padding: EdgeInsets.zero,
+                  children: [
+                    UserAccountsDrawerHeader(
+                      accountName: Text(
+                        user?.name ?? 'Usuário',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onPrimary,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                    accountEmail: Text(
-                      user?.email ?? '',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onPrimary,
+                      accountEmail: Text(
+                        user?.email ?? '',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onPrimary,
+                        ),
                       ),
-                    ),
-                    currentAccountPicture: CircleAvatar(
-                      backgroundColor: Colors.white,
-                      child: ClipOval(
-                        child: user?.photoUrl != null
-                            ? AppNetworkImage(
-                                url: user!.photoUrl!,
-                                width: 72,
-                                height: 72,
-                                fit: BoxFit.cover,
-                                errorWidget: const Icon(
+                      currentAccountPicture: CircleAvatar(
+                        backgroundColor: Colors.white,
+                        child: ClipOval(
+                          child: user?.photoUrl != null
+                              ? AppNetworkImage(
+                                  url: user!.photoUrl!,
+                                  width: 72,
+                                  height: 72,
+                                  fit: BoxFit.cover,
+                                  errorWidget: const Icon(
+                                    Icons.person,
+                                    size: 40,
+                                    color: Colors.grey,
+                                  ),
+                                )
+                              : const Icon(
                                   Icons.person,
                                   size: 40,
                                   color: Colors.grey,
                                 ),
-                              )
-                            : const Icon(
-                                Icons.person,
-                                size: 40,
-                                color: Colors.grey,
-                              ),
+                        ),
+                      ),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                     ),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primary,
+                    ListTile(
+                      leading: const Icon(Icons.person),
+                      title: const Text('Perfil'),
+                      onTap: () async {
+                        Navigator.pop(context); // Fecha o drawer
+                        context.go('/perfil');
+                      },
                     ),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.person),
-                    title: const Text('Perfil'),
-                    onTap: () async {
-                      Navigator.pop(context); // Fecha o drawer
-                      context.go('/perfil');
-                    },
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.logout),
-                    title: const Text('Sair'),
-                    onTap: () async {
-                      Navigator.pop(context);
-                      await context.read<AuthNotifier>().logout();
-                    },
-                  ),
-                ],
-              );
+                    ListTile(
+                      leading: const Icon(Icons.logout),
+                      title: const Text('Sair'),
+                      onTap: () async {
+                        Navigator.pop(context);
+                        await context.read<AuthNotifier>().logout();
+                      },
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+          floatingActionButton: FloatingActionButton.extended(
+            onPressed: () {
+              context.go('/competicoes');
             },
+            label: const Text('Ver Competições'),
+            icon: const Icon(Icons.sports_soccer),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(30),
+            ),
           ),
-        ),
-        floatingActionButton: FloatingActionButton.extended(
-          onPressed: () {
-            context.go('/competicoes');
-          },
-          label: const Text('Ver Competições'),
-          icon: const Icon(Icons.sports_soccer),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
+          body: TabBarView(
+            children: [
+              _LeaguesTab(key: _activeTabKey, status: 'active'),
+              const _LeaguesTab(status: 'finished'),
+            ],
           ),
-        ),
-        body: TabBarView(
-          children: [
-            _LeaguesTab(key: _activeTabKey, status: 'active'),
-            const _LeaguesTab(status: 'finished'),
-          ],
         ),
       ),
     );
