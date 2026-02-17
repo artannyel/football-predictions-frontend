@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:football_predictions/features/matches/data/models/match_model.dart';
 
 class LeagueModel {
