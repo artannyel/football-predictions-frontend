@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:football_predictions/core/presentation/widgets/app_network_image.dart';
@@ -6,6 +7,7 @@ import 'package:football_predictions/core/presentation/widgets/loading_widget.da
 import 'package:football_predictions/features/matches/data/models/match_model.dart';
 import 'package:football_predictions/features/matches/data/models/match_stats_model.dart';
 import 'package:football_predictions/features/home/data/repositories/leagues_repository.dart';
+import 'package:football_predictions/features/predictions/data/models/prediction_model.dart';
 import 'package:football_predictions/features/predictions/data/repositories/predictions_repository.dart';
 import 'package:provider/provider.dart';
 
@@ -28,15 +30,18 @@ class PredictionPage extends StatefulWidget {
 class _PredictionPageState extends State<PredictionPage> {
   final _homeScoreController = TextEditingController();
   final _awayScoreController = TextEditingController();
+  late ConfettiController _confettiController;
   bool _isLoading = false;
   bool _isFetching = false;
   MatchModel? _match;
+  PredictionModel? _prediction;
   MatchStatsModel? _stats;
   String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
+    _confettiController = ConfettiController(duration: const Duration(seconds: 3));
     _loadData();
   }
 
@@ -70,6 +75,7 @@ class _PredictionPageState extends State<PredictionPage> {
         }
 
         if (mounted) {
+          _prediction = prediction;
           _homeScoreController.text = prediction.homeScore.toString();
           _awayScoreController.text = prediction.awayScore.toString();
         }
@@ -80,6 +86,13 @@ class _PredictionPageState extends State<PredictionPage> {
           _match = match;
           _stats = stats;
         });
+
+        if (_prediction != null &&
+            _match!.status == 'FINISHED' &&
+            _prediction!.homeScore == _match!.homeScore &&
+            _prediction!.awayScore == _match!.awayScore) {
+          _confettiController.play();
+        }
       }
     } on DioException catch (e) {
       if (mounted) {
@@ -106,6 +119,7 @@ class _PredictionPageState extends State<PredictionPage> {
 
   @override
   void dispose() {
+    _confettiController.dispose();
     _homeScoreController.dispose();
     _awayScoreController.dispose();
     super.dispose();
@@ -173,7 +187,26 @@ class _PredictionPageState extends State<PredictionPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Fazer Palpite')),
-      body: _buildBody(),
+      body: Stack(
+        children: [
+          _buildBody(),
+          Align(
+            alignment: Alignment.topCenter,
+            child: ConfettiWidget(
+              confettiController: _confettiController,
+              blastDirectionality: BlastDirectionality.explosive,
+              shouldLoop: false,
+              colors: const [
+                Colors.green,
+                Colors.blue,
+                Colors.pink,
+                Colors.orange,
+                Colors.purple,
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -242,28 +275,16 @@ class _PredictionPageState extends State<PredictionPage> {
           const SizedBox(height: 24),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildTeamColumn(_match!.homeTeamName, _match!.homeTeamCrest),
-              const Text(
-                'X',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              ),
+              Expanded(child: _buildMatchInfo()),
               _buildTeamColumn(_match!.awayTeamName, _match!.awayTeamCrest),
             ],
           ),
           _buildStats(),
           const SizedBox(height: 32),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _buildScoreInput(_homeScoreController, !isLocked),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16.0),
-                child: Text('-', style: TextStyle(fontSize: 24)),
-              ),
-              _buildScoreInput(_awayScoreController, !isLocked),
-            ],
-          ),
+          _buildPredictionSection(isLocked),
           const SizedBox(height: 48),
           SizedBox(
             width: double.infinity,
@@ -283,6 +304,130 @@ class _PredictionPageState extends State<PredictionPage> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildMatchInfo() {
+    if (_match!.homeScore != null) {
+      return Column(
+        children: [
+          const SizedBox(height: 8),
+          Text(
+            '${_match!.homeScore} - ${_match!.awayScore}',
+            style: const TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          if (_match!.homeScoreExtraTime != null &&
+              _match!.awayScoreExtraTime != null)
+            Text(
+              'Prorrogação: ${_match!.homeScoreExtraTime} - ${_match!.awayScoreExtraTime}',
+              style: const TextStyle(
+                fontSize: 10,
+                color: Colors.grey,
+              ),
+            ),
+          if (_match!.homeScorePenalties != null &&
+              _match!.awayScorePenalties != null)
+            Text(
+              'Pênaltis: ${_match!.homeScorePenalties} - ${_match!.awayScorePenalties}',
+              style: const TextStyle(
+                fontSize: 10,
+                color: Colors.grey,
+              ),
+            ),
+          const SizedBox(height: 4),
+          Text(
+            _match!.status == 'IN_PLAY'
+                ? 'Em andamento'
+                : (_match!.status == 'FINISHED' ? 'Encerrado' : _match!.status),
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
+          ),
+        ],
+      );
+    }
+
+    return Column(
+      children: [
+        const SizedBox(height: 16),
+        const Text(
+          'X',
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPredictionSection(bool isLocked) {
+    if (isLocked) {
+      if (_prediction == null) {
+        return const Text(
+          'Você não palpitou nesta partida.',
+          style: TextStyle(color: Colors.white70),
+        );
+      }
+
+      final points = _prediction!.pointsEarned;
+      final isWin = points != null && points > 0;
+
+      return Column(
+        children: [
+          const Text(
+            'SEU PALPITE',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Colors.white54,
+              letterSpacing: 1,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                '${_prediction!.homeScore} - ${_prediction!.awayScore}',
+                style:
+                    const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+              ),
+              if (points != null) ...[
+                const SizedBox(width: 16),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isWin ? Colors.green : Colors.grey,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    '${points > 0 ? '+' : ''}$points pts',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ],
+      );
+    }
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _buildScoreInput(_homeScoreController, true),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16.0),
+          child: Text('-', style: TextStyle(fontSize: 24)),
+        ),
+        _buildScoreInput(_awayScoreController, true),
+      ],
     );
   }
 

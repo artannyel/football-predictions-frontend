@@ -11,6 +11,11 @@ class MatchModel {
   final String? awayTeamCrest;
   final int? homeScore;
   final int? awayScore;
+  final String? scoreDuration;
+  final int? homeScoreExtraTime;
+  final int? awayScoreExtraTime;
+  final int? homeScorePenalties;
+  final int? awayScorePenalties;
 
   MatchModel({
     required this.id,
@@ -25,6 +30,11 @@ class MatchModel {
     this.awayTeamCrest,
     this.homeScore,
     this.awayScore,
+    this.scoreDuration,
+    this.homeScoreExtraTime,
+    this.awayScoreExtraTime,
+    this.homeScorePenalties,
+    this.awayScorePenalties,
   });
 
   factory MatchModel.fromJson(Map<String, dynamic> json) {
@@ -41,6 +51,11 @@ class MatchModel {
       awayTeamCrest: json['away_team']['crest'],
       homeScore: json['score']['full_time']['home'],
       awayScore: json['score']['full_time']['away'],
+      scoreDuration: json['score']['duration'],
+      homeScoreExtraTime: json['score']['extra_time']?['home'],
+      awayScoreExtraTime: json['score']['extra_time']?['away'],
+      homeScorePenalties: json['score']['penalties']?['home'],
+      awayScorePenalties: json['score']['penalties']?['away'],
     );
   }
 }

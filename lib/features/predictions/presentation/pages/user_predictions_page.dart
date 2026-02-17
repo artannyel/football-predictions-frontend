@@ -400,6 +400,24 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
+                                if (match.homeScoreExtraTime != null &&
+                                    match.awayScoreExtraTime != null)
+                                  Text(
+                                    'Prorrogação: ${match.homeScoreExtraTime} - ${match.awayScoreExtraTime}',
+                                    style: const TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.white70,
+                                    ),
+                                  ),
+                                if (match.homeScorePenalties != null &&
+                                    match.awayScorePenalties != null)
+                                  Text(
+                                    'Pênaltis: ${match.homeScorePenalties} - ${match.awayScorePenalties}',
+                                    style: const TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.white70,
+                                    ),
+                                  ),
                                 const SizedBox(height: 4),
                                 match.status == 'IN_PLAY'
                                     ? const BlinkingLiveIndicator()
