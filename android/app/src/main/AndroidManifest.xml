@@ -39,6 +39,16 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+
+        <!-- Configuração do OneSignal -->
+        <!-- Define o ícone de notificação personalizado -->
+        <meta-data
+            android:name="com.onesignal.NotificationIcon.DEFAULT"
+            android:resource="@drawable/ic_stat_notification_icon" />
+        <!-- Define a cor do ícone (Verde do seu tema: 0xFF1B5E20) -->
+        <meta-data
+            android:name="com.onesignal.NotificationAccentColor.DEFAULT"
+            android:value="FF1B5E20" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

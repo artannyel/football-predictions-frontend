@@ -67,14 +67,17 @@ class AuthNotifier extends ChangeNotifier {
           // No Mobile, usamos o plugin oficial
           if (_backendUser != null) {
             OneSignal.login(_backendUser!.id.toString());
+            // Adiciona o email como tag ou email auth se necessário futuramente
+            // OneSignal.User.addEmail(_backendUser!.email); 
             OneSignal.Notifications.requestPermission(true);
+
             _setupNotificationListeners();
           } else {
             OneSignal.logout();
           }
         }
       } catch (e) {
-        debugPrint('Erro OneSignal: $e');
+        debugPrint('Erro na integração OneSignal (AuthNotifier): $e');
       }
 
       _isInitialized = true;
