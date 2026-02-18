@@ -863,7 +863,7 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
                 width: 1,
                 color: Colors.white10,
                 margin: const EdgeInsets.symmetric(horizontal: 12),
-                height: 32,
+                height: 48,
               ),
               Expanded(child: _buildBadgesList(meBadges, Colors.amberAccent)),
             ],
@@ -918,8 +918,8 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
                 ],
               ),
               child: SizedBox(
-                width: 32,
-                height: 32,
+                width: 48,
+                height: 48,
                 child: badge.iconUrl != null
                     ? AppNetworkImage(url: badge.iconUrl!, fit: BoxFit.contain)
                     : Icon(
