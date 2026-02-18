@@ -333,7 +333,8 @@ class _PredictionPageState extends State<PredictionPage> {
               fontWeight: FontWeight.bold,
             ),
           ),
-          if (_match!.homeScoreExtraTime != null &&
+          if (_match!.scoreDuration != 'REGULAR' &&
+              _match!.homeScoreExtraTime != null &&
               _match!.awayScoreExtraTime != null)
             Text(
               'Prorrogação: ${_match!.homeScoreExtraTime} - ${_match!.awayScoreExtraTime}',
@@ -342,7 +343,8 @@ class _PredictionPageState extends State<PredictionPage> {
                 color: Colors.grey,
               ),
             ),
-          if (_match!.homeScorePenalties != null &&
+          if (_match!.scoreDuration != 'REGULAR' &&
+              _match!.homeScorePenalties != null &&
               _match!.awayScorePenalties != null)
             Text(
               'Pênaltis: ${_match!.homeScorePenalties} - ${_match!.awayScorePenalties}',

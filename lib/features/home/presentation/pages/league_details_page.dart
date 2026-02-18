@@ -1511,7 +1511,8 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                                  if (match.homeScoreExtraTime != null &&
+                                  if (match.scoreDuration != 'REGULAR' &&
+                                      match.homeScoreExtraTime != null &&
                                       match.awayScoreExtraTime != null)
                                     Text(
                                       'Prorrogação: ${match.homeScoreExtraTime} - ${match.awayScoreExtraTime}',
@@ -1520,7 +1521,8 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                                         color: Colors.white70,
                                       ),
                                     ),
-                                  if (match.homeScorePenalties != null &&
+                                  if (match.scoreDuration != 'REGULAR' &&
+                                      match.homeScorePenalties != null &&
                                       match.awayScorePenalties != null)
                                     Text(
                                       'Pênaltis: ${match.homeScorePenalties} - ${match.awayScorePenalties}',
@@ -1738,7 +1740,8 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              if (match.homeScoreExtraTime != null &&
+                              if (match.scoreDuration != 'REGULAR' &&
+                                  match.homeScoreExtraTime != null &&
                                   match.awayScoreExtraTime != null)
                                 Text(
                                   'Prorrogação: ${match.homeScoreExtraTime} - ${match.awayScoreExtraTime}',
@@ -1747,7 +1750,8 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                                     color: Colors.white70,
                                   ),
                                 ),
-                              if (match.homeScorePenalties != null &&
+                              if (match.scoreDuration != 'REGULAR' &&
+                                  match.homeScorePenalties != null &&
                                   match.awayScorePenalties != null)
                                 Text(
                                   'Pênaltis: ${match.homeScorePenalties} - ${match.awayScorePenalties}',
@@ -1942,7 +1946,8 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                                  if (match.homeScoreExtraTime != null &&
+                                  if (match.scoreDuration != 'REGULAR' &&
+                                      match.homeScoreExtraTime != null &&
                                       match.awayScoreExtraTime != null)
                                     Text(
                                       'Prorrogação: ${match.homeScoreExtraTime} - ${match.awayScoreExtraTime}',
@@ -1951,7 +1956,8 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                                         color: Colors.white70,
                                       ),
                                     ),
-                                  if (match.homeScorePenalties != null &&
+                                  if (match.scoreDuration != 'REGULAR' &&
+                                      match.homeScorePenalties != null &&
                                       match.awayScorePenalties != null)
                                     Text(
                                       'Pênaltis: ${match.homeScorePenalties} - ${match.awayScorePenalties}',
