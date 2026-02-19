@@ -110,16 +110,6 @@ class _HomePageState extends State<HomePage> {
               },
             ),
           ),
-          floatingActionButton: FloatingActionButton.extended(
-            onPressed: () {
-              context.go('/competicoes');
-            },
-            label: const Text('Ver Competições'),
-            icon: const Icon(Icons.sports_soccer),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(30),
-            ),
-          ),
           body: TabBarView(
             children: [
               _LeaguesTab(key: _activeTabKey, status: 'active'),
