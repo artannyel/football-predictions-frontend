@@ -165,7 +165,7 @@ class _HomePageState extends State<HomePage> {
                   if (result is LeagueModel) {
                     _activeTabKey.currentState?.refresh();
                     if (mounted) {
-                      context.go('/liga/${result.id}');
+                      context.go('/ligas/${result.id}');
                     }
                   } else if (result == true) {
                     _activeTabKey.currentState?.refresh();
@@ -486,7 +486,7 @@ class _LeaguesTabState extends State<_LeaguesTab>
                   : null,
               child: ListTile(
                 onTap: () {
-                  context.go('/liga/${league.id}');
+                  context.go('/ligas/${league.id}');
                 },
                 leading: SizedBox(
                   width: 40,

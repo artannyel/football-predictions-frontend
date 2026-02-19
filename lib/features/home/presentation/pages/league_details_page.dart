@@ -1278,7 +1278,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                           ? null
                           : (_) {
                               context.go(
-                                '/liga/${widget.leagueId}/usuario/${member.id}',
+                                '/ligas/${widget.leagueId}/usuario/${member.id}',
                               );
                             },
                       color: isCurrentUser

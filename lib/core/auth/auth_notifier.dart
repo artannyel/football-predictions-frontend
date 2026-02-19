@@ -103,7 +103,8 @@ class AuthNotifier extends ChangeNotifier {
           data['type'] == 'match_result' &&
           data['league_id'] != null) {
         // Define o caminho e notifica o router
-        setRedirectPath('/liga/${data['league_id']}');
+        // Atualizado para refletir a nova estrutura de rotas (dentro da aba Ligas)
+        setRedirectPath('/ligas/${data['league_id']}');
         notifyListeners();
       }
     });

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:football_predictions/core/auth/auth_notifier.dart';
+import 'package:football_predictions/core/presentation/widgets/scaffold_with_nav_bar.dart';
 import 'package:football_predictions/features/auth/presentation/pages/login_page.dart';
 import 'package:football_predictions/features/auth/presentation/pages/splash_page.dart';
 import 'package:football_predictions/features/auth/presentation/pages/edit_profile_page.dart';
@@ -8,6 +9,7 @@ import 'package:football_predictions/features/competitions/presentation/pages/co
 import 'package:football_predictions/features/home/presentation/pages/home_page.dart';
 import 'package:football_predictions/features/home/presentation/pages/league_details_page.dart';
 import 'package:football_predictions/features/matches/presentation/pages/matches_page.dart';
+import 'package:football_predictions/features/ranking/presentation/pages/ranking_page.dart';
 import 'package:football_predictions/features/predictions/presentation/pages/user_predictions_page.dart';
 import 'package:football_predictions/features/predictions/presentation/pages/prediction_page.dart';
 import 'package:go_router/go_router.dart';
@@ -89,68 +91,105 @@ GoRouter appRouter(AuthNotifier authNotifier) {
         name: 'Login',
         builder: (context, state) => const LoginPage(),
       ),
-      GoRoute(
-        path: '/perfil',
-        name: 'Profile',
-        builder: (context, state) => const ProfilePage(),
-        routes: [
-          GoRoute(
-            path: 'editar',
-            name: 'EditProfile',
-            builder: (context, state) => const EditProfilePage(),
-          ),
-          GoRoute(
-            path: '/usuario/:userId',
-            name: 'UserProfile',
-            builder: (context, state) =>
-                ProfilePage(userId: state.pathParameters['userId']),
-          ),
-        ],
-      ),
-      GoRoute(
-        path: '/ligas',
-        name: 'Home',
-        builder: (context, state) => const HomePage(),
-      ),
-      GoRoute(
-        path: '/liga/:id',
-        name: 'LeagueDetails',
-        builder: (context, state) {
-          final leagueId = state.pathParameters['id']!;
-          return LeagueDetailsPage(leagueId: leagueId);
+      // Shell Route que envolve as abas principais
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) {
+          return ScaffoldWithNavBar(navigationShell: navigationShell);
         },
-        routes: [
-          GoRoute(
-            path: '/usuario/:userId',
-            name: 'Predictions',
-            builder: (context, state) => UserPredictionsPage(
-              userId: state.pathParameters['userId']!,
-              leagueId: state.pathParameters['id']!,
-            ),
+        branches: [
+          // Aba 1: Ligas (Home)
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/ligas',
+                name: 'Home',
+                builder: (context, state) => const HomePage(),
+                routes: [
+                  GoRoute(
+                    path: ':id', // Caminho final: /ligas/:id
+                    name: 'LeagueDetails',
+                    builder: (context, state) {
+                      final leagueId = state.pathParameters['id']!;
+                      return LeagueDetailsPage(leagueId: leagueId);
+                    },
+                    routes: [
+                      GoRoute(
+                        path: 'usuario/:userId',
+                        name: 'Predictions',
+                        builder: (context, state) => UserPredictionsPage(
+                          userId: state.pathParameters['userId']!,
+                          leagueId: state.pathParameters['id']!,
+                        ),
+                      ),
+                      GoRoute(
+                        path: 'palpite/:matchId',
+                        name: 'Prediction',
+                        builder: (context, state) => PredictionPage(
+                          leagueId: state.pathParameters['id']!,
+                          matchId: int.parse(state.pathParameters['matchId']!),
+                          predictionId: state.uri.queryParameters['predictionId'] != null
+                              ? int.parse(state.uri.queryParameters['predictionId']!)
+                              : null,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
           ),
-          GoRoute(
-            path: 'palpite/:matchId',
-            name: 'Prediction',
-            builder: (context, state) => PredictionPage(
-              leagueId: state.pathParameters['id']!,
-              matchId: int.parse(state.pathParameters['matchId']!),
-              predictionId: state.uri.queryParameters['predictionId'] != null
-                  ? int.parse(state.uri.queryParameters['predictionId']!)
-                  : null,
-            ),
+          // Aba 2: Ranking
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/ranking',
+                name: 'Ranking',
+                builder: (context, state) => const RankingPage(),
+              ),
+            ],
+          ),
+          // Aba 3: Competições
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/competicoes',
+                name: 'Competitions',
+                builder: (context, state) => const CompetitionsPage(),
+                routes: [
+                  GoRoute(
+                    path: 'partidas/:id', // Caminho final: /competicoes/partidas/:id
+                    name: 'Matches',
+                    builder: (context, state) => MatchesPage(
+                        competitionId: int.parse(state.pathParameters['id']!)),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          // Aba 4: Perfil
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/perfil',
+                name: 'Profile',
+                builder: (context, state) => const ProfilePage(),
+                routes: [
+                  GoRoute(
+                    path: 'editar',
+                    name: 'EditProfile',
+                    builder: (context, state) => const EditProfilePage(),
+                  ),
+                  GoRoute(
+                    path: 'usuario/:userId',
+                    name: 'UserProfile',
+                    builder: (context, state) =>
+                        ProfilePage(userId: state.pathParameters['userId']),
+                  ),
+                ],
+              ),
+            ],
           ),
         ],
-      ),
-      GoRoute(
-        path: '/competicoes',
-        name: 'Competitions',
-        builder: (context, state) => const CompetitionsPage(),
-      ),
-      GoRoute(
-        path: '/competicao/:id/partidas',
-        name: 'Matches',
-        builder: (context, state) =>
-            MatchesPage(competitionId: int.parse(state.pathParameters['id']!)),
       ),
     ],
   );
