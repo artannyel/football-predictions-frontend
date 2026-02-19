@@ -1466,15 +1466,15 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                             ),
                             Text(
                               _formatDate(match.utcDate),
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 12,
-                                color: Colors.white70,
+                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                               ),
                             ),
                           ],
                         ),
                       ),
-                      const Divider(height: 1, color: Colors.white10),
+                      Divider(height: 1, color: Theme.of(context).dividerColor),
                       // Corpo: Times e Placar
                       Padding(
                         padding: const EdgeInsets.all(16),
@@ -1514,9 +1514,9 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                                       match.awayScoreExtraTime != null)
                                     Text(
                                       'Prorrogação: ${match.homeScoreExtraTime} - ${match.awayScoreExtraTime}',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 10,
-                                        color: Colors.white70,
+                                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                                       ),
                                     ),
                                   if (match.scoreDuration != 'REGULAR' &&
@@ -1524,9 +1524,9 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                                       match.awayScorePenalties != null)
                                     Text(
                                       'Pênaltis: ${match.homeScorePenalties} - ${match.awayScorePenalties}',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 10,
-                                        color: Colors.white70,
+                                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                                       ),
                                     ),
                                   const SizedBox(height: 4),
@@ -1534,9 +1534,9 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                                       ? const BlinkingLiveIndicator()
                                       : Text(
                                           _translateStatus(match.status),
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             fontSize: 10,
-                                            color: Colors.white70,
+                                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                                           ),
                                         ),
                                 ],
@@ -1697,15 +1697,15 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                           ),
                           Text(
                             _formatDate(match.utcDate),
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12,
-                              color: Colors.white70,
+                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                             ),
                           ),
                         ],
                       ),
                     ),
-                    const Divider(height: 1, color: Colors.white10),
+                    Divider(height: 1, color: Theme.of(context).dividerColor),
                     // Corpo: Times e Placar
                     Padding(
                       padding: const EdgeInsets.all(16),
@@ -1743,9 +1743,9 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                                     match.awayScoreExtraTime != null)
                                   Text(
                                     'Prorrogação: ${match.homeScoreExtraTime} - ${match.awayScoreExtraTime}',
-                                    style: const TextStyle(
+                                  style: TextStyle(
                                       fontSize: 10,
-                                      color: Colors.white70,
+                                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                                     ),
                                   ),
                                 if (match.scoreDuration != 'REGULAR' &&
@@ -1753,9 +1753,9 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                                     match.awayScorePenalties != null)
                                   Text(
                                     'Pênaltis: ${match.homeScorePenalties} - ${match.awayScorePenalties}',
-                                    style: const TextStyle(
+                                  style: TextStyle(
                                       fontSize: 10,
-                                      color: Colors.white70,
+                                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                                     ),
                                   ),
                                 const SizedBox(height: 4),
@@ -1763,9 +1763,9 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                                     ? const BlinkingLiveIndicator()
                                     : Text(
                                         _translateStatus(match.status),
-                                        style: const TextStyle(
+                                      style: TextStyle(
                                           fontSize: 10,
-                                          color: Colors.white70,
+                                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                                         ),
                                       ),
                               ],
@@ -1905,15 +1905,15 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                             ),
                             Text(
                               _formatDate(match.utcDate),
-                              style: const TextStyle(
+                            style: TextStyle(
                                 fontSize: 12,
-                                color: Colors.white70,
+                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                               ),
                             ),
                           ],
                         ),
                       ),
-                      const Divider(height: 1, color: Colors.white10),
+                    Divider(height: 1, color: Theme.of(context).dividerColor),
                       // Corpo: Times e Placar
                       Padding(
                         padding: const EdgeInsets.all(16),
@@ -1951,9 +1951,9 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                                       match.awayScoreExtraTime != null)
                                     Text(
                                       'Prorrogação: ${match.homeScoreExtraTime} - ${match.awayScoreExtraTime}',
-                                      style: const TextStyle(
+                                    style: TextStyle(
                                         fontSize: 10,
-                                        color: Colors.white70,
+                                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                                       ),
                                     ),
                                   if (match.scoreDuration != 'REGULAR' &&
@@ -1961,9 +1961,9 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                                       match.awayScorePenalties != null)
                                     Text(
                                       'Pênaltis: ${match.homeScorePenalties} - ${match.awayScorePenalties}',
-                                      style: const TextStyle(
+                                    style: TextStyle(
                                         fontSize: 10,
-                                        color: Colors.white70,
+                                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                                       ),
                                     ),
                                   const SizedBox(height: 4),
@@ -1971,9 +1971,9 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                                       ? const BlinkingLiveIndicator()
                                       : Text(
                                           _translateStatus(match.status),
-                                          style: const TextStyle(
+                                        style: TextStyle(
                                             fontSize: 10,
-                                            color: Colors.white70,
+                                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                                           ),
                                         ),
                                 ],
@@ -2042,9 +2042,9 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
       return Container(
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.05),
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white10, width: 1),
+          border: Border.all(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1), width: 1),
         ),
         child: Column(
           children: [
@@ -2052,16 +2052,16 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
               label,
               style: TextStyle(
                 fontSize: 10,
-                color: Colors.white.withValues(alpha: 0.7),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
               ),
             ),
             const SizedBox(height: 4),
-            const Text(
+            Text(
               '-',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 18,
-                color: Colors.white54,
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
               ),
             ),
           ],
@@ -2079,10 +2079,10 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
       decoration: BoxDecoration(
         color: isWin
             ? color.withValues(alpha: 0.15)
-            : Colors.white.withValues(alpha: 0.05),
+            : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isWin ? color.withValues(alpha: 0.6) : Colors.white10,
+          color: isWin ? color.withValues(alpha: 0.6) : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1),
           width: 1,
         ),
       ),
@@ -2092,7 +2092,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
             label,
             style: TextStyle(
               fontSize: 10,
-              color: Colors.white.withValues(alpha: 0.7),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
             ),
           ),
           const SizedBox(height: 4),
