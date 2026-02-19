@@ -13,6 +13,7 @@ import 'package:football_predictions/features/home/data/repositories/leagues_rep
 import 'package:football_predictions/features/home/presentation/pages/home_page.dart';
 import 'package:football_predictions/features/matches/data/repositories/matches_repository.dart';
 import 'package:football_predictions/features/predictions/data/repositories/predictions_repository.dart';
+import 'package:football_predictions/features/ranking/data/repositories/ranking_repository.dart';
 import 'package:football_predictions/firebase_options_prod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
@@ -78,6 +79,9 @@ Future<void> initApp(FirebaseOptions? firebaseOptions) async {
         ProxyProvider<DioClient, PredictionsRepository>(
           update: (_, dioClient, __) =>
               PredictionsRepository(dioClient: dioClient),
+        ),
+        ProxyProvider<DioClient, RankingRepository>(
+          update: (_, dioClient, __) => RankingRepository(dioClient),
         ),
       ],
       child: const MyApp(),

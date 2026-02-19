@@ -51,6 +51,7 @@ dependencies:
   go_router: ^17.1.0
   url_strategy: ^0.3.0
   onesignal_flutter: ^5.3.5
+  intl: ^0.20.2
 
 dev_dependencies:
   flutter_test:
