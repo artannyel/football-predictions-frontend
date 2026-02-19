@@ -32,6 +32,8 @@ class UserModel {
   final String? photoUrl;
   final DateTime createdAt;
   final List<BadgeModel> badges;
+  final bool notifyResults;
+  final bool notifyReminders;
 
   UserModel({
     required this.id,
@@ -41,7 +43,33 @@ class UserModel {
     this.photoUrl,
     required this.createdAt,
     this.badges = const [],
+    required this.notifyResults,
+    required this.notifyReminders,
   });
+
+  UserModel copyWith({
+    String? id,
+    String? firebaseUid,
+    String? name,
+    String? email,
+    String? photoUrl,
+    DateTime? createdAt,
+    List<BadgeModel>? badges,
+    bool? notifyResults,
+    bool? notifyReminders,
+  }) {
+    return UserModel(
+      id: id ?? this.id,
+      firebaseUid: firebaseUid ?? this.firebaseUid,
+      name: name ?? this.name,
+      email: email ?? this.email,
+      photoUrl: photoUrl ?? this.photoUrl,
+      createdAt: createdAt ?? this.createdAt,
+      badges: badges ?? this.badges,
+      notifyResults: notifyResults ?? this.notifyResults,
+      notifyReminders: notifyReminders ?? this.notifyReminders,
+    );
+  }
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
@@ -54,10 +82,10 @@ class UserModel {
           ? DateTime.parse(json['created_at'])
           : DateTime.now(),
       badges: json['badges'] != null
-          ? (json['badges'] as List)
-              .map((e) => BadgeModel.fromJson(e))
-              .toList()
+          ? (json['badges'] as List).map((e) => BadgeModel.fromJson(e)).toList()
           : [],
+      notifyResults: json['notify_results'] ?? false,
+      notifyReminders: json['notify_reminders'] ?? false,
     );
   }
 }
@@ -140,7 +168,9 @@ class HallOfFameModel {
       name: json['name'] ?? '',
       avatarUrl: json['avatar_url'],
       competitionName: json['competition_name'] ?? '',
-      position: json['position'] is int ? json['position'] : int.tryParse(json['position'].toString()) ?? 0,
+      position: json['position'] is int
+          ? json['position']
+          : int.tryParse(json['position'].toString()) ?? 0,
       year: json['year'].toString(),
     );
   }
@@ -162,7 +192,8 @@ class UserProfileModel {
     return UserProfileModel(
       user: UserModel.fromJson(data),
       career: CareerModel.fromJson(data['career'] ?? {}),
-      hallOfFame: (data['hall_of_fame'] as List?)
+      hallOfFame:
+          (data['hall_of_fame'] as List?)
               ?.map((e) => HallOfFameModel.fromJson(e))
               .toList() ??
           [],

@@ -48,97 +48,83 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  void _onBackPage(BuildContext context) {
-    context.go('/ligas');
-  }
-
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, _) {
-        if (didPop) return;
-        _onBackPage(context);
-      },
-      child: SafeArea(
-        child: Scaffold(
-          appBar: AppBar(
-            title: const Text('Perfil'),
-            backgroundColor: const Color(0xFF1B5E20),
-            foregroundColor: Colors.white,
-            leading: IconButton(
-              onPressed: () => _onBackPage(context),
-              icon: const Icon(Icons.arrow_back_rounded),
-            ),
-            actions: [
+    return SafeArea(
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Perfil'),
+          backgroundColor: const Color(0xFF1B5E20),
+          foregroundColor: Colors.white,
+          actions: [
+            if (widget.userId == null)
               IconButton(
-                icon: const Icon(Icons.edit),
-                tooltip: 'Editar Perfil',
-                onPressed: () => context.go('/perfil/editar'),
+                icon: const Icon(Icons.settings),
+                tooltip: 'Configurações',
+                onPressed: () => context.go('/perfil/configuracoes'),
               ),
-            ],
-          ),
-          body: Stack(
-            fit: StackFit.expand,
-            children: [
-              Positioned.fill(
-                child: Image.asset(
-                  'assets/images/background.jpg',
-                  fit: BoxFit.fill,
-                  colorBlendMode: BlendMode.darken,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      decoration: const BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [Color(0xFF2E7D32), Color(0xFF388E3C)],
-                        ),
+          ],
+        ),
+        body: Stack(
+          fit: StackFit.expand,
+          children: [
+            Positioned.fill(
+              child: Image.asset(
+                'assets/images/background.jpg',
+                fit: BoxFit.fill,
+                colorBlendMode: BlendMode.darken,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [Color(0xFF2E7D32), Color(0xFF388E3C)],
                       ),
-                    );
-                  },
-                ),
-              ),
-              if (_isLoading)
-                const Center(child: LoadingWidget())
-              else if (_error != null)
-                Center(
-                  child: Text(
-                    _error!,
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                )
-              else if (_profile != null)
-                TweenAnimationBuilder<double>(
-                  tween: Tween<double>(begin: 0.0, end: 1.0),
-                  duration: const Duration(milliseconds: 800),
-                  curve: Curves.easeOutQuad,
-                  builder: (context, value, child) {
-                    return Opacity(
-                      opacity: value,
-                      child: Transform.translate(
-                        offset: Offset(0, 20 * (1 - value)),
-                        child: child,
-                      ),
-                    );
-                  },
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      children: [
-                        _buildUserInfo(context, _profile!.user),
-                        const SizedBox(height: 16),
-                        _buildCareerStats(context, _profile!.career),
-                        const SizedBox(height: 16),
-                        _buildHallOfFame(context, _profile!.hallOfFame),
-                        const SizedBox(height: 16),
-                        _buildBadgesSection(context, _profile!.user.badges),
-                      ],
                     ),
+                  );
+                },
+              ),
+            ),
+            if (_isLoading)
+              const Center(child: LoadingWidget())
+            else if (_error != null)
+              Center(
+                child: Text(
+                  _error!,
+                  style: const TextStyle(color: Colors.white),
+                ),
+              )
+            else if (_profile != null)
+              TweenAnimationBuilder<double>(
+                tween: Tween<double>(begin: 0.0, end: 1.0),
+                duration: const Duration(milliseconds: 800),
+                curve: Curves.easeOutQuad,
+                builder: (context, value, child) {
+                  return Opacity(
+                    opacity: value,
+                    child: Transform.translate(
+                      offset: Offset(0, 20 * (1 - value)),
+                      child: child,
+                    ),
+                  );
+                },
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      _buildUserInfo(context, _profile!.user),
+                      const SizedBox(height: 16),
+                      _buildCareerStats(context, _profile!.career),
+                      const SizedBox(height: 16),
+                      _buildHallOfFame(context, _profile!.hallOfFame),
+                      const SizedBox(height: 16),
+                      _buildBadgesSection(context, _profile!.user.badges),
+                    ],
                   ),
                 ),
-            ],
-          ),
+              ),
+          ],
         ),
       ),
     );

@@ -6,6 +6,7 @@ import 'package:football_predictions/core/auth/auth_notifier.dart';
 import 'package:football_predictions/core/navigation/app_router.dart';
 import 'package:football_predictions/core/presentation/widgets/loading_widget.dart';
 import 'package:football_predictions/dio_client.dart';
+import 'package:football_predictions/core/providers/theme_provider.dart';
 import 'package:football_predictions/features/auth/data/repositories/auth_repository.dart';
 import 'package:football_predictions/features/auth/presentation/pages/login_page.dart';
 import 'package:football_predictions/features/competitions/data/repositories/competitions_repository.dart';
@@ -83,6 +84,7 @@ Future<void> initApp(FirebaseOptions? firebaseOptions) async {
         ProxyProvider<DioClient, RankingRepository>(
           update: (_, dioClient, __) => RankingRepository(dioClient),
         ),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
       ],
       child: const MyApp(),
     ),
@@ -147,6 +149,8 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = context.watch<ThemeProvider>();
+
     return MaterialApp.router(
       routerConfig: _router,
       debugShowCheckedModeBanner: false,
@@ -162,7 +166,7 @@ class _MyAppState extends State<MyApp> {
           brightness: Brightness.dark,
         ),
       ),
-      themeMode: ThemeMode.system,
+      themeMode: themeProvider.themeMode,
     );
   }
 }

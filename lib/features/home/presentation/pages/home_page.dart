@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:football_predictions/core/auth/auth_notifier.dart';
 import 'package:football_predictions/core/presentation/widgets/app_network_image.dart';
 import 'package:football_predictions/core/presentation/widgets/loading_widget.dart';
 import 'package:football_predictions/features/competitions/data/models/competition_model.dart';
@@ -40,75 +39,6 @@ class _HomePageState extends State<HomePage> {
                 onPressed: () => _showAddOptions(context),
               ),
             ],
-          ),
-          drawer: Drawer(
-            child: Consumer<AuthNotifier>(
-              builder: (context, authNotifier, child) {
-                // Obtém o usuário já carregado no AuthNotifier
-                final user = authNotifier.backendUser;
-                return ListView(
-                  padding: EdgeInsets.zero,
-                  children: [
-                    UserAccountsDrawerHeader(
-                      accountName: Text(
-                        user?.name ?? 'Usuário',
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.onPrimary,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      accountEmail: Text(
-                        user?.email ?? '',
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.onPrimary,
-                        ),
-                      ),
-                      currentAccountPicture: CircleAvatar(
-                        backgroundColor: Colors.white,
-                        child: ClipOval(
-                          child: user?.photoUrl != null
-                              ? AppNetworkImage(
-                                  url: user!.photoUrl!,
-                                  width: 72,
-                                  height: 72,
-                                  fit: BoxFit.cover,
-                                  errorWidget: const Icon(
-                                    Icons.person,
-                                    size: 40,
-                                    color: Colors.grey,
-                                  ),
-                                )
-                              : const Icon(
-                                  Icons.person,
-                                  size: 40,
-                                  color: Colors.grey,
-                                ),
-                        ),
-                      ),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                    ),
-                    ListTile(
-                      leading: const Icon(Icons.person),
-                      title: const Text('Perfil'),
-                      onTap: () async {
-                        Navigator.pop(context); // Fecha o drawer
-                        context.go('/perfil');
-                      },
-                    ),
-                    ListTile(
-                      leading: const Icon(Icons.logout),
-                      title: const Text('Sair'),
-                      onTap: () async {
-                        Navigator.pop(context);
-                        await context.read<AuthNotifier>().logout();
-                      },
-                    ),
-                  ],
-                );
-              },
-            ),
           ),
           body: TabBarView(
             children: [
@@ -463,8 +393,8 @@ class _LeaguesTabState extends State<_LeaguesTab>
             }
 
             final league = _leagues[index];
-            final isNextMatchToday = league.nextMatch != null &&
-                _isToday(league.nextMatch!.utcDate);
+            final isNextMatchToday =
+                league.nextMatch != null && _isToday(league.nextMatch!.utcDate);
 
             return Card(
               elevation: isNextMatchToday ? 3 : 1,
@@ -525,7 +455,9 @@ class _LeaguesTabState extends State<_LeaguesTab>
                     Row(
                       children: [
                         Card(
-                          color: Colors.grey[850],
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withValues(alpha: 0.2),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 8.0,
@@ -630,8 +562,9 @@ class _LeaguesTabState extends State<_LeaguesTab>
                             '• ${_formatDate(league.nextMatch!.utcDate)}',
                             style: TextStyle(
                               fontSize: 12,
-                              color:
-                                  isNextMatchToday ? Colors.green : Colors.grey,
+                              color: isNextMatchToday
+                                  ? Colors.green
+                                  : Colors.grey,
                               fontWeight: isNextMatchToday
                                   ? FontWeight.bold
                                   : FontWeight.normal,

@@ -4,6 +4,7 @@ import 'package:football_predictions/core/presentation/widgets/scaffold_with_nav
 import 'package:football_predictions/features/auth/presentation/pages/login_page.dart';
 import 'package:football_predictions/features/auth/presentation/pages/splash_page.dart';
 import 'package:football_predictions/features/auth/presentation/pages/edit_profile_page.dart';
+import 'package:football_predictions/features/auth/presentation/pages/settings_page.dart';
 import 'package:football_predictions/features/auth/presentation/pages/profile_page.dart';
 import 'package:football_predictions/features/competitions/presentation/pages/competitions_page.dart';
 import 'package:football_predictions/features/home/presentation/pages/home_page.dart';
@@ -157,7 +158,7 @@ GoRouter appRouter(AuthNotifier authNotifier) {
                 builder: (context, state) => const CompetitionsPage(),
                 routes: [
                   GoRoute(
-                    path: 'partidas/:id', // Caminho final: /competicoes/partidas/:id
+                    path: '/:id/partidas',
                     name: 'Matches',
                     builder: (context, state) => MatchesPage(
                         competitionId: int.parse(state.pathParameters['id']!)),
@@ -178,6 +179,11 @@ GoRouter appRouter(AuthNotifier authNotifier) {
                     path: 'editar',
                     name: 'EditProfile',
                     builder: (context, state) => const EditProfilePage(),
+                  ),
+                  GoRoute(
+                    path: 'configuracoes',
+                    name: 'Settings',
+                    builder: (context, state) => const SettingsPage(),
                   ),
                   GoRoute(
                     path: 'usuario/:userId',

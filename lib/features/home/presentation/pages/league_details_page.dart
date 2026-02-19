@@ -442,7 +442,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
               child: Image.asset(
                 'assets/images/background.jpg',
                 fit: BoxFit.fill,
-                //color: Colors.black.withOpacity(0.6), // Escurece a imagem
+                color: Colors.black.withOpacity(0.6), // Escurece a imagem
                 colorBlendMode: BlendMode.darken,
                 errorBuilder: (context, error, stackTrace) {
                   debugPrint('Erro ao carregar imagem de fundo: $error');
@@ -951,12 +951,10 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                         decoration: BoxDecoration(
                           color: Theme.of(
                             context,
-                          ).colorScheme.primaryContainer.withValues(alpha: 0.2),
+                          ).colorScheme.primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.primaryContainer,
+                            color: Theme.of(context).colorScheme.primary,
                             width: 1,
                           ),
                         ),
@@ -968,9 +966,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                                 Icon(
                                   Icons.vpn_key,
                                   size: 18,
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.primaryContainer,
+                                  color: Theme.of(context).colorScheme.primary,
                                 ),
                                 const SizedBox(width: 8),
                                 Text(
@@ -989,9 +985,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                                 vertical: 8,
                               ),
                               decoration: BoxDecoration(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.primaryContainer,
+                                color: Theme.of(context).colorScheme.primary,
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Row(
@@ -1001,16 +995,18 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                                     style: TextStyle(
                                       fontSize: 10,
                                       fontWeight: FontWeight.bold,
-                                      color: Colors.white.withValues(
-                                        alpha: 0.8,
-                                      ),
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onPrimary,
                                     ),
                                   ),
                                   const SizedBox(width: 4),
                                   Icon(
                                     Icons.copy,
                                     size: 14,
-                                    color: Colors.white.withValues(alpha: 0.8),
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onPrimary,
                                   ),
                                 ],
                               ),
@@ -1444,7 +1440,9 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                     );
                     if (result == true && mounted) {
                       setState(() {
-                        _detailsFuture = leaguesRepo.getLeagueDetails(widget.leagueId);
+                        _detailsFuture = leaguesRepo.getLeagueDetails(
+                          widget.leagueId,
+                        );
                       });
                     }
                   },
@@ -1668,140 +1666,140 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                       'id': widget.leagueId,
                       'matchId': match.id.toString(),
                     },
-                    queryParameters: {
-                      'predictionId': prediction.id.toString(),
-                    },
+                    queryParameters: {'predictionId': prediction.id.toString()},
                   );
                   if (result == true && mounted) {
                     _loadHistoryPredictions(refresh: true);
                     setState(() {
-                      _detailsFuture = leaguesRepo.getLeagueDetails(widget.leagueId);
+                      _detailsFuture = leaguesRepo.getLeagueDetails(
+                        widget.leagueId,
+                      );
                     });
                   }
                 },
                 child: Column(
-                children: [
-                  // Header: Rodada e Data
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
+                  children: [
+                    // Header: Rodada e Data
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            '${_translateStage(match.stage)} • ${_formatMatchday(match.stage, match.matchday)}',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            _formatDate(match.utcDate),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.white70,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          '${_translateStage(match.stage)} • ${_formatMatchday(match.stage, match.matchday)}',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          _formatDate(match.utcDate),
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.white70,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Divider(height: 1, color: Colors.white10),
-                  // Corpo: Times e Placar
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            children: [
-                              _buildTeamLogo(match.homeTeamCrest),
-                              const SizedBox(height: 8),
-                              Text(
-                                match.homeTeamName,
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(fontSize: 12),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
-                        ),
-                        Expanded(
-                          child: Column(
-                            children: [
-                              const SizedBox(height: 8),
-                              Text(
-                                '${match.homeScore ?? '-'} - ${match.awayScore ?? '-'}',
-                                style: const TextStyle(
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              if (match.scoreDuration != 'REGULAR' &&
-                                  match.homeScoreExtraTime != null &&
-                                  match.awayScoreExtraTime != null)
+                    const Divider(height: 1, color: Colors.white10),
+                    // Corpo: Times e Placar
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              children: [
+                                _buildTeamLogo(match.homeTeamCrest),
+                                const SizedBox(height: 8),
                                 Text(
-                                  'Prorrogação: ${match.homeScoreExtraTime} - ${match.awayScoreExtraTime}',
+                                  match.homeTeamName,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(fontSize: 12),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                          Expanded(
+                            child: Column(
+                              children: [
+                                const SizedBox(height: 8),
+                                Text(
+                                  '${match.homeScore ?? '-'} - ${match.awayScore ?? '-'}',
                                   style: const TextStyle(
-                                    fontSize: 10,
-                                    color: Colors.white70,
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                              if (match.scoreDuration != 'REGULAR' &&
-                                  match.homeScorePenalties != null &&
-                                  match.awayScorePenalties != null)
-                                Text(
-                                  'Pênaltis: ${match.homeScorePenalties} - ${match.awayScorePenalties}',
-                                  style: const TextStyle(
-                                    fontSize: 10,
-                                    color: Colors.white70,
-                                  ),
-                                ),
-                              const SizedBox(height: 4),
-                              match.status == 'IN_PLAY'
-                                  ? const BlinkingLiveIndicator()
-                                  : Text(
-                                      _translateStatus(match.status),
-                                      style: const TextStyle(
-                                        fontSize: 10,
-                                        color: Colors.white70,
-                                      ),
+                                if (match.scoreDuration != 'REGULAR' &&
+                                    match.homeScoreExtraTime != null &&
+                                    match.awayScoreExtraTime != null)
+                                  Text(
+                                    'Prorrogação: ${match.homeScoreExtraTime} - ${match.awayScoreExtraTime}',
+                                    style: const TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.white70,
                                     ),
-                            ],
+                                  ),
+                                if (match.scoreDuration != 'REGULAR' &&
+                                    match.homeScorePenalties != null &&
+                                    match.awayScorePenalties != null)
+                                  Text(
+                                    'Pênaltis: ${match.homeScorePenalties} - ${match.awayScorePenalties}',
+                                    style: const TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.white70,
+                                    ),
+                                  ),
+                                const SizedBox(height: 4),
+                                match.status == 'IN_PLAY'
+                                    ? const BlinkingLiveIndicator()
+                                    : Text(
+                                        _translateStatus(match.status),
+                                        style: const TextStyle(
+                                          fontSize: 10,
+                                          color: Colors.white70,
+                                        ),
+                                      ),
+                              ],
+                            ),
                           ),
-                        ),
-                        Expanded(
-                          child: Column(
-                            children: [
-                              _buildTeamLogo(match.awayTeamCrest),
-                              const SizedBox(height: 8),
-                              Text(
-                                match.awayTeamName,
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(fontSize: 12),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
+                          Expanded(
+                            child: Column(
+                              children: [
+                                _buildTeamLogo(match.awayTeamCrest),
+                                const SizedBox(height: 8),
+                                Text(
+                                  match.awayTeamName,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(fontSize: 12),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  // Footer: Palpite
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-                    child: _buildPredictionCard(
-                      prediction,
-                      'Seu palpite',
-                      Colors.greenAccent,
+                    // Footer: Palpite
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                      child: _buildPredictionCard(
+                        prediction,
+                        'Seu palpite',
+                        Colors.greenAccent,
+                      ),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
               ),
             ),
           );
@@ -1880,7 +1878,9 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                           );
                           if (result == true && mounted) {
                             setState(() {
-                              _detailsFuture = leaguesRepo.getLeagueDetails(widget.leagueId);
+                              _detailsFuture = leaguesRepo.getLeagueDetails(
+                                widget.leagueId,
+                              );
                             });
                           }
                         }
@@ -2036,7 +2036,9 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
     String label,
     Color color,
   ) {
-    if (prediction == null || prediction.homeScore == null || prediction.awayScore == null) {
+    if (prediction == null ||
+        prediction.homeScore == null ||
+        prediction.awayScore == null) {
       return Container(
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
         decoration: BoxDecoration(
