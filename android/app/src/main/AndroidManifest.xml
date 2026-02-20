@@ -2,6 +2,7 @@
     <uses-permission android:name="android.permission.INTERNET"/>
     <!-- Para acessar a galeria em Android 12 ou inferior -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     
     <!-- Para acessar fotos em Android 13 ou superior -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
