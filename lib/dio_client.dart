@@ -3,11 +3,16 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 class DioClient {
   final Dio _dio;
+  final Dio _dioAdmin;
 
-  DioClient() : _dio = Dio() {
+  DioClient()
+      : _dio = Dio(),
+        _dioAdmin = Dio() {
+    const baseUrl = String.fromEnvironment('BASE_URL',
+        defaultValue: 'http://192.168.0.11/');
+
     _dio.options = BaseOptions(
-      baseUrl: const String.fromEnvironment('BASE_URL',
-          defaultValue: 'http://192.168.0.11/'),
+      baseUrl: baseUrl,
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 10),
       headers: {
@@ -33,7 +38,19 @@ class DioClient {
         },
       ),
     );
+
+    _dioAdmin.options = BaseOptions(
+      baseUrl: baseUrl,
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 10),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-Admin-Key': const String.fromEnvironment('TOKEN_ADMIN'),
+      },
+    );
   }
 
   Dio get dio => _dio;
+  Dio get dioAdmin => _dioAdmin;
 }

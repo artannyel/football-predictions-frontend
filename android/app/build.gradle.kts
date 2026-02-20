@@ -44,6 +44,18 @@ android {
             dimension = "default"
             resValue("string", "app_name", "Palpites Futebol")
         }
+        create("devAdmin") {
+            dimension = "default"
+            applicationIdSuffix = ".dev.admin"
+            versionNameSuffix = "-dev_admin"
+            resValue("string", "app_name", "Palpites Futebol Dev Admin")
+        }
+        create("prodAdmin") {
+            dimension = "default"
+            applicationIdSuffix = ".admin"
+            versionNameSuffix = "-prod_admin"
+            resValue("string", "app_name", "Palpites Futebol Admin")
+        }
     }
 
     buildTypes {
