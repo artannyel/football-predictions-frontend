@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://palpitesfutebol-b0f33.web.app/sitemap.xml
