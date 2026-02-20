@@ -23,6 +23,10 @@ class RadarChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final gridColor = colorScheme.onSurface.withValues(alpha: 0.2);
+    final labelColor = colorScheme.onSurface.withValues(alpha: 0.7);
+
     return CustomPaint(
       painter: _RadarChartPainter(
         values1: values1,
@@ -32,6 +36,8 @@ class RadarChart extends StatelessWidget {
         color1: color1,
         color2: color2,
         animationValue: animationValue,
+        gridColor: gridColor,
+        labelColor: labelColor,
       ),
     );
   }
@@ -45,6 +51,8 @@ class _RadarChartPainter extends CustomPainter {
   final Color color1;
   final Color? color2;
   final double animationValue;
+  final Color gridColor;
+  final Color labelColor;
 
   _RadarChartPainter({
     required this.values1,
@@ -54,6 +62,8 @@ class _RadarChartPainter extends CustomPainter {
     required this.color1,
     this.color2,
     required this.animationValue,
+    required this.gridColor,
+    required this.labelColor,
   });
 
   @override
@@ -64,7 +74,7 @@ class _RadarChartPainter extends CustomPainter {
     final angleStep = (2 * math.pi) / labels.length;
 
     final paintWeb = Paint()
-      ..color = Colors.white.withValues(alpha: 0.2)
+      ..color = gridColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1;
 
@@ -100,7 +110,7 @@ class _RadarChartPainter extends CustomPainter {
       // Labels
       textPainter.text = TextSpan(
         text: labels[i],
-        style: const TextStyle(color: Colors.white70, fontSize: 10),
+        style: TextStyle(color: labelColor, fontSize: 10),
       );
       textPainter.layout();
 

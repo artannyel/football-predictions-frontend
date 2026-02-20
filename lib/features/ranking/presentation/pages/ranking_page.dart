@@ -299,7 +299,7 @@ class _RankingListTabState extends State<_RankingListTab>
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      const Padding(
+                      Padding(
                         padding: EdgeInsets.all(16.0),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -309,7 +309,7 @@ class _RankingListTabState extends State<_RankingListTab>
                             Text(
                               'TOP 10 JOGADORES',
                               style: TextStyle(
-                                color: Colors.white,
+                                color: Theme.of(context).colorScheme.onSurface,
                                 fontWeight: FontWeight.bold,
                                 letterSpacing: 1.2,
                               ),
@@ -318,19 +318,22 @@ class _RankingListTabState extends State<_RankingListTab>
                         ),
                       ),
                       if (_rankingData!.topList.isEmpty)
-                        const Padding(
-                          padding: EdgeInsets.all(32.0),
+                        Padding(
+                          padding: const EdgeInsets.all(32.0),
                           child: Center(
                             child: Text(
                               'Nenhum jogador pontuou neste período ainda.',
-                              style: TextStyle(color: Colors.white60),
+                              style: TextStyle(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withOpacity(0.6),
+                              ),
                               textAlign: TextAlign.center,
                             ),
                           ),
                         )
                       else
                         _buildRankingTable(),
-                    
                     ],
                   ),
                 ),
@@ -392,7 +395,7 @@ class _RankingListTabState extends State<_RankingListTab>
                     ).colorScheme.primaryContainer.withValues(alpha: 0.3),
                   )
                 : null,
-            onSelectChanged: user.userId != null
+            onSelectChanged: (user.userId != null && !isCurrentUser)
                 ? (_) {
                     context.pushNamed(
                       'UserProfile',
@@ -475,6 +478,7 @@ class _RankingListTabState extends State<_RankingListTab>
 
   Widget _buildMyRankCard() {
     final myRank = _rankingData!.myRank;
+    final onSurface = Theme.of(context).colorScheme.onSurface;
 
     if (myRank == null) {
       return GlassCard(
@@ -492,10 +496,10 @@ class _RankingListTabState extends State<_RankingListTab>
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'Faça seus palpites e acerte os placares para começar a pontuar e disputar com os melhores!',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white70),
+              style: TextStyle(color: onSurface.withOpacity(0.7)),
             ),
             const SizedBox(height: 16),
             FilledButton(
@@ -548,9 +552,12 @@ class _RankingListTabState extends State<_RankingListTab>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Seu Desempenho',
-                      style: TextStyle(color: Colors.white70, fontSize: 12),
+                      style: TextStyle(
+                        color: onSurface.withOpacity(0.7),
+                        fontSize: 12,
+                      ),
                     ),
                     Text(
                       myRank.name,
@@ -561,8 +568,10 @@ class _RankingListTabState extends State<_RankingListTab>
                     ),
                     Text(
                       '${myRank.points} pontos',
-                      style: const TextStyle(
-                        color: Colors.greenAccent,
+                      style: TextStyle(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.greenAccent
+                            : Colors.green,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -571,21 +580,31 @@ class _RankingListTabState extends State<_RankingListTab>
               ),
             ],
           ),
-          const Divider(color: Colors.white10, height: 24),
+          Divider(color: Theme.of(context).dividerColor, height: 24),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _buildStatItem(
                 'Exatos',
                 myRank.stats.exactScore,
-                Colors.cyanAccent,
+                Theme.of(context).brightness == Brightness.dark
+                    ? Colors.cyanAccent
+                    : Colors.cyan,
               ),
-              _buildStatItem('Saldos', myRank.stats.winnerDiff, Colors.white70),
-              _buildStatItem('Gols', myRank.stats.winnerGoal, Colors.white70),
+              _buildStatItem(
+                'Saldos',
+                myRank.stats.winnerDiff,
+                onSurface.withOpacity(0.7),
+              ),
+              _buildStatItem(
+                'Gols',
+                myRank.stats.winnerGoal,
+                onSurface.withOpacity(0.7),
+              ),
               _buildStatItem(
                 'Vencedor',
                 myRank.stats.winnerOnly,
-                Colors.white70,
+                onSurface.withOpacity(0.7),
               ),
             ],
           ),
@@ -609,7 +628,9 @@ class _RankingListTabState extends State<_RankingListTab>
           label,
           style: TextStyle(
             fontSize: 10,
-            color: Colors.white.withValues(alpha: 0.6),
+            color: Theme.of(
+              context,
+            ).colorScheme.onSurface.withValues(alpha: 0.6),
           ),
         ),
       ],
@@ -620,7 +641,7 @@ class _RankingListTabState extends State<_RankingListTab>
     if (rank == 1) return const Color(0xFFFFD700);
     if (rank == 2) return const Color(0xFFC0C0C0);
     if (rank == 3) return const Color(0xFFCD7F32);
-    return Colors.white;
+    return Theme.of(context).colorScheme.onSurface;
   }
 }
 
@@ -629,6 +650,8 @@ class _RankingRulesTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+
     return FutureBuilder<GlobalRulesModel>(
       future: context.read<RankingRepository>().getGlobalRules(),
       builder: (context, snapshot) {
@@ -672,7 +695,10 @@ class _RankingRulesTab extends StatelessWidget {
                   Text(
                     rules.description,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(color: Colors.white70, height: 1.4),
+                    style: TextStyle(
+                      color: onSurface.withOpacity(0.7),
+                      height: 1.4,
+                    ),
                   ),
                 ],
               ),
@@ -686,6 +712,8 @@ class _RankingRulesTab extends StatelessWidget {
   }
 
   Widget _buildRuleItem(BuildContext context, GlobalRuleItem rule) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: GlassCard(
@@ -709,16 +737,19 @@ class _RankingRulesTab extends StatelessWidget {
                 children: [
                   Text(
                     rule.title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
-                      color: Colors.white,
+                      color: onSurface,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     rule.description,
-                    style: const TextStyle(color: Colors.white70, height: 1.3),
+                    style: TextStyle(
+                      color: onSurface.withOpacity(0.7),
+                      height: 1.3,
+                    ),
                   ),
                 ],
               ),

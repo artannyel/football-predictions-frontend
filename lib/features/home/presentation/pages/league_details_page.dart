@@ -442,7 +442,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
               child: Image.asset(
                 'assets/images/background.jpg',
                 fit: BoxFit.fill,
-                color: Colors.black.withOpacity(0.6), // Escurece a imagem
+                //color: Colors.black.withOpacity(0.6), // Escurece a imagem
                 colorBlendMode: BlendMode.darken,
                 errorBuilder: (context, error, stackTrace) {
                   debugPrint('Erro ao carregar imagem de fundo: $error');

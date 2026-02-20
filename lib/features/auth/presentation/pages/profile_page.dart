@@ -131,6 +131,8 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildUserInfo(BuildContext context, UserModel user) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+
     return GlassCard(
       padding: const EdgeInsets.all(24),
       child: SizedBox(
@@ -188,10 +190,10 @@ class _ProfilePageState extends State<ProfilePage> {
             const SizedBox(height: 16),
             Text(
               user.name,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: onSurface,
               ),
               textAlign: TextAlign.center,
             ),
@@ -199,7 +201,7 @@ class _ProfilePageState extends State<ProfilePage> {
               const SizedBox(height: 8),
               Text(
                 user.email,
-                style: const TextStyle(fontSize: 14, color: Colors.white70),
+                style: TextStyle(fontSize: 14, color: onSurface.withOpacity(0.7)),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -210,6 +212,8 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildCareerStats(BuildContext context, CareerModel career) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final onSurface = Theme.of(context).colorScheme.onSurface;
     final radar = career.radar;
     final values = [
       radar.precision.toDouble(),
@@ -228,12 +232,12 @@ class _ProfilePageState extends State<ProfilePage> {
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
-              const Text(
+              Text(
                 'Estatísticas da Carreira',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: onSurface,
                 ),
               ),
               const SizedBox(height: 16),
@@ -262,7 +266,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   _buildStatItem('Ligas Final.', career.finishedLeaguesCount),
                 ],
               ),
-              const Divider(height: 32, color: Colors.white24),
+              Divider(height: 32, color: Theme.of(context).dividerColor),
               SizedBox(
                 height: 200,
                 width: double.infinity,
@@ -275,16 +279,16 @@ class _ProfilePageState extends State<ProfilePage> {
                       values1: values,
                       labels: displayLabels,
                       maxValue: 100,
-                      color1: Colors.greenAccent,
+                      color1: isDark ? Colors.greenAccent : Theme.of(context).colorScheme.primary,
                       animationValue: value,
                     );
                   },
                 ),
               ),
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 'Palpites Recente',
-                style: TextStyle(color: Colors.white70, fontSize: 12),
+                style: TextStyle(color: onSurface.withOpacity(0.7), fontSize: 12),
               ),
               const SizedBox(height: 8),
               Row(
@@ -329,17 +333,17 @@ class _ProfilePageState extends State<ProfilePage> {
           builder: (context, val, child) {
             return Text(
               formatter != null ? formatter(val) : val.toInt().toString(),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             );
           },
         ),
         Text(
           label,
-          style: const TextStyle(fontSize: 10, color: Colors.white70),
+          style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
         ),
       ],
     );
@@ -349,17 +353,19 @@ class _ProfilePageState extends State<ProfilePage> {
     BuildContext context,
     List<HallOfFameModel> hallOfFame,
   ) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+
     return GlassCard(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             '🏆 Hall da Fama',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
+              color: onSurface,
             ),
           ),
           const SizedBox(height: 16),
@@ -367,22 +373,22 @@ class _ProfilePageState extends State<ProfilePage> {
             Center(
               child: Column(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.emoji_events_outlined,
                     size: 48,
-                    color: Colors.white54,
+                    color: Colors.grey,
                   ),
                   const SizedBox(height: 16),
                   Text(
                     widget.userId == null
                         ? 'Seu Hall da Fama está vazio.'
                         : 'Hall da Fama está vazio.',
-                    style: const TextStyle(color: Colors.white70),
+                    style: TextStyle(color: onSurface.withOpacity(0.7)),
                   ),
                   if (widget.userId == null)
-                    const Text(
+                    Text(
                       'Continue disputando as ligas para conquistar troféus!',
-                      style: TextStyle(color: Colors.white54, fontSize: 12),
+                      style: TextStyle(color: onSurface.withOpacity(0.5), fontSize: 12),
                       textAlign: TextAlign.center,
                     ),
                 ],
@@ -471,10 +477,10 @@ class _ProfilePageState extends State<ProfilePage> {
                           const SizedBox(height: 8),
                           Text(
                             item.name,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 12,
-                              color: Colors.white,
+                              color: onSurface,
                             ),
                             textAlign: TextAlign.center,
                             maxLines: 2,
@@ -482,9 +488,9 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                           Text(
                             item.competitionName,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 10,
-                              color: Colors.white70,
+                              color: onSurface.withOpacity(0.7),
                             ),
                             textAlign: TextAlign.center,
                             maxLines: 1,
@@ -512,17 +518,19 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildBadgesSection(BuildContext context, List<BadgeModel> badges) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+
     return GlassCard(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Medalhas e Conquistas',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
+              color: onSurface,
             ),
           ),
           const SizedBox(height: 16),
@@ -530,22 +538,22 @@ class _ProfilePageState extends State<ProfilePage> {
             Center(
               child: Column(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.emoji_events_outlined,
                     size: 48,
-                    color: Colors.white54,
+                    color: Colors.grey,
                   ),
                   const SizedBox(height: 16),
                   Text(
                     widget.userId == null
                         ? 'Você ainda não possui medalhas.'
                         : 'Não possui medalhas',
-                    style: const TextStyle(color: Colors.white70),
+                    style: TextStyle(color: onSurface.withOpacity(0.7)),
                   ),
                   if (widget.userId == null)
-                    const Text(
+                    Text(
                       'Participe das ligas e acerte palpites para ganhar!',
-                      style: TextStyle(color: Colors.white54, fontSize: 12),
+                      style: TextStyle(color: onSurface.withOpacity(0.5), fontSize: 12),
                       textAlign: TextAlign.center,
                     ),
                 ],
@@ -589,10 +597,10 @@ class _ProfilePageState extends State<ProfilePage> {
                                 Flexible(
                                   child: Text(
                                     badge.name,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.bold,
-                                      color: Colors.white,
+                                      color: onSurface,
                                     ),
                                     textAlign: TextAlign.center,
                                     maxLines: 2,

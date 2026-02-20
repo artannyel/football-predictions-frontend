@@ -228,6 +228,10 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
     final hasStats = _userStats != null;
     final hasPredictions = _predictions.isNotEmpty;
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cyanColor = isDark ? Colors.cyanAccent : Colors.cyan;
+    final amberColor = isDark ? Colors.amberAccent : Colors.orange;
+
     // Calcula o número de itens
     int itemCount = 0;
     if (hasStats) itemCount++; // Header
@@ -357,15 +361,15 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
                           ),
                           Text(
                             _formatDate(match.utcDate),
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12,
-                              color: Colors.white70,
+                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                             ),
                           ),
                         ],
                       ),
                     ),
-                    const Divider(height: 1, color: Colors.white10),
+                    Divider(height: 1, color: Theme.of(context).dividerColor),
                     // Corpo: Times e Placar
                     Padding(
                       padding: const EdgeInsets.all(16),
@@ -405,9 +409,9 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
                                     match.awayScoreExtraTime != null)
                                   Text(
                                     'Prorrogação: ${match.homeScoreExtraTime} - ${match.awayScoreExtraTime}',
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 10,
-                                      color: Colors.white70,
+                                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                                     ),
                                   ),
                                 if (match.scoreDuration != 'REGULAR' &&
@@ -415,9 +419,9 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
                                     match.awayScorePenalties != null)
                                   Text(
                                     'Pênaltis: ${match.homeScorePenalties} - ${match.awayScorePenalties}',
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 10,
-                                      color: Colors.white70,
+                                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                                     ),
                                   ),
                                 const SizedBox(height: 4),
@@ -425,9 +429,9 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
                                     ? const BlinkingLiveIndicator()
                                     : Text(
                                         _translateStatus(match.status),
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           fontSize: 10,
-                                          color: Colors.white70,
+                                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                                         ),
                                       ),
                               ],
@@ -461,7 +465,7 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
                             child: _buildPredictionCard(
                               prediction,
                               _userHistory?.name.split(' ').first ?? 'Usuário',
-                              Colors.cyanAccent,
+                              cyanColor,
                             ),
                           ),
                           if (isComparing) ...[
@@ -470,7 +474,7 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
                               child: _buildPredictionCard(
                                 myPrediction,
                                 'Seu palpite',
-                                Colors.amberAccent,
+                                amberColor,
                               ),
                             ),
                           ],
@@ -490,6 +494,10 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
   Widget _buildRadarComparison() {
     final userStats = _userStats!;
     final meStats = _meStats!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final cyanColor = isDark ? Colors.cyanAccent : Colors.cyan;
+    final amberColor = isDark ? Colors.amberAccent : Colors.orange;
 
     // Dados para o gráfico
     final rawLabels = ['Exato', 'Saldo', 'Gols', 'Vencedor', 'Erros'];
@@ -538,7 +546,7 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
                         onTap: () => _navigateToProfile(_userHistory),
                         child: Row(
                           children: [
-                            _buildAvatar(_userHistory, Colors.cyanAccent),
+                            _buildAvatar(_userHistory, cyanColor),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
@@ -572,10 +580,10 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
                               builder: (context, value, child) {
                                 return Text(
                                   '${value.toInt()}',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 20,
-                                    color: Colors.cyanAccent,
+                                    color: cyanColor,
                                   ),
                                 );
                               },
@@ -586,7 +594,7 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
                                 'x',
                                 style: TextStyle(
                                   fontSize: 14,
-                                  color: Colors.white54,
+                                  color: Colors.grey,
                                 ),
                               ),
                             ),
@@ -600,10 +608,10 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
                               builder: (context, value, child) {
                                 return Text(
                                   '${value.toInt()}',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 20,
-                                    color: Colors.amberAccent,
+                                    color: amberColor,
                                   ),
                                 );
                               },
@@ -612,7 +620,7 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
                         ),
                         const Text(
                           'pts',
-                          style: TextStyle(fontSize: 10, color: Colors.white54),
+                          style: TextStyle(fontSize: 10, color: Colors.grey),
                         ),
                       ],
                     ),
@@ -635,7 +643,7 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
                               ),
                             ),
                             const SizedBox(width: 8),
-                            _buildAvatar(_meHistory, Colors.amberAccent),
+                            _buildAvatar(_meHistory, amberColor),
                           ],
                         ),
                       ),
@@ -658,8 +666,8 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
                       values2: meValues,
                       labels: labels,
                       maxValue: maxValue,
-                      color1: Colors.cyanAccent,
-                      color2: Colors.amberAccent,
+                      color1: cyanColor,
+                      color2: amberColor,
                       animationValue: value,
                     );
                   },
@@ -669,7 +677,7 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
               Text(
                 'Comparativo de desempenho',
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.7),
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                   fontSize: 12,
                 ),
               ),
@@ -685,8 +693,8 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
                   'Total de Palpites',
                   userStats.total,
                   meStats.total,
-                  Colors.cyanAccent,
-                  Colors.amberAccent,
+                  cyanColor,
+                  amberColor,
                 ),
               ),
               const SizedBox(width: 8),
@@ -695,8 +703,8 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
                   'Acurácia',
                   _calculateAccuracy(userStats),
                   _calculateAccuracy(meStats),
-                  Colors.cyanAccent,
-                  Colors.amberAccent,
+                  cyanColor,
+                  amberColor,
                   isPercentage: true,
                   tooltip:
                       'Considera acerto qualquer palpite que pontuou.\nFórmula: ((Total - Erros) / Total) * 100',
@@ -705,7 +713,7 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
             ],
           ),
         ),
-        _buildBadgesComparison(_userHistory!.badges, _meHistory!.badges),
+        _buildBadgesComparison(_userHistory!.badges, _meHistory!.badges, cyanColor, amberColor),
       ],
     );
   }
@@ -752,7 +760,7 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(color: Colors.white70, fontSize: 12),
+                    style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7), fontSize: 12),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(width: 4),
@@ -762,7 +770,7 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
                     child: const Icon(
                       Icons.info_outline,
                       size: 14,
-                      color: Colors.white54,
+                      color: Colors.grey,
                     ),
                   ),
                 ],
@@ -770,7 +778,7 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
             else
               Text(
                 title,
-                style: const TextStyle(color: Colors.white70, fontSize: 12),
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7), fontSize: 12),
                 textAlign: TextAlign.center,
               ),
             const SizedBox(height: 8),
@@ -805,7 +813,7 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
                   padding: EdgeInsets.symmetric(horizontal: 8.0),
                   child: Text(
                     'vs',
-                    style: TextStyle(fontSize: 12, color: Colors.white54),
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
                   ),
                 ),
                 Column(
@@ -843,6 +851,8 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
   Widget _buildBadgesComparison(
     List<BadgeModel> userBadges,
     List<BadgeModel> meBadges,
+    Color color1,
+    Color color2,
   ) {
     if (userBadges.isEmpty && meBadges.isEmpty) return const SizedBox();
 
@@ -853,21 +863,21 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
         children: [
           const Text(
             'Medalhas da Liga',
-            style: TextStyle(color: Colors.white70, fontSize: 12),
+            style: TextStyle(color: Colors.grey, fontSize: 12),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 12),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(child: _buildBadgesList(userBadges, Colors.cyanAccent)),
+              Expanded(child: _buildBadgesList(userBadges, color1)),
               Container(
                 width: 1,
-                color: Colors.white10,
+                color: Theme.of(context).dividerColor,
                 margin: const EdgeInsets.symmetric(horizontal: 12),
                 height: 48,
               ),
-              Expanded(child: _buildBadgesList(meBadges, Colors.amberAccent)),
+              Expanded(child: _buildBadgesList(meBadges, color2)),
             ],
           ),
         ],
@@ -878,7 +888,7 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
   Widget _buildBadgesList(List<BadgeModel> badges, Color color) {
     if (badges.isEmpty) {
       return const Center(
-        child: Text('-', style: TextStyle(color: Colors.white30, fontSize: 24)),
+        child: Text('-', style: TextStyle(color: Colors.grey, fontSize: 24)),
       );
     }
     return Wrap(
@@ -1066,14 +1076,14 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
           style: TextStyle(
             fontSize: isMain ? 24 : 18,
             fontWeight: FontWeight.bold,
-            color: color ?? Colors.white,
+            color: color ?? Theme.of(context).colorScheme.onSurface,
           ),
         ),
         Text(
           label,
           style: TextStyle(
             fontSize: 12,
-            color: Colors.white.withValues(alpha: 0.7),
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
           ),
         ),
       ],
@@ -1105,9 +1115,9 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
       return Container(
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.05),
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white10, width: 1),
+          border: Border.all(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1), width: 1),
         ),
         child: Column(
           children: [
@@ -1115,16 +1125,16 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
               label,
               style: TextStyle(
                 fontSize: 10,
-                color: Colors.white.withValues(alpha: 0.7),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
               ),
             ),
             const SizedBox(height: 4),
-            const Text(
+            Text(
               '-',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 18,
-                color: Colors.white54,
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
               ),
             ),
           ],
@@ -1142,10 +1152,10 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
       decoration: BoxDecoration(
         color: isWin
             ? color.withValues(alpha: 0.15)
-            : Colors.white.withValues(alpha: 0.05),
+            : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isWin ? color.withValues(alpha: 0.6) : Colors.white10,
+          color: isWin ? color.withValues(alpha: 0.6) : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1),
           width: 1,
         ),
       ),
@@ -1155,7 +1165,7 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
             label,
             style: TextStyle(
               fontSize: 10,
-              color: Colors.white.withValues(alpha: 0.7),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
             ),
           ),
           const SizedBox(height: 4),
