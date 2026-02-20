@@ -304,7 +304,14 @@ class _RankingListTabState extends State<_RankingListTab>
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.emoji_events, color: Colors.amber),
+                            Icon(
+                              Icons.emoji_events,
+                              color:
+                                  Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.amber
+                                  : Colors.amber.shade600,
+                            ),
                             SizedBox(width: 8),
                             Text(
                               'TOP 10 JOGADORES',
@@ -485,10 +492,12 @@ class _RankingListTabState extends State<_RankingListTab>
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            const Icon(
+            Icon(
               Icons.emoji_events_outlined,
               size: 48,
-              color: Colors.amber,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.amber
+                  : Colors.amber.shade600,
             ),
             const SizedBox(height: 16),
             const Text(
@@ -522,7 +531,12 @@ class _RankingListTabState extends State<_RankingListTab>
                 height: 60,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(color: Colors.amber, width: 2),
+                  border: Border.all(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.amber
+                        : Colors.amber.shade600,
+                    width: 2,
+                  ),
                 ),
                 child: Center(
                   child: Column(
@@ -537,10 +551,12 @@ class _RankingListTabState extends State<_RankingListTab>
                       ),
                       Text(
                         '#${myRank.rank}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          color: Colors.amber,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.amber
+                              : Colors.amber.shade600,
                         ),
                       ),
                     ],
@@ -638,7 +654,11 @@ class _RankingListTabState extends State<_RankingListTab>
   }
 
   Color _getRankColor(int rank) {
-    if (rank == 1) return const Color(0xFFFFD700);
+    if (rank == 1) {
+      return Theme.of(context).brightness == Brightness.dark
+          ? Colors.amber
+          : Colors.amber.shade600;
+    }
     if (rank == 2) return const Color(0xFFC0C0C0);
     if (rank == 3) return const Color(0xFFCD7F32);
     return Theme.of(context).colorScheme.onSurface;

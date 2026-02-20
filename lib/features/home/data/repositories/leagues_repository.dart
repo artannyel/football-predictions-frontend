@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:football_predictions/dio_client.dart';
 import 'package:football_predictions/features/home/data/models/league_details_model.dart';
 import 'package:football_predictions/features/home/data/models/league_model.dart';
+import 'package:football_predictions/features/home/data/models/league_feed_model.dart';
 import 'package:football_predictions/features/home/data/models/league_ranking_model.dart';
 import 'package:football_predictions/features/home/data/models/rule_model.dart';
 import 'package:football_predictions/features/matches/data/models/match_stats_model.dart';
@@ -220,6 +221,26 @@ class LeaguesRepository {
       );
     } catch (e) {
       throw Exception('Falha ao carregar ranking: $e');
+    }
+  }
+
+  Future<({List<LeagueFeedModel> feed, int lastPage})> getLeagueFeed(
+    String id, {
+    int page = 1,
+  }) async {
+    try {
+      final response = await dioClient.dio.get(
+        'leagues/$id/feed',
+        queryParameters: {'page': page},
+      );
+      final List<dynamic> data = response.data['data'];
+      final meta = response.data['meta'] ?? {};
+      return (
+        feed: data.map((json) => LeagueFeedModel.fromJson(json)).toList(),
+        lastPage: (meta['last_page'] as int?) ?? 1,
+      );
+    } catch (e) {
+      throw Exception('Falha ao carregar feed: $e');
     }
   }
 

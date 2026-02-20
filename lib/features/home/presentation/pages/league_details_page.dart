@@ -10,6 +10,7 @@ import 'package:football_predictions/core/presentation/widgets/loading_widget.da
 import 'package:football_predictions/features/auth/data/repositories/auth_repository.dart';
 import 'package:football_predictions/features/home/data/models/league_details_model.dart';
 import 'package:football_predictions/features/home/data/models/league_ranking_model.dart';
+import 'package:football_predictions/features/home/data/models/league_feed_model.dart';
 import 'package:football_predictions/features/home/data/repositories/leagues_repository.dart';
 import 'package:football_predictions/features/home/data/models/rule_model.dart';
 import 'package:football_predictions/features/matches/data/models/match_model.dart';
@@ -52,6 +53,13 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
   bool _isSilentHistoryLoading = false;
   String? _historyError;
 
+  // Feed state
+  final List<LeagueFeedModel> _feedItems = [];
+  int _feedPage = 1;
+  int _feedLastPage = 1;
+  bool _isFeedLoading = false;
+  String? _feedError;
+
   late ConfettiController _confettiController;
   late ConfettiController _fireworksController;
   late AnimationController _pulseController;
@@ -79,6 +87,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
     // Carrega ranking inicial e usuário
     _loadRanking();
     _loadHistoryPredictions();
+    _loadFeed();
     _userIdFuture.then((id) {
       if (mounted) setState(() => _currentUserId = id);
     });
@@ -246,6 +255,42 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
     }
   }
 
+  Future<void> _loadFeed({bool refresh = false}) async {
+    if (_isFeedLoading) return;
+
+    if (refresh) {
+      _feedPage = 1;
+      _feedLastPage = 1;
+      _feedItems.clear();
+      _feedError = null;
+    } else if (_feedPage > _feedLastPage) {
+      return;
+    }
+
+    setState(() => _isFeedLoading = true);
+
+    try {
+      final repo = context.read<LeaguesRepository>();
+      final result = await repo.getLeagueFeed(widget.leagueId, page: _feedPage);
+
+      if (mounted) {
+        setState(() {
+          _feedItems.addAll(result.feed);
+          _feedLastPage = result.lastPage;
+          _feedPage++;
+          _isFeedLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _feedError = e.toString().replaceAll('Exception: ', '');
+          _isFeedLoading = false;
+        });
+      }
+    }
+  }
+
   void _setupFirestoreListener(int competitionId) {
     _firestoreSubscription = FirebaseFirestore.instance
         .collection('competition_updates')
@@ -259,6 +304,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
           if (mounted) {
             _loadRanking(refresh: true, silent: true);
             _loadHistoryPredictions(refresh: true, silent: true);
+            _loadFeed(refresh: true);
             // O setState fará o rebuild, atualizando também o FutureBuilder dos palpites ativos
             setState(() {});
           }
@@ -276,6 +322,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
       _detailsFuture,
       _loadRanking(refresh: true),
       _loadHistoryPredictions(refresh: true),
+      _loadFeed(refresh: true),
       _rulesFuture,
     ]);
   }
@@ -287,6 +334,31 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
     final hour = dateTime.hour.toString().padLeft(2, '0');
     final minute = dateTime.minute.toString().padLeft(2, '0');
     return '$day/$month $hour:$minute';
+  }
+
+  String _formatRelativeTime(String utcDate) {
+    final dateTime = DateTime.parse(utcDate).toLocal();
+    final now = DateTime.now();
+    final difference = now.difference(dateTime);
+
+    if (difference.inSeconds < 60) {
+      final seconds = math.max(0, difference.inSeconds);
+      return 'Há $seconds ${seconds == 1 ? "segundo" : "segundos"}';
+    } else if (difference.inMinutes < 60) {
+      final minutes = difference.inMinutes;
+      return 'Há $minutes ${minutes == 1 ? "minuto" : "minutos"}';
+    } else if (difference.inHours < 24) {
+      final hours = difference.inHours;
+      return 'Há $hours ${hours == 1 ? "hora" : "horas"}';
+    } else if (difference.inDays < 30) {
+      final days = difference.inDays;
+      return 'Há $days ${days == 1 ? "dia" : "dias"}';
+    } else {
+      final day = dateTime.day.toString().padLeft(2, '0');
+      final month = dateTime.month.toString().padLeft(2, '0');
+      final year = dateTime.year;
+      return '$day/$month/$year';
+    }
   }
 
   String _translateStatus(String status) {
@@ -523,7 +595,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                   final league = snapshot.data!;
 
                   return DefaultTabController(
-                    length: 5,
+                    length: 6,
                     child: RefreshIndicator(
                       onRefresh: _refreshData,
                       notificationPredicate: (notification) {
@@ -544,6 +616,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                                   isScrollable: true,
                                   tabs: const [
                                     Tab(text: 'Ranking'),
+                                    Tab(text: 'Feed'),
                                     Tab(text: 'Palpitar'),
                                     Tab(text: 'Ativos'),
                                     Tab(text: 'Histórico'),
@@ -558,6 +631,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                         body: TabBarView(
                           children: [
                             _buildRankingTab(league.isActive),
+                            _buildFeedTab(),
                             _buildMatchesTab(league.id),
                             _buildActivePredictionsTab(league.id),
                             _buildHistoryPredictionsTab(league.id),
@@ -1379,6 +1453,219 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
     );
   }
 
+  Widget _buildFeedTab() {
+    if (_feedError != null && _feedItems.isEmpty) {
+      return _buildScrollablePlaceholder(
+        Text(
+          'Erro ao carregar feed:\n$_feedError',
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: Colors.red),
+        ),
+      );
+    }
+
+    if (_feedItems.isEmpty && _isFeedLoading) {
+      return const LoadingWidget();
+    }
+
+    if (_feedItems.isEmpty) {
+      return _buildScrollablePlaceholder(
+        const Text('Nenhuma atividade recente.'),
+      );
+    }
+
+    return NotificationListener<ScrollNotification>(
+      onNotification: (scrollInfo) {
+        if (!_isFeedLoading &&
+            scrollInfo.metrics.pixels >=
+                scrollInfo.metrics.maxScrollExtent - 200) {
+          _loadFeed();
+        }
+        return false;
+      },
+      child: ListView.builder(
+        key: const PageStorageKey('feed'),
+        padding: const EdgeInsets.all(8),
+        physics: const AlwaysScrollableScrollPhysics(),
+        itemCount: _feedItems.length + (_isFeedLoading ? 1 : 0),
+        itemBuilder: (context, index) {
+          if (index == _feedItems.length) {
+            return const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Center(child: LoadingWidget(size: 30)),
+            );
+          }
+
+          final item = _feedItems[index];
+          final user = item.user;
+          final badge = item.badge;
+          final match = item.match;
+
+          return TweenAnimationBuilder<double>(
+            key: ValueKey('feed_${item.id}'),
+            tween: Tween<double>(begin: 0.0, end: 1.0),
+            duration: const Duration(milliseconds: 500),
+            curve: Curves.easeOutQuad,
+            builder: (context, value, child) {
+              return Opacity(
+                opacity: value,
+                child: Transform.translate(
+                  offset: Offset(0, 20 * (1 - value)),
+                  child: child,
+                ),
+              );
+            },
+            child: GlassCard(
+              margin: const EdgeInsets.symmetric(vertical: 4),
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () => context.go(
+                          '/ligas/${widget.leagueId}/usuario/${user.id}',
+                        ),
+                        child: ClipOval(
+                          child: user.photoUrl != null
+                              ? AppNetworkImage(
+                                  url: user.photoUrl!,
+                                  width: 32,
+                                  height: 32,
+                                  fit: BoxFit.cover,
+                                )
+                              : CircleAvatar(
+                                  radius: 16,
+                                  child: Text(
+                                    user.name.isNotEmpty
+                                        ? user.name[0].toUpperCase()
+                                        : '?',
+                                    style: const TextStyle(fontSize: 14),
+                                  ),
+                                ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            RichText(
+                              text: TextSpan(
+                                style: DefaultTextStyle.of(context).style,
+                                children: [
+                                  TextSpan(
+                                    text: user.name,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const TextSpan(
+                                    text: ' conquistou a medalha ',
+                                  ),
+                                  TextSpan(
+                                    text: badge.name,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Theme.of(context).brightness ==
+                                              Brightness.dark
+                                          ? Colors.amber
+                                          : Colors.amber.shade900,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Text(
+                              _formatRelativeTime(item.createdAt),
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withOpacity(0.6),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 8.0),
+                    child: Divider(height: 1),
+                  ),
+                  Row(
+                    children: [
+                      SizedBox(
+                        width: 40,
+                        height: 40,
+                        child: badge.iconUrl != null
+                            ? AppNetworkImage(
+                                url: badge.iconUrl!,
+                                errorWidget: const Icon(
+                                  Icons.military_tech,
+                                  size: 32,
+                                  color: Colors.amber,
+                                ),
+                              )
+                            : const Icon(
+                                Icons.military_tech,
+                                size: 32,
+                                color: Colors.amber,
+                              ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.surface.withOpacity(0.3),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Column(
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  _buildTeamLogo(match.homeTeamCrest),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    '${match.homeScore ?? '-'} x ${match.awayScore ?? '-'}',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  _buildTeamLogo(match.awayTeamCrest),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '${match.homeTeamName} vs ${match.awayTeamName}',
+                                style: const TextStyle(fontSize: 10),
+                                textAlign: TextAlign.center,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   Widget _buildMatchesTab(String leagueId) {
     return FutureBuilder<List<MatchModel>>(
       future: context.read<LeaguesRepository>().getMatchesPredictions(
@@ -1468,7 +1755,9 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                               _formatDate(match.utcDate),
                               style: TextStyle(
                                 fontSize: 12,
-                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withOpacity(0.7),
                               ),
                             ),
                           ],
@@ -1516,7 +1805,10 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                                       'Prorrogação: ${match.homeScoreExtraTime} - ${match.awayScoreExtraTime}',
                                       style: TextStyle(
                                         fontSize: 10,
-                                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withOpacity(0.7),
                                       ),
                                     ),
                                   if (match.scoreDuration != 'REGULAR' &&
@@ -1526,7 +1818,10 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                                       'Pênaltis: ${match.homeScorePenalties} - ${match.awayScorePenalties}',
                                       style: TextStyle(
                                         fontSize: 10,
-                                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withOpacity(0.7),
                                       ),
                                     ),
                                   const SizedBox(height: 4),
@@ -1536,7 +1831,10 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                                           _translateStatus(match.status),
                                           style: TextStyle(
                                             fontSize: 10,
-                                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onSurface
+                                                .withOpacity(0.7),
                                           ),
                                         ),
                                 ],
@@ -1699,7 +1997,9 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                             _formatDate(match.utcDate),
                             style: TextStyle(
                               fontSize: 12,
-                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withOpacity(0.7),
                             ),
                           ),
                         ],
@@ -1743,9 +2043,11 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                                     match.awayScoreExtraTime != null)
                                   Text(
                                     'Prorrogação: ${match.homeScoreExtraTime} - ${match.awayScoreExtraTime}',
-                                  style: TextStyle(
+                                    style: TextStyle(
                                       fontSize: 10,
-                                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurface.withOpacity(0.7),
                                     ),
                                   ),
                                 if (match.scoreDuration != 'REGULAR' &&
@@ -1753,9 +2055,11 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                                     match.awayScorePenalties != null)
                                   Text(
                                     'Pênaltis: ${match.homeScorePenalties} - ${match.awayScorePenalties}',
-                                  style: TextStyle(
+                                    style: TextStyle(
                                       fontSize: 10,
-                                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurface.withOpacity(0.7),
                                     ),
                                   ),
                                 const SizedBox(height: 4),
@@ -1763,9 +2067,12 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                                     ? const BlinkingLiveIndicator()
                                     : Text(
                                         _translateStatus(match.status),
-                                      style: TextStyle(
+                                        style: TextStyle(
                                           fontSize: 10,
-                                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface
+                                              .withOpacity(0.7),
                                         ),
                                       ),
                               ],
@@ -1905,15 +2212,17 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                             ),
                             Text(
                               _formatDate(match.utcDate),
-                            style: TextStyle(
+                              style: TextStyle(
                                 fontSize: 12,
-                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withOpacity(0.7),
                               ),
                             ),
                           ],
                         ),
                       ),
-                    Divider(height: 1, color: Theme.of(context).dividerColor),
+                      Divider(height: 1, color: Theme.of(context).dividerColor),
                       // Corpo: Times e Placar
                       Padding(
                         padding: const EdgeInsets.all(16),
@@ -1951,9 +2260,12 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                                       match.awayScoreExtraTime != null)
                                     Text(
                                       'Prorrogação: ${match.homeScoreExtraTime} - ${match.awayScoreExtraTime}',
-                                    style: TextStyle(
+                                      style: TextStyle(
                                         fontSize: 10,
-                                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withOpacity(0.7),
                                       ),
                                     ),
                                   if (match.scoreDuration != 'REGULAR' &&
@@ -1961,9 +2273,12 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                                       match.awayScorePenalties != null)
                                     Text(
                                       'Pênaltis: ${match.homeScorePenalties} - ${match.awayScorePenalties}',
-                                    style: TextStyle(
+                                      style: TextStyle(
                                         fontSize: 10,
-                                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withOpacity(0.7),
                                       ),
                                     ),
                                   const SizedBox(height: 4),
@@ -1971,9 +2286,12 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                                       ? const BlinkingLiveIndicator()
                                       : Text(
                                           _translateStatus(match.status),
-                                        style: TextStyle(
+                                          style: TextStyle(
                                             fontSize: 10,
-                                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onSurface
+                                                .withOpacity(0.7),
                                           ),
                                         ),
                                 ],
@@ -2042,9 +2360,16 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
       return Container(
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.05),
+          color: Theme.of(
+            context,
+          ).colorScheme.onSurface.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1), width: 1),
+          border: Border.all(
+            color: Theme.of(
+              context,
+            ).colorScheme.onSurface.withValues(alpha: 0.1),
+            width: 1,
+          ),
         ),
         child: Column(
           children: [
@@ -2052,7 +2377,9 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
               label,
               style: TextStyle(
                 fontSize: 10,
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.7),
               ),
             ),
             const SizedBox(height: 4),
@@ -2061,7 +2388,9 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 18,
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.5),
               ),
             ),
           ],
@@ -2083,7 +2412,9 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
             : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isWin ? color.withValues(alpha: 0.6) : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1),
+          color: isWin
+              ? color.withValues(alpha: 0.6)
+              : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1),
           width: 1,
         ),
       ),
@@ -2093,7 +2424,9 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
             label,
             style: TextStyle(
               fontSize: 10,
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.7),
             ),
           ),
           const SizedBox(height: 4),
@@ -2178,7 +2511,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                         BoxShadow(
                           color: Colors.black.withValues(alpha: 0.1),
                           blurRadius: 2,
-                        )
+                        ),
                       ],
                     ),
                     padding: const EdgeInsets.all(2),
