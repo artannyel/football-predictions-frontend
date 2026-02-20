@@ -56,16 +56,20 @@ class LeagueRulesModel {
 
   factory LeagueRulesModel.fromJson(Map<String, dynamic> json) {
     return LeagueRulesModel(
-      scoring: (json['scoring'] as List?)
+      scoring:
+          (json['scoring'] as List?)
               ?.map((e) => RuleModel.fromJson(e))
               .toList() ??
           [],
-      tieBreakers: (json['tie_breakers'] as List?)
+      tieBreakers:
+          (json['tie_breakers'] as List?)
               ?.map((e) => TieBreakerModel.fromJson(e))
               .toList() ??
           [],
-      badges: (json['badges'] as List?)
-              ?.map((e) => BadgeModel.fromJson(e))
+      badges:
+          (json['badges'] as List?)
+              ?.where((e) => (e['type'] ?? 'league') == 'league')
+              .map((e) => BadgeModel.fromJson(e))
               .toList() ??
           [],
     );

@@ -389,6 +389,7 @@ class _PredictionPageState extends State<PredictionPage> {
 
       // Verifica se usou coringa (baseado no model ou no estado local se acabou de salvar)
       final powerupUsed = _prediction!.powerupUsed != null;
+      final badges = _prediction!.badges;
 
       return Column(
         children: [
@@ -457,6 +458,38 @@ class _PredictionPageState extends State<PredictionPage> {
                   ),
                 ],
               ),
+            ),
+          ],
+          if (badges.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 8,
+              runSpacing: 8,
+              children: badges.map((badge) {
+                return Tooltip(
+                  message: badge.name,
+                  triggerMode: TooltipTriggerMode.tap,
+                  child: Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Theme.of(context).colorScheme.surface,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.1),
+                          blurRadius: 4,
+                        )
+                      ],
+                    ),
+                    padding: const EdgeInsets.all(6),
+                    child: badge.iconUrl != null
+                        ? AppNetworkImage(url: badge.iconUrl!)
+                        : const Icon(Icons.military_tech, size: 24, color: Colors.amber),
+                  ),
+                );
+              }).toList(),
             ),
           ],
         ],

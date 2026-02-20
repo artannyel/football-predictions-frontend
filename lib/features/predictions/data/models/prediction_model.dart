@@ -1,3 +1,4 @@
+import 'package:football_predictions/features/auth/data/models/user_model.dart';
 import 'package:football_predictions/features/matches/data/models/match_model.dart';
 
 class PredictionModel {
@@ -10,6 +11,7 @@ class PredictionModel {
   final String? createdAt;
   final MatchModel match;
   final String? powerupUsed;
+  final List<BadgeModel> badges;
 
   PredictionModel({
     required this.id,
@@ -21,6 +23,7 @@ class PredictionModel {
     required this.createdAt,
     required this.match,
     this.powerupUsed,
+    this.badges = const [],
   });
 
   factory PredictionModel.fromJson(Map<String, dynamic> json) {
@@ -34,6 +37,10 @@ class PredictionModel {
       createdAt: json['created_at'],
       match: MatchModel.fromJson(json['match']),
       powerupUsed: json['powerup_used'],
+      badges: (json['badges'] as List?)
+              ?.map((e) => BadgeModel.fromJson(e))
+              .toList() ??
+          [],
     );
   }
 }

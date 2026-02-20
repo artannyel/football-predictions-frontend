@@ -2073,6 +2073,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
     final isWin = points > 0;
     final pointsText = points > 0 ? '+$points' : '$points';
     final powerupUsed = prediction.powerupUsed != null;
+    final badges = prediction.badges;
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
@@ -2157,6 +2158,38 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
               ],
             ],
           ),
+          if (badges.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 4,
+              runSpacing: 4,
+              children: badges.map((badge) {
+                return Tooltip(
+                  message: badge.name,
+                  triggerMode: TooltipTriggerMode.tap,
+                  child: Container(
+                    width: 20,
+                    height: 20,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Theme.of(context).colorScheme.surface,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.1),
+                          blurRadius: 2,
+                        )
+                      ],
+                    ),
+                    padding: const EdgeInsets.all(2),
+                    child: badge.iconUrl != null
+                        ? AppNetworkImage(url: badge.iconUrl!)
+                        : Icon(Icons.military_tech, size: 12, color: color),
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
         ],
       ),
     );
