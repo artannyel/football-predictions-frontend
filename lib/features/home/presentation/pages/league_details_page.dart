@@ -59,6 +59,9 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
   int _feedLastPage = 1;
   bool _isFeedLoading = false;
   String? _feedError;
+  
+  final TextEditingController _chatController = TextEditingController();
+  bool _isSendingMessage = false;
 
   late ConfettiController _confettiController;
   late ConfettiController _fireworksController;
@@ -105,6 +108,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
   @override
   void dispose() {
     _firestoreSubscription?.cancel();
+    _chatController.dispose();
     _confettiController.dispose();
     _fireworksController.dispose();
     _pulseController.dispose();
@@ -454,6 +458,35 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
     return path;
   }
 
+  Future<void> _sendMessage() async {
+    final text = _chatController.text.trim();
+    if (text.isEmpty) return;
+
+    setState(() {
+      _isSendingMessage = true;
+    });
+
+    try {
+      // Envia para a API (que salvará no Firestore e disparará notificações)
+      // Nota: Certifique-se de implementar este método no LeaguesRepository
+      await context.read<LeaguesRepository>().sendMessage(widget.leagueId, text);
+      
+      if (mounted) {
+        _chatController.clear();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao enviar: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSendingMessage = false);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return PopScope(
@@ -595,7 +628,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                   final league = snapshot.data!;
 
                   return DefaultTabController(
-                    length: 6,
+                    length: 7,
                     child: RefreshIndicator(
                       onRefresh: _refreshData,
                       notificationPredicate: (notification) {
@@ -616,6 +649,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                                   isScrollable: true,
                                   tabs: const [
                                     Tab(text: 'Ranking'),
+                                    Tab(text: 'Chat'),
                                     Tab(text: 'Feed'),
                                     Tab(text: 'Palpitar'),
                                     Tab(text: 'Ativos'),
@@ -631,6 +665,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                         body: TabBarView(
                           children: [
                             _buildRankingTab(league.isActive),
+                            _buildChatTab(),
                             _buildFeedTab(),
                             _buildMatchesTab(league.id),
                             _buildActivePredictionsTab(league.id),
@@ -1449,6 +1484,243 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
               child: Center(child: LoadingWidget(size: 30)),
             ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildChatTab() {
+    return Column(
+      children: [
+        Expanded(
+          child: StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('leagues')
+                .doc(widget.leagueId)
+                .collection('messages')
+                .orderBy('createdAt', descending: true)
+                .limit(50)
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return Center(child: Text('Erro no chat: ${snapshot.error}'));
+              }
+
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const LoadingWidget();
+              }
+
+              final docs = snapshot.data?.docs ?? [];
+
+              if (docs.isEmpty) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.chat_bubble_outline,
+                        size: 48,
+                        color: Colors.white.withOpacity(0.5),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Seja o primeiro a falar!',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.7),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              return ListView.builder(
+                reverse: true,
+                padding: const EdgeInsets.all(16),
+                itemCount: docs.length,
+                itemBuilder: (context, index) {
+                  final data = docs[index].data() as Map<String, dynamic>;
+                  final type = data['type'] as String? ?? 'user';
+
+                  if (type == 'system') {
+                    return _buildSystemMessage(data);
+                  }
+
+                  final isMe = data['userId'] == _currentUserId;
+                  return _buildChatBubble(data, isMe);
+                },
+              );
+            },
+          ),
+        ),
+        _buildChatInput(),
+      ],
+    );
+  }
+
+  Widget _buildSystemMessage(Map<String, dynamic> data) {
+    final message = data['text'] ?? '';
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            message,
+            style: TextStyle(
+              fontSize: 11,
+              color: Colors.white.withOpacity(0.7),
+              fontStyle: FontStyle.italic,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildChatBubble(Map<String, dynamic> data, bool isMe) {
+    final message = data['text'] ?? '';
+    final userName = data['userName'] ?? 'Usuário';
+    final userPhoto = data['userPhoto'];
+    final timestamp = data['createdAt'] as Timestamp?;
+    final timeString = timestamp != null
+        ? '${timestamp.toDate().hour.toString().padLeft(2, '0')}:${timestamp.toDate().minute.toString().padLeft(2, '0')}'
+        : '';
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        mainAxisAlignment:
+            isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          if (!isMe) ...[
+            CircleAvatar(
+              radius: 16,
+              backgroundImage: userPhoto != null
+                  ? NetworkImage(userPhoto)
+                  : null,
+              child: userPhoto == null
+                  ? Text(
+                      userName.isNotEmpty ? userName[0].toUpperCase() : '?',
+                      style: const TextStyle(fontSize: 12),
+                    )
+                  : null,
+            ),
+            const SizedBox(width: 8),
+          ],
+          Flexible(
+            child: Column(
+              crossAxisAlignment:
+                  isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              children: [
+                if (!isMe)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 4, bottom: 4),
+                    child: Text(
+                      userName,
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.white.withOpacity(0.7),
+                      ),
+                    ),
+                  ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isMe
+                        ? Theme.of(context).colorScheme.primaryContainer
+                        : Colors.grey.shade800,
+                    borderRadius: BorderRadius.only(
+                      topLeft: const Radius.circular(16),
+                      topRight: const Radius.circular(16),
+                      bottomLeft: isMe
+                          ? const Radius.circular(16)
+                          : const Radius.circular(4),
+                      bottomRight: isMe
+                          ? const Radius.circular(4)
+                          : const Radius.circular(16),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        message,
+                        style: TextStyle(
+                          color: isMe ? Colors.black87 : Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        timeString,
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: isMe ? Colors.black54 : Colors.white54,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChatInput() {
+    return GlassCard(
+      margin: EdgeInsets.zero,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      child: SafeArea(
+        top: false,
+        child: Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _chatController,
+                decoration: InputDecoration(
+                  hintText: 'Digite sua mensagem...',
+                  hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(24),
+                    borderSide: BorderSide.none,
+                  ),
+                  filled: true,
+                  fillColor: Colors.black.withOpacity(0.2),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                ),
+                style: const TextStyle(color: Colors.white),
+                textCapitalization: TextCapitalization.sentences,
+                onSubmitted: (_) => _sendMessage(),
+              ),
+            ),
+            const SizedBox(width: 8),
+            IconButton(
+              onPressed: _isSendingMessage ? null : _sendMessage,
+              icon: _isSendingMessage
+                  ? const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.send),
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -244,6 +244,22 @@ class LeaguesRepository {
     }
   }
 
+  Future<void> sendMessage(String leagueId, String message) async {
+    try {
+      await dioClient.dio.post(
+        'leagues/$leagueId/chat',
+        data: {'text': message},
+      );
+    } on DioException catch (e) {
+      final errorMessage = e.response?.data is Map
+          ? (e.response?.data['message'] ?? 'Erro ao enviar mensagem')
+          : 'Erro de conexão (${e.response?.statusCode})';
+      throw Exception(errorMessage);
+    } catch (e) {
+      throw Exception('Falha ao enviar mensagem: $e');
+    }
+  }
+
   Future<LeagueRulesModel> getRules() async {
     try {
       final response = await dioClient.dio.get('rules');
