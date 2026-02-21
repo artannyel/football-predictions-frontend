@@ -29,18 +29,18 @@ class LeagueFeedModel {
 class FeedMatchModel {
   final int id;
   final String homeTeamName;
-  final String homeTeamCrest;
+  final String? homeTeamCrest;
   final String awayTeamName;
-  final String awayTeamCrest;
+  final String? awayTeamCrest;
   final int? homeScore;
   final int? awayScore;
 
   FeedMatchModel({
     required this.id,
     required this.homeTeamName,
-    required this.homeTeamCrest,
+    this.homeTeamCrest,
     required this.awayTeamName,
-    required this.awayTeamCrest,
+    this.awayTeamCrest,
     this.homeScore,
     this.awayScore,
   });
