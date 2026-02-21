@@ -9,6 +9,7 @@ import 'package:football_predictions/features/auth/presentation/pages/profile_pa
 import 'package:football_predictions/features/competitions/presentation/pages/competitions_page.dart';
 import 'package:football_predictions/features/home/presentation/pages/home_page.dart';
 import 'package:football_predictions/features/home/presentation/pages/league_details_page.dart';
+import 'package:football_predictions/features/home/presentation/pages/league_chat_page.dart';
 import 'package:football_predictions/features/matches/presentation/pages/matches_page.dart';
 import 'package:football_predictions/features/ranking/presentation/pages/ranking_page.dart';
 import 'package:football_predictions/features/predictions/presentation/pages/user_predictions_page.dart';
@@ -131,6 +132,13 @@ GoRouter appRouter(AuthNotifier authNotifier) {
                           predictionId: state.uri.queryParameters['predictionId'] != null
                               ? int.parse(state.uri.queryParameters['predictionId']!)
                               : null,
+                        ),
+                      ),
+                      GoRoute(
+                        path: 'chat',
+                        name: 'LeagueChat',
+                        builder: (context, state) => LeagueChatPage(
+                          leagueId: state.pathParameters['id']!,
                         ),
                       ),
                     ],

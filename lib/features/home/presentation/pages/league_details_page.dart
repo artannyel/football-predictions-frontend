@@ -20,6 +20,7 @@ import 'package:football_predictions/features/home/presentation/pages/edit_leagu
 import 'package:go_router/go_router.dart';
 import '../widgets/glass_card.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LeagueDetailsPage extends StatefulWidget {
   final String leagueId;
@@ -31,7 +32,7 @@ class LeagueDetailsPage extends StatefulWidget {
 }
 
 class _LeagueDetailsPageState extends State<LeagueDetailsPage>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late Future<LeagueDetailsModel> _detailsFuture;
   late Future<LeagueRulesModel> _rulesFuture;
   late Future<String> _userIdFuture;
@@ -60,14 +61,14 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
   bool _isFeedLoading = false;
   String? _feedError;
   
-  final TextEditingController _chatController = TextEditingController();
-  bool _isSendingMessage = false;
 
   late ConfettiController _confettiController;
   late ConfettiController _fireworksController;
   late AnimationController _pulseController;
   bool _confettiPlayed = false;
+  late TabController _tabController;
   StreamSubscription? _firestoreSubscription;
+  DateTime? _lastReadTime;
 
   @override
   void initState() {
@@ -86,6 +87,8 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
       vsync: this,
       duration: const Duration(milliseconds: 1500),
     )..repeat(reverse: true);
+    _tabController = TabController(length: 6, vsync: this);
+    _loadLastReadTime();
 
     // Carrega ranking inicial e usuário
     _loadRanking();
@@ -108,11 +111,33 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
   @override
   void dispose() {
     _firestoreSubscription?.cancel();
-    _chatController.dispose();
     _confettiController.dispose();
     _fireworksController.dispose();
     _pulseController.dispose();
+    _tabController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadLastReadTime() async {
+    final prefs = await SharedPreferences.getInstance();
+    final timestamp = prefs.getInt('last_read_${widget.leagueId}');
+    if (timestamp != null && mounted) {
+      setState(() {
+        _lastReadTime = DateTime.fromMillisecondsSinceEpoch(timestamp);
+      });
+    }
+  }
+
+  Future<void> _updateLastReadTime() async {
+    final now = DateTime.now();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(
+        'last_read_${widget.leagueId}', now.millisecondsSinceEpoch);
+    if (mounted) {
+      setState(() {
+        _lastReadTime = now;
+      });
+    }
   }
 
   Future<void> _loadRanking({bool refresh = false, bool silent = false}) async {
@@ -458,35 +483,6 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
     return path;
   }
 
-  Future<void> _sendMessage() async {
-    final text = _chatController.text.trim();
-    if (text.isEmpty) return;
-
-    setState(() {
-      _isSendingMessage = true;
-    });
-
-    try {
-      // Envia para a API (que salvará no Firestore e disparará notificações)
-      // Nota: Certifique-se de implementar este método no LeaguesRepository
-      await context.read<LeaguesRepository>().sendMessage(widget.leagueId, text);
-      
-      if (mounted) {
-        _chatController.clear();
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao enviar: $e')),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isSendingMessage = false);
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return PopScope(
@@ -505,6 +501,58 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
           backgroundColor: const Color(0xFF1B5E20), // Verde escuro
           foregroundColor: Colors.white,
           actions: [
+            StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('leagues')
+                  .doc(widget.leagueId)
+                  .collection('messages')
+                  .orderBy('createdAt', descending: true)
+                  .limit(1)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                bool hasUnread = false;
+                if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
+                  final doc = snapshot.data!.docs.first;
+                  final data = doc.data() as Map<String, dynamic>;
+                  final createdAt = (data['createdAt'] as Timestamp?)?.toDate();
+                  final userId = data['userId'] as String?;
+
+                  // Verifica se a mensagem é nova e não é do próprio usuário
+                  if (createdAt != null && userId != _currentUserId) {
+                    if (_lastReadTime == null ||
+                        createdAt.isAfter(_lastReadTime!)) {
+                      hasUnread = true;
+                    }
+                  }
+                }
+
+                return Stack(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.chat_bubble_outline),
+                      tooltip: 'Chat da Liga',
+                      onPressed: () {
+                        _updateLastReadTime();
+                        context.go('/ligas/${widget.leagueId}/chat');
+                      },
+                    ),
+                    if (hasUnread)
+                      Positioned(
+                        right: 12,
+                        top: 12,
+                        child: Container(
+                          width: 10,
+                          height: 10,
+                          decoration: const BoxDecoration(
+                            color: Colors.redAccent,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
             FutureBuilder(
               future: Future.wait([_detailsFuture, _userIdFuture]),
               builder: (context, snapshot) {
@@ -627,52 +675,49 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
 
                   final league = snapshot.data!;
 
-                  return DefaultTabController(
-                    length: 7,
-                    child: RefreshIndicator(
-                      onRefresh: _refreshData,
-                      notificationPredicate: (notification) {
-                        return notification.depth == 2;
-                      },
-                      child: NestedScrollView(
-                        headerSliverBuilder: (context, innerBoxIsScrolled) {
-                          return [
-                            SliverToBoxAdapter(
-                              child: _buildLeagueHeader(league),
-                            ),
-                            SliverPersistentHeader(
-                              delegate: _SliverAppBarDelegate(
-                                TabBar(
-                                  labelColor: Colors.white,
-                                  unselectedLabelColor: Colors.white70,
-                                  indicatorColor: Colors.white,
-                                  isScrollable: true,
-                                  tabs: const [
-                                    Tab(text: 'Ranking'),
-                                    Tab(text: 'Chat'),
-                                    Tab(text: 'Feed'),
-                                    Tab(text: 'Palpitar'),
-                                    Tab(text: 'Ativos'),
-                                    Tab(text: 'Histórico'),
-                                    Tab(text: 'Regras'),
-                                  ],
-                                ),
+                  return RefreshIndicator(
+                    onRefresh: _refreshData,
+                    notificationPredicate: (notification) {
+                      return notification.depth == 2;
+                    },
+                    child: NestedScrollView(
+                      headerSliverBuilder: (context, innerBoxIsScrolled) {
+                        return [
+                          SliverToBoxAdapter(
+                            child: _buildLeagueHeader(league),
+                          ),
+                          SliverPersistentHeader(
+                            delegate: _SliverAppBarDelegate(
+                              TabBar(
+                                controller: _tabController,
+                                labelColor: Colors.white,
+                                unselectedLabelColor: Colors.white70,
+                                indicatorColor: Colors.white,
+                                isScrollable: true,
+                                tabs: const [
+                                  Tab(text: 'Ranking'),
+                                  Tab(text: 'Palpitar'),
+                                  Tab(text: 'Ativos'),
+                                  Tab(text: 'Histórico'),
+                                  Tab(text: 'Feed'),
+                                  Tab(text: 'Regras'),
+                                ],
                               ),
-                              pinned: true,
                             ),
-                          ];
-                        },
-                        body: TabBarView(
-                          children: [
-                            _buildRankingTab(league.isActive),
-                            _buildChatTab(),
-                            _buildFeedTab(),
-                            _buildMatchesTab(league.id),
-                            _buildActivePredictionsTab(league.id),
-                            _buildHistoryPredictionsTab(league.id),
-                            _buildRulesTab(),
-                          ],
-                        ),
+                            pinned: true,
+                          ),
+                        ];
+                      },
+                      body: TabBarView(
+                        controller: _tabController,
+                        children: [
+                          _buildRankingTab(league.isActive),
+                          _buildMatchesTab(league.id),
+                          _buildActivePredictionsTab(league.id),
+                          _buildHistoryPredictionsTab(league.id),
+                          _buildFeedTab(),
+                          _buildRulesTab(),
+                        ],
                       ),
                     ),
                   );
@@ -1484,243 +1529,6 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
               child: Center(child: LoadingWidget(size: 30)),
             ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildChatTab() {
-    return Column(
-      children: [
-        Expanded(
-          child: StreamBuilder<QuerySnapshot>(
-            stream: FirebaseFirestore.instance
-                .collection('leagues')
-                .doc(widget.leagueId)
-                .collection('messages')
-                .orderBy('createdAt', descending: true)
-                .limit(50)
-                .snapshots(),
-            builder: (context, snapshot) {
-              if (snapshot.hasError) {
-                return Center(child: Text('Erro no chat: ${snapshot.error}'));
-              }
-
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const LoadingWidget();
-              }
-
-              final docs = snapshot.data?.docs ?? [];
-
-              if (docs.isEmpty) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.chat_bubble_outline,
-                        size: 48,
-                        color: Colors.white.withOpacity(0.5),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Seja o primeiro a falar!',
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.7),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }
-
-              return ListView.builder(
-                reverse: true,
-                padding: const EdgeInsets.all(16),
-                itemCount: docs.length,
-                itemBuilder: (context, index) {
-                  final data = docs[index].data() as Map<String, dynamic>;
-                  final type = data['type'] as String? ?? 'user';
-
-                  if (type == 'system') {
-                    return _buildSystemMessage(data);
-                  }
-
-                  final isMe = data['userId'] == _currentUserId;
-                  return _buildChatBubble(data, isMe);
-                },
-              );
-            },
-          ),
-        ),
-        _buildChatInput(),
-      ],
-    );
-  }
-
-  Widget _buildSystemMessage(Map<String, dynamic> data) {
-    final message = data['text'] ?? '';
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Center(
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Text(
-            message,
-            style: TextStyle(
-              fontSize: 11,
-              color: Colors.white.withOpacity(0.7),
-              fontStyle: FontStyle.italic,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildChatBubble(Map<String, dynamic> data, bool isMe) {
-    final message = data['text'] ?? '';
-    final userName = data['userName'] ?? 'Usuário';
-    final userPhoto = data['userPhoto'];
-    final timestamp = data['createdAt'] as Timestamp?;
-    final timeString = timestamp != null
-        ? '${timestamp.toDate().hour.toString().padLeft(2, '0')}:${timestamp.toDate().minute.toString().padLeft(2, '0')}'
-        : '';
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        mainAxisAlignment:
-            isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          if (!isMe) ...[
-            CircleAvatar(
-              radius: 16,
-              backgroundImage: userPhoto != null
-                  ? NetworkImage(userPhoto)
-                  : null,
-              child: userPhoto == null
-                  ? Text(
-                      userName.isNotEmpty ? userName[0].toUpperCase() : '?',
-                      style: const TextStyle(fontSize: 12),
-                    )
-                  : null,
-            ),
-            const SizedBox(width: 8),
-          ],
-          Flexible(
-            child: Column(
-              crossAxisAlignment:
-                  isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-              children: [
-                if (!isMe)
-                  Padding(
-                    padding: const EdgeInsets.only(left: 4, bottom: 4),
-                    child: Text(
-                      userName,
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: Colors.white.withOpacity(0.7),
-                      ),
-                    ),
-                  ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isMe
-                        ? Theme.of(context).colorScheme.primaryContainer
-                        : Colors.grey.shade800,
-                    borderRadius: BorderRadius.only(
-                      topLeft: const Radius.circular(16),
-                      topRight: const Radius.circular(16),
-                      bottomLeft: isMe
-                          ? const Radius.circular(16)
-                          : const Radius.circular(4),
-                      bottomRight: isMe
-                          ? const Radius.circular(4)
-                          : const Radius.circular(16),
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        message,
-                        style: TextStyle(
-                          color: isMe ? Colors.black87 : Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        timeString,
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: isMe ? Colors.black54 : Colors.white54,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildChatInput() {
-    return GlassCard(
-      margin: EdgeInsets.zero,
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-      child: SafeArea(
-        top: false,
-        child: Row(
-          children: [
-            Expanded(
-              child: TextField(
-                controller: _chatController,
-                decoration: InputDecoration(
-                  hintText: 'Digite sua mensagem...',
-                  hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(24),
-                    borderSide: BorderSide.none,
-                  ),
-                  filled: true,
-                  fillColor: Colors.black.withOpacity(0.2),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                ),
-                style: const TextStyle(color: Colors.white),
-                textCapitalization: TextCapitalization.sentences,
-                onSubmitted: (_) => _sendMessage(),
-              ),
-            ),
-            const SizedBox(width: 8),
-            IconButton(
-              onPressed: _isSendingMessage ? null : _sendMessage,
-              icon: _isSendingMessage
-                  ? const SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.send),
-              color: Theme.of(context).colorScheme.primary,
-            ),
-          ],
-        ),
       ),
     );
   }
