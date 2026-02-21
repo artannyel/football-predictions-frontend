@@ -34,6 +34,7 @@ class UserModel {
   final List<BadgeModel> badges;
   final bool notifyResults;
   final bool notifyReminders;
+  final bool notifyChat;
 
   UserModel({
     required this.id,
@@ -45,6 +46,7 @@ class UserModel {
     this.badges = const [],
     required this.notifyResults,
     required this.notifyReminders,
+    required this.notifyChat,
   });
 
   UserModel copyWith({
@@ -57,6 +59,7 @@ class UserModel {
     List<BadgeModel>? badges,
     bool? notifyResults,
     bool? notifyReminders,
+    bool? notifyChat,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -68,6 +71,7 @@ class UserModel {
       badges: badges ?? this.badges,
       notifyResults: notifyResults ?? this.notifyResults,
       notifyReminders: notifyReminders ?? this.notifyReminders,
+      notifyChat: notifyChat ?? this.notifyChat,
     );
   }
 
@@ -86,6 +90,7 @@ class UserModel {
           : [],
       notifyResults: json['notify_results'] ?? false,
       notifyReminders: json['notify_reminders'] ?? false,
+      notifyChat: json['notify_chat'] ?? false,
     );
   }
 }

@@ -15,14 +15,17 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   bool _updatingResults = false;
   bool _updatingReminders = false;
+  bool _updatingNotifyChat = false;
 
   Future<void> _updateSettings({
     bool? notifyResults,
     bool? notifyReminders,
+    bool? notifyChat,
   }) async {
     setState(() {
       if (notifyResults != null) _updatingResults = true;
       if (notifyReminders != null) _updatingReminders = true;
+      if (notifyChat != null) _updatingNotifyChat = true;
     });
 
     final authNotifier = context.read<AuthNotifier>();
@@ -31,17 +34,21 @@ class _SettingsPageState extends State<SettingsPage> {
       setState(() {
         _updatingResults = false;
         _updatingReminders = false;
+        _updatingNotifyChat = false;
       });
       return;
     }
 
     final newResults = notifyResults ?? user.notifyResults;
     final newReminders = notifyReminders ?? user.notifyReminders;
+    final newChat = notifyChat ?? user.notifyChat;
+
 
     // Atualização otimista local
     final updatedUser = user.copyWith(
       notifyResults: newResults,
       notifyReminders: newReminders,
+      notifyChat: newChat,
     );
     authNotifier.refreshUser(updatedUser);
 
@@ -49,6 +56,7 @@ class _SettingsPageState extends State<SettingsPage> {
       await context.read<DioClient>().dio.post('user/settings', data: {
         'notify_results': newResults,
         'notify_reminders': newReminders,
+        'notify_chat': newChat,
       });
 
       if (mounted) {
@@ -61,6 +69,10 @@ class _SettingsPageState extends State<SettingsPage> {
           message = notifyReminders
               ? 'Lembretes ativados'
               : 'Lembretes desativados';
+        } else if (notifyChat != null) {
+          message = notifyChat
+              ? 'Chat de ligas ativado'
+              : 'Chat de ligas desativado';
         }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message), backgroundColor: Colors.green),
@@ -82,6 +94,7 @@ class _SettingsPageState extends State<SettingsPage> {
         setState(() {
           _updatingResults = false;
           _updatingReminders = false;
+          _updatingNotifyChat = false;
         });
       }
     }
@@ -148,6 +161,24 @@ class _SettingsPageState extends State<SettingsPage> {
                   onChanged: _updatingReminders
                       ? null
                       : (val) => _updateSettings(notifyReminders: val),
+                  activeColor: isDark
+                      ? Colors.greenAccent
+                      : Theme.of(context).colorScheme.primary,
+                ),
+                SwitchListTile(
+                  secondary: const Icon(Icons.access_alarm),
+                  title: const Text(
+                    'Chat de ligas',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: const Text(
+                    'Receba notificações de mensagens de suas ligas',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                  value: user?.notifyChat ?? false,
+                  onChanged: _updatingNotifyChat
+                      ? null
+                      : (val) => _updateSettings(notifyChat: val),
                   activeColor: isDark
                       ? Colors.greenAccent
                       : Theme.of(context).colorScheme.primary,
