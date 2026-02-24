@@ -296,6 +296,7 @@ class _PredictionPageState extends State<PredictionPage> {
               _buildTeamColumn(_match!.awayTeamName, _match!.awayTeamCrest),
             ],
           ),
+          _buildFormSection(),
           _buildStats(),
           const SizedBox(height: 32),
           _buildPredictionSection(isLocked),
@@ -524,16 +525,22 @@ class _PredictionPageState extends State<PredictionPage> {
             }
             setState(() => _usePowerup = value);
           },
-          title: const Text(
+          title: Text(
             'Usar Coringa (x2)',
-            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
           ),
           subtitle: Text(
             'Dobra a pontuação deste palpite.\nDisponíveis: $_availablePowerups',
-            style: const TextStyle(fontSize: 12, color: Colors.white70),
+            style: TextStyle(
+              fontSize: 12,
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+            ),
           ),
           secondary: const Icon(Icons.style, color: Colors.deepPurpleAccent),
-          activeColor: Colors.deepPurpleAccent,
+          activeThumbColor: Colors.deepPurpleAccent,
           contentPadding: const EdgeInsets.symmetric(horizontal: 8),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -548,6 +555,132 @@ class _PredictionPageState extends State<PredictionPage> {
               : Colors.transparent,
         ),
       ],
+    );
+  }
+
+  Widget _buildFormSection() {
+    if (_stats?.form == null) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16.0),
+      child: Column(
+        children: [
+          Text(
+            'Últimos Jogos',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: _buildTeamFormRow(_stats!.form!.home, isHome: true),
+              ),
+              const SizedBox(width: 32),
+              Expanded(
+                child: _buildTeamFormRow(_stats!.form!.away, isHome: false),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTeamFormRow(List<MatchResultModel> results,
+      {required bool isHome}) {
+    final displayResults = results.take(5).toList();
+
+    return Row(
+      mainAxisAlignment:
+          isHome ? MainAxisAlignment.end : MainAxisAlignment.start,
+      children: displayResults.asMap().entries.map((entry) {
+        final index = entry.key;
+        final result = entry.value;
+        Color color;
+        Widget content;
+        switch (result.result.toUpperCase()) {
+          case 'W':
+            color = Colors.green;
+            content = const Icon(Icons.check, color: Colors.white, size: 16);
+            break;
+          case 'L':
+            color = Colors.red;
+            content = const Icon(Icons.close, color: Colors.white, size: 16);
+            break;
+          case 'D':
+            color = Colors.grey;
+            content = const Icon(Icons.remove, color: Colors.white, size: 16);
+            break;
+          default:
+            color = Colors.grey;
+            content = const Text(
+              '?',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+              ),
+            );
+        }
+
+        return TweenAnimationBuilder<double>(
+          duration: Duration(milliseconds: 400 + (index * 100)),
+          tween: Tween(begin: 0.0, end: 1.0),
+          curve: Curves.easeOutBack,
+          builder: (context, value, child) {
+            return Opacity(
+              opacity: value.clamp(0.0, 1.0),
+              child: Transform.scale(
+                scale: value,
+                child: child,
+              ),
+            );
+          },
+          child: GestureDetector(
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: Text(
+                    result.result == 'W'
+                        ? 'Vitória'
+                        : result.result == 'L'
+                            ? 'Derrota'
+                            : 'Empate',
+                  ),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Adversário: ${result.opponent}'),
+                      Text('Placar: ${result.score}'),
+                      Text('Data: ${_formatDate(result.date)}'),
+                      Text('Mando: ${result.isHome ? 'Casa' : 'Fora'}'),
+                    ],
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('OK'),
+                    ),
+                  ],
+                ),
+              );
+            },
+            child: Container(
+              width: 24,
+              height: 24,
+              margin: const EdgeInsets.symmetric(horizontal: 2.0),
+              decoration: BoxDecoration(
+                color: color,
+                shape: BoxShape.circle,
+              ),
+              alignment: Alignment.center,
+              child: content,
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 
