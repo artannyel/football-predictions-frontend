@@ -166,7 +166,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       : Theme.of(context).colorScheme.primary,
                 ),
                 SwitchListTile(
-                  secondary: const Icon(Icons.access_alarm),
+                  secondary: const Icon(Icons.chat_bubble_outline),
                   title: const Text(
                     'Chat de ligas',
                     style: TextStyle(fontWeight: FontWeight.bold),
