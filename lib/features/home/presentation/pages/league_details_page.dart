@@ -60,7 +60,6 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
   int _feedLastPage = 1;
   bool _isFeedLoading = false;
   String? _feedError;
-  
 
   late ConfettiController _confettiController;
   late ConfettiController _fireworksController;
@@ -132,7 +131,9 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
     final now = DateTime.now();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(
-        'last_read_${widget.leagueId}', now.millisecondsSinceEpoch);
+      'last_read_${widget.leagueId}',
+      now.millisecondsSinceEpoch,
+    );
     if (mounted) {
       setState(() {
         _lastReadTime = now;
@@ -683,9 +684,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                     child: NestedScrollView(
                       headerSliverBuilder: (context, innerBoxIsScrolled) {
                         return [
-                          SliverToBoxAdapter(
-                            child: _buildLeagueHeader(league),
-                          ),
+                          SliverToBoxAdapter(child: _buildLeagueHeader(league)),
                           SliverPersistentHeader(
                             delegate: _SliverAppBarDelegate(
                               TabBar(
@@ -1279,39 +1278,6 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
     );
   }
 
-  Widget _buildInfoItem(String label, String value, {String? imageUrl}) {
-    return Column(
-      children: [
-        Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-        const SizedBox(height: 4),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (imageUrl != null) ...[
-              ClipOval(
-                clipBehavior: Clip.antiAlias,
-                child: AppNetworkImage(
-                  url: imageUrl,
-                  width: 20,
-                  height: 20,
-                  errorWidget: const Icon(Icons.sports_soccer, size: 20),
-                ),
-              ),
-              const SizedBox(width: 8),
-            ],
-            Flexible(
-              child: Text(
-                value,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
   Widget _buildScrollablePlaceholder(Widget child) {
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -1648,7 +1614,8 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                                     text: badge.name,
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
-                                      color: Theme.of(context).brightness ==
+                                      color:
+                                          Theme.of(context).brightness ==
                                               Brightness.dark
                                           ? Colors.amber
                                           : Colors.amber.shade900,
@@ -1940,13 +1907,16 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                         ),
                       ),
                       // Footer: Palpitar (Opcional, ou apenas espaço)
-                      const Padding(
-                        padding: EdgeInsets.only(bottom: 12.0),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12.0),
                         child: Text(
                           "Toque para palpitar",
                           style: TextStyle(
                             fontSize: 10,
-                            color: Colors.greenAccent,
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                ? Colors.greenAccent
+                                : const Color(0xFF1B5E20),
                           ),
                         ),
                       ),
