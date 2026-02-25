@@ -84,8 +84,8 @@ class AdminRepository {
           'score_fulltime_away': awayScore,
           'score_winner': winner,
           'score_duration': duration,
-          'score_extra_time_home': homeScoreExtra,
-          'score_extra_time_away': awayScoreExtra,
+          'score_extratime_home': homeScoreExtra,
+          'score_extratime_away': awayScoreExtra,
           'score_penalties_home': homeScorePen,
           'score_penalties_away': awayScorePen,
         }
