@@ -6,7 +6,9 @@ class AdminMatchModel {
   final String stage;
   final String competitionName;
   final String homeTeamName;
+  final String? homeTeamCrest;
   final String awayTeamName;
+  final String? awayTeamCrest;
   final int? homeScore;
   final int? awayScore;
   final int? homeScoreHalfTime;
@@ -27,7 +29,9 @@ class AdminMatchModel {
     required this.stage,
     required this.competitionName,
     required this.homeTeamName,
+    this.homeTeamCrest,
     required this.awayTeamName,
+    this.awayTeamCrest,
     this.homeScore,
     this.awayScore,
     this.homeScoreHalfTime,
@@ -56,7 +60,9 @@ class AdminMatchModel {
       stage: json['stage'] ?? '',
       competitionName: json['competition']?['name'] ?? 'Desconhecida',
       homeTeamName: json['home_team']['name'],
+      homeTeamCrest: json['home_team']['crest'],
       awayTeamName: json['away_team']['name'],
+      awayTeamCrest: json['away_team']['crest'],
       homeScore: fullTime['home'],
       awayScore: fullTime['away'],
       homeScoreHalfTime: halfTime['home'],

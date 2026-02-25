@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:football_predictions/core/presentation/widgets/app_network_image.dart';
 import 'package:football_predictions/core/presentation/widgets/loading_widget.dart';
 import 'package:football_predictions/features/admin/data/models/admin_match_model.dart';
 import 'package:football_predictions/features/admin/data/repositories/admin_repository.dart';
@@ -32,8 +33,20 @@ class _AdminMatchesPageState extends State<AdminMatchesPage> {
   @override
   void initState() {
     super.initState();
+    _teamController.addListener(() {
+      if (mounted) {
+        setState(() {});
+      }
+    });
     _loadFilters();
     _loadMatches();
+  }
+
+  @override
+  void dispose() {
+    // O listener é removido automaticamente quando o controller é disposed.
+    _teamController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadFilters() async {
@@ -59,14 +72,14 @@ class _AdminMatchesPageState extends State<AdminMatchesPage> {
 
     try {
       final result = await context.read<AdminRepository>().getMatches(
-            page: _page,
-            stuck: _isStuckMode,
-            competitionId: _selectedCompetitionId,
-            status: _selectedStatus,
-            teamName: _teamController.text,
-            dateFrom: _dateFrom?.toIso8601String().split('T')[0],
-            dateTo: _dateTo?.toIso8601String().split('T')[0],
-          );
+        page: _page,
+        stuck: _isStuckMode,
+        competitionId: _selectedCompetitionId,
+        status: _selectedStatus,
+        teamName: _teamController.text,
+        dateFrom: _dateFrom?.toIso8601String().split('T')[0],
+        dateTo: _dateTo?.toIso8601String().split('T')[0],
+      );
 
       setState(() {
         _matches.addAll(result.matches);
@@ -74,9 +87,9 @@ class _AdminMatchesPageState extends State<AdminMatchesPage> {
         _page++;
       });
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Erro: $e')));
     } finally {
       setState(() => _isLoading = false);
     }
@@ -156,28 +169,68 @@ class _AdminMatchesPageState extends State<AdminMatchesPage> {
               children: [
                 Expanded(
                   child: DropdownButtonFormField<int>(
-                    value: _selectedCompetitionId,
-                    decoration: const InputDecoration(
+                    isExpanded: true,
+                    initialValue: _selectedCompetitionId,
+                    decoration: InputDecoration(
                       labelText: 'Competição',
-                      contentPadding: EdgeInsets.symmetric(horizontal: 10),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                      ),
+                      suffixIcon: _selectedCompetitionId != null
+                          ? IconButton(
+                              icon: const Icon(Icons.clear),
+                              onPressed: () {
+                                setState(() => _selectedCompetitionId = null);
+                              },
+                            )
+                          : null,
                     ),
-                    items: _filtersData?.competitions.map((c) {
-                      return DropdownMenuItem(value: c.id, child: Text(c.name));
-                    }).toList(),
-                    onChanged: (v) => setState(() => _selectedCompetitionId = v),
+                    items: [
+                      const DropdownMenuItem(value: null, child: Text('Todas')),
+                      ..._filtersData?.competitions.map((c) {
+                            return DropdownMenuItem(
+                              value: c.id,
+                              child: Text(
+                                c.name,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            );
+                          }).toList() ??
+                          [],
+                    ],
+                    onChanged: (v) =>
+                        setState(() => _selectedCompetitionId = v),
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: DropdownButtonFormField<String>(
-                    value: _selectedStatus,
-                    decoration: const InputDecoration(
+                    isExpanded: true,
+                    initialValue: _selectedStatus,
+                    decoration: InputDecoration(
                       labelText: 'Status',
-                      contentPadding: EdgeInsets.symmetric(horizontal: 10),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                      ),
+                      suffixIcon: _selectedStatus != null
+                          ? IconButton(
+                              icon: const Icon(Icons.clear),
+                              onPressed: () {
+                                setState(() => _selectedStatus = null);
+                              },
+                            )
+                          : null,
                     ),
-                    items: _filtersData?.statuses.map((s) {
-                      return DropdownMenuItem(value: s, child: Text(s));
-                    }).toList(),
+                    items: [
+                      const DropdownMenuItem(value: null, child: Text('Todos')),
+                      ..._filtersData?.statuses.map((s) {
+                            return DropdownMenuItem(
+                              value: s,
+                              child: Text(s, overflow: TextOverflow.ellipsis),
+                            );
+                          }).toList() ??
+                          [],
+                    ],
                     onChanged: (v) => setState(() => _selectedStatus = v),
                   ),
                 ),
@@ -189,29 +242,71 @@ class _AdminMatchesPageState extends State<AdminMatchesPage> {
                 Expanded(
                   child: TextField(
                     controller: _teamController,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Time',
-                      prefixIcon: Icon(Icons.search),
+                      prefixIcon: const Icon(Icons.search),
+                      suffixIcon: _teamController.text.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear),
+                              onPressed: () {
+                                _teamController.clear();
+                              },
+                            )
+                          : null,
                     ),
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.calendar_today),
-                  onPressed: () => _selectDate(true),
-                  tooltip: 'Data Inicial',
-                ),
-                if (_dateFrom != null)
-                  Text(DateFormat('dd/MM').format(_dateFrom!)),
-                const Text(' - '),
-                IconButton(
-                  icon: const Icon(Icons.calendar_today),
-                  onPressed: () => _selectDate(false),
-                  tooltip: 'Data Final',
-                ),
-                if (_dateTo != null) Text(DateFormat('dd/MM').format(_dateTo!)),
               ],
             ),
             const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    readOnly: true,
+                    controller: TextEditingController(
+                      text: _dateFrom != null
+                          ? DateFormat('dd/MM/yyyy').format(_dateFrom!)
+                          : '',
+                    ),
+                    decoration: InputDecoration(
+                      labelText: 'De',
+                      prefixIcon: const Icon(Icons.calendar_today),
+                      suffixIcon: _dateFrom != null
+                          ? IconButton(
+                              icon: const Icon(Icons.clear),
+                              onPressed: () => setState(() => _dateFrom = null),
+                            )
+                          : null,
+                    ),
+                    onTap: () => _selectDate(true),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextField(
+                    readOnly: true,
+                    controller: TextEditingController(
+                      text: _dateTo != null
+                          ? DateFormat('dd/MM/yyyy').format(_dateTo!)
+                          : '',
+                    ),
+                    decoration: InputDecoration(
+                      labelText: 'Até',
+                      prefixIcon: const Icon(Icons.calendar_today),
+                      suffixIcon: _dateTo != null
+                          ? IconButton(
+                              icon: const Icon(Icons.clear),
+                              onPressed: () => setState(() => _dateTo = null),
+                            )
+                          : null,
+                    ),
+                    onTap: () => _selectDate(false),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
             SizedBox(
               width: double.infinity,
               child: FilledButton(
@@ -273,8 +368,10 @@ class _AdminMatchesPageState extends State<AdminMatchesPage> {
               ),
               if (match.isManualUpdate)
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.orange,
                     borderRadius: BorderRadius.circular(4),
@@ -294,14 +391,33 @@ class _AdminMatchesPageState extends State<AdminMatchesPage> {
           Row(
             children: [
               Expanded(
-                child: Text(
-                  match.homeTeamName,
-                  textAlign: TextAlign.right,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        match.homeTeamName,
+                        textAlign: TextAlign.right,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    match.homeTeamCrest != null
+                        ? AppNetworkImage(
+                            url: match.homeTeamCrest!,
+                            width: 24,
+                            height: 24,
+                            errorWidget: const Icon(
+                              Icons.sports_soccer,
+                              size: 24,
+                            ),
+                          )
+                        : const Icon(Icons.sports_soccer, size: 24),
+                  ],
                 ),
               ),
               Container(
-                margin: const EdgeInsets.symmetric(horizontal: 12),
+                margin: const EdgeInsets.symmetric(horizontal: 8),
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: Colors.black12,
@@ -316,14 +432,48 @@ class _AdminMatchesPageState extends State<AdminMatchesPage> {
                 ),
               ),
               Expanded(
-                child: Text(
-                  match.awayTeamName,
-                  textAlign: TextAlign.left,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+                child: Row(
+                  children: [
+                    match.awayTeamCrest != null
+                        ? AppNetworkImage(
+                            url: match.awayTeamCrest!,
+                            width: 24,
+                            height: 24,
+                            errorWidget: const Icon(
+                              Icons.sports_soccer,
+                              size: 24,
+                            ),
+                          )
+                        : const Icon(Icons.sports_soccer, size: 24),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        match.awayTeamName,
+                        textAlign: TextAlign.left,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
+          if (match.homeScoreExtraTime != null &&
+              match.awayScoreExtraTime != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              'Prorrogação: ${match.homeScoreExtraTime} - ${match.awayScoreExtraTime}',
+              style: const TextStyle(fontSize: 10, color: Colors.grey),
+            ),
+          ],
+          if (match.homeScorePenalties != null &&
+              match.awayScorePenalties != null) ...[
+            const SizedBox(height: 2),
+            Text(
+              'Pênaltis: ${match.homeScorePenalties} - ${match.awayScorePenalties}',
+              style: const TextStyle(fontSize: 10, color: Colors.grey),
+            ),
+          ],
           const SizedBox(height: 4),
           Text(
             match.status,
@@ -400,18 +550,24 @@ class _FixMatchDialogState extends State<_FixMatchDialog> {
   @override
   void initState() {
     super.initState();
-    _homeScoreCtrl =
-        TextEditingController(text: widget.match.homeScore?.toString() ?? '');
-    _awayScoreCtrl =
-        TextEditingController(text: widget.match.awayScore?.toString() ?? '');
+    _homeScoreCtrl = TextEditingController(
+      text: widget.match.homeScore?.toString() ?? '',
+    );
+    _awayScoreCtrl = TextEditingController(
+      text: widget.match.awayScore?.toString() ?? '',
+    );
     _homeScoreExtraCtrl = TextEditingController(
-        text: widget.match.homeScoreExtraTime?.toString() ?? '');
+      text: widget.match.homeScoreExtraTime?.toString() ?? '',
+    );
     _awayScoreExtraCtrl = TextEditingController(
-        text: widget.match.awayScoreExtraTime?.toString() ?? '');
+      text: widget.match.awayScoreExtraTime?.toString() ?? '',
+    );
     _homeScorePenCtrl = TextEditingController(
-        text: widget.match.homeScorePenalties?.toString() ?? '');
+      text: widget.match.homeScorePenalties?.toString() ?? '',
+    );
     _awayScorePenCtrl = TextEditingController(
-        text: widget.match.awayScorePenalties?.toString() ?? '');
+      text: widget.match.awayScorePenalties?.toString() ?? '',
+    );
 
     _selectedStatus = widget.match.status;
     _selectedWinner = widget.match.winner;
@@ -433,18 +589,18 @@ class _FixMatchDialogState extends State<_FixMatchDialog> {
     setState(() => _isSaving = true);
     try {
       await context.read<AdminRepository>().fixMatch(
-            id: widget.match.id,
-            unlock: _unlock,
-            status: _selectedStatus,
-            homeScore: int.tryParse(_homeScoreCtrl.text),
-            awayScore: int.tryParse(_awayScoreCtrl.text),
-            homeScoreExtra: int.tryParse(_homeScoreExtraCtrl.text),
-            awayScoreExtra: int.tryParse(_awayScoreExtraCtrl.text),
-            homeScorePen: int.tryParse(_homeScorePenCtrl.text),
-            awayScorePen: int.tryParse(_awayScorePenCtrl.text),
-            winner: _selectedWinner,
-            duration: _selectedDuration,
-          );
+        id: widget.match.id,
+        unlock: _unlock,
+        status: _selectedStatus,
+        homeScore: int.tryParse(_homeScoreCtrl.text),
+        awayScore: int.tryParse(_awayScoreCtrl.text),
+        homeScoreExtra: int.tryParse(_homeScoreExtraCtrl.text),
+        awayScoreExtra: int.tryParse(_awayScoreExtraCtrl.text),
+        homeScorePen: int.tryParse(_homeScorePenCtrl.text),
+        awayScorePen: int.tryParse(_awayScorePenCtrl.text),
+        winner: _selectedWinner,
+        duration: _selectedDuration,
+      );
       if (mounted) {
         Navigator.pop(context);
         widget.onSaved();
@@ -465,11 +621,15 @@ class _FixMatchDialogState extends State<_FixMatchDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final showExtraTime = _selectedDuration == 'EXTRA_TIME' || _selectedDuration == 'PENALTY_SHOOTOUT';
+    final showExtraTime =
+        _selectedDuration == 'EXTRA_TIME' ||
+        _selectedDuration == 'PENALTY_SHOOTOUT';
     final showPenalties = _selectedDuration == 'PENALTY_SHOOTOUT';
 
     return AlertDialog(
-      title: Text('Corrigir: ${widget.match.homeTeamName} x ${widget.match.awayTeamName}'),
+      title: Text(
+        'Corrigir: ${widget.match.homeTeamName} x ${widget.match.awayTeamName}',
+      ),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -539,7 +699,10 @@ class _FixMatchDialogState extends State<_FixMatchDialog> {
               ),
               if (showExtraTime) ...[
                 const SizedBox(height: 16),
-                const Text('Prorrogação', style: TextStyle(fontWeight: FontWeight.bold)),
+                const Text(
+                  'Prorrogação',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
                 const SizedBox(height: 8),
                 Row(
                   children: [
@@ -569,7 +732,10 @@ class _FixMatchDialogState extends State<_FixMatchDialog> {
               ],
               if (showPenalties) ...[
                 const SizedBox(height: 16),
-                const Text('Pênaltis', style: TextStyle(fontWeight: FontWeight.bold)),
+                const Text(
+                  'Pênaltis',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
                 const SizedBox(height: 8),
                 Row(
                   children: [

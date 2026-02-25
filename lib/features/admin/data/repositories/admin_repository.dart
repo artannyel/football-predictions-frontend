@@ -84,7 +84,10 @@ class AdminRepository {
           'score_fulltime_away': awayScore,
           'score_winner': winner,
           'score_duration': duration,
-          // Adicione os outros campos opcionais conforme necessário
+          'score_extra_time_home': homeScoreExtra,
+          'score_extra_time_away': awayScoreExtra,
+          'score_penalties_home': homeScorePen,
+          'score_penalties_away': awayScorePen,
         }
       };
       await dioClient.dioAdmin.post('admin/matches/$id/fix', data: data);
