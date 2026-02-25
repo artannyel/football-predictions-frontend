@@ -43,7 +43,9 @@ class _PredictionPageState extends State<PredictionPage> {
   @override
   void initState() {
     super.initState();
-    _confettiController = ConfettiController(duration: const Duration(seconds: 3));
+    _confettiController = ConfettiController(
+      duration: const Duration(seconds: 3),
+    );
     _loadData();
   }
 
@@ -75,8 +77,9 @@ class _PredictionPageState extends State<PredictionPage> {
       if (!mounted) return;
       // Se tiver ID de palpite, carrega o palpite também
       if (widget.predictionId != null) {
-        final prediction =
-            await predictionsRepo.getPrediction(widget.predictionId!);
+        final prediction = await predictionsRepo.getPrediction(
+          widget.predictionId!,
+        );
 
         if (prediction.match.id != match.id) {
           throw Exception('O palpite não corresponde à partida selecionada.');
@@ -297,6 +300,7 @@ class _PredictionPageState extends State<PredictionPage> {
             ],
           ),
           _buildFormSection(),
+          _buildHeadToHeadSection(),
           _buildStats(),
           const SizedBox(height: 32),
           _buildPredictionSection(isLocked),
@@ -329,30 +333,21 @@ class _PredictionPageState extends State<PredictionPage> {
           const SizedBox(height: 8),
           Text(
             '${_match!.homeScore} - ${_match!.awayScore}',
-            style: const TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
           ),
           if (_match!.scoreDuration != 'REGULAR' &&
               _match!.homeScoreExtraTime != null &&
               _match!.awayScoreExtraTime != null)
             Text(
               'Prorrogação: ${_match!.homeScoreExtraTime} - ${_match!.awayScoreExtraTime}',
-              style: const TextStyle(
-                fontSize: 10,
-                color: Colors.grey,
-              ),
+              style: const TextStyle(fontSize: 10, color: Colors.grey),
             ),
           if (_match!.scoreDuration != 'REGULAR' &&
               _match!.homeScorePenalties != null &&
               _match!.awayScorePenalties != null)
             Text(
               'Pênaltis: ${_match!.homeScorePenalties} - ${_match!.awayScorePenalties}',
-              style: const TextStyle(
-                fontSize: 10,
-                color: Colors.grey,
-              ),
+              style: const TextStyle(fontSize: 10, color: Colors.grey),
             ),
           const SizedBox(height: 4),
           Text(
@@ -409,8 +404,10 @@ class _PredictionPageState extends State<PredictionPage> {
             children: [
               Text(
                 '${_prediction!.homeScore} - ${_prediction!.awayScore}',
-                style:
-                    const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               if (points != null) ...[
                 const SizedBox(width: 16),
@@ -481,13 +478,17 @@ class _PredictionPageState extends State<PredictionPage> {
                         BoxShadow(
                           color: Colors.black.withValues(alpha: 0.1),
                           blurRadius: 4,
-                        )
+                        ),
                       ],
                     ),
                     padding: const EdgeInsets.all(6),
                     child: badge.iconUrl != null
                         ? AppNetworkImage(url: badge.iconUrl!)
-                        : const Icon(Icons.military_tech, size: 24, color: Colors.amber),
+                        : const Icon(
+                            Icons.military_tech,
+                            size: 24,
+                            color: Colors.amber,
+                          ),
                   ),
                 );
               }).toList(),
@@ -545,9 +546,7 @@ class _PredictionPageState extends State<PredictionPage> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
             side: BorderSide(
-              color: _usePowerup
-                  ? Colors.deepPurpleAccent
-                  : Colors.transparent,
+              color: _usePowerup ? Colors.deepPurpleAccent : Colors.transparent,
             ),
           ),
           tileColor: _usePowerup
@@ -565,10 +564,7 @@ class _PredictionPageState extends State<PredictionPage> {
       padding: const EdgeInsets.symmetric(vertical: 16.0),
       child: Column(
         children: [
-          Text(
-            'Últimos Jogos',
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
+          Text('Últimos Jogos', style: Theme.of(context).textTheme.bodySmall),
           const SizedBox(height: 8),
           Row(
             children: [
@@ -586,13 +582,126 @@ class _PredictionPageState extends State<PredictionPage> {
     );
   }
 
-  Widget _buildTeamFormRow(List<MatchResultModel> results,
-      {required bool isHome}) {
+  Widget _buildHeadToHeadSection() {
+    if (_stats?.h2h == null || _stats!.h2h.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16.0),
+      child: Column(
+        children: [
+          Text(
+            'Confronto Direto',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: _stats!.h2h.take(5).toList().asMap().entries.map((entry) {
+              return _buildH2HBubble(entry.value, entry.key);
+            }).toList(),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Mandante vs Visitante',
+            style: TextStyle(fontSize: 10, color: Colors.grey),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildH2HBubble(HeadToHeadModel h2h, int index) {
+    Color color;
+    Widget content;
+    // Result is relative to current home team
+    switch (h2h.result.toUpperCase()) {
+      case 'W':
+        color = Colors.green;
+        content = const Icon(Icons.check, color: Colors.white, size: 16);
+        break;
+      case 'L':
+        color = Colors.red;
+        content = const Icon(Icons.close, color: Colors.white, size: 16);
+        break;
+      case 'D':
+        color = Colors.grey;
+        content = const Icon(Icons.remove, color: Colors.white, size: 16);
+        break;
+      default:
+        color = Colors.grey;
+        content = const Text(
+          '?',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+          ),
+        );
+    }
+
+    return TweenAnimationBuilder<double>(
+      duration: Duration(milliseconds: 400 + (index * 100)),
+      tween: Tween(begin: 0.0, end: 1.0),
+      curve: Curves.easeOutBack,
+      builder: (context, value, child) {
+        return Opacity(
+          opacity: value.clamp(0.0, 1.0),
+          child: Transform.scale(scale: value, child: child),
+        );
+      },
+      child: GestureDetector(
+        onTap: () {
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Text(
+                h2h.result == 'W'
+                    ? 'Vitória do Mandante'
+                    : h2h.result == 'L'
+                    ? 'Derrota do Mandante'
+                    : 'Empate',
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Placar: ${h2h.score}'),
+                  Text('Data: ${_formatDate(h2h.date)}'),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('OK'),
+                ),
+              ],
+            ),
+          );
+        },
+        child: Container(
+          width: 24,
+          height: 24,
+          margin: const EdgeInsets.symmetric(horizontal: 2.0),
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          alignment: Alignment.center,
+          child: content,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTeamFormRow(
+    List<MatchResultModel> results, {
+    required bool isHome,
+  }) {
     final displayResults = results.take(5).toList();
 
     return Row(
-      mainAxisAlignment:
-          isHome ? MainAxisAlignment.end : MainAxisAlignment.start,
+      mainAxisAlignment: isHome
+          ? MainAxisAlignment.end
+          : MainAxisAlignment.start,
       children: displayResults.asMap().entries.map((entry) {
         final index = entry.key;
         final result = entry.value;
@@ -630,10 +739,7 @@ class _PredictionPageState extends State<PredictionPage> {
           builder: (context, value, child) {
             return Opacity(
               opacity: value.clamp(0.0, 1.0),
-              child: Transform.scale(
-                scale: value,
-                child: child,
-              ),
+              child: Transform.scale(scale: value, child: child),
             );
           },
           child: GestureDetector(
@@ -645,8 +751,8 @@ class _PredictionPageState extends State<PredictionPage> {
                     result.result == 'W'
                         ? 'Vitória'
                         : result.result == 'L'
-                            ? 'Derrota'
-                            : 'Empate',
+                        ? 'Derrota'
+                        : 'Empate',
                   ),
                   content: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -671,10 +777,7 @@ class _PredictionPageState extends State<PredictionPage> {
               width: 24,
               height: 24,
               margin: const EdgeInsets.symmetric(horizontal: 2.0),
-              decoration: BoxDecoration(
-                color: color,
-                shape: BoxShape.circle,
-              ),
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
               alignment: Alignment.center,
               child: content,
             ),

@@ -44,12 +44,36 @@ class TeamFormModel {
   }
 }
 
+class HeadToHeadModel {
+  final String result;
+  final String score;
+  final String date;
+  final int homeTeamId;
+
+  HeadToHeadModel({
+    required this.result,
+    required this.score,
+    required this.date,
+    required this.homeTeamId,
+  });
+
+  factory HeadToHeadModel.fromJson(Map<String, dynamic> json) {
+    return HeadToHeadModel(
+      result: json['result'] ?? '',
+      score: json['score'] ?? '',
+      date: json['date'] ?? '',
+      homeTeamId: json['home_team_id'] ?? 0,
+    );
+  }
+}
+
 class MatchStatsModel {
   final int total;
   final num homeWinPercentage;
   final num awayWinPercentage;
   final num drawPercentage;
   final TeamFormModel? form;
+  final List<HeadToHeadModel> h2h;
 
   MatchStatsModel({
     required this.total,
@@ -57,6 +81,7 @@ class MatchStatsModel {
     required this.awayWinPercentage,
     required this.drawPercentage,
     this.form,
+    this.h2h = const [],
   });
 
   factory MatchStatsModel.fromJson(Map<String, dynamic> json) {
@@ -66,6 +91,10 @@ class MatchStatsModel {
       awayWinPercentage: json['away_win_percentage'] ?? 0,
       drawPercentage: json['draw_percentage'] ?? 0,
       form: json['form'] != null ? TeamFormModel.fromJson(json['form']) : null,
+      h2h: (json['h2h'] as List?)
+              ?.map((e) => HeadToHeadModel.fromJson(e))
+              .toList() ??
+          [],
     );
   }
 }
