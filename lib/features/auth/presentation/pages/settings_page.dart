@@ -128,6 +128,16 @@ class _SettingsPageState extends State<SettingsPage> {
                   onTap: () => context.push('/perfil/editar'),
                 ),
                 const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.lock_outline),
+                  title: const Text('Alterar Senha'),
+                  trailing: const Icon(
+                    Icons.arrow_forward_ios,
+                    size: 16,
+                  ),
+                  onTap: () => context.pushNamed('ChangePassword'),
+                ),
+                const Divider(height: 1),
                 SwitchListTile(
                   secondary: const Icon(Icons.sports_soccer),
                   title: const Text(
@@ -165,6 +175,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       ? Colors.greenAccent
                       : Theme.of(context).colorScheme.primary,
                 ),
+                const Divider(height: 1),
                 SwitchListTile(
                   secondary: const Icon(Icons.chat_bubble_outline),
                   title: const Text(

@@ -3,8 +3,12 @@ import 'package:football_predictions/core/auth/auth_notifier.dart';
 import 'package:football_predictions/core/presentation/widgets/scaffold_with_nav_bar.dart';
 import 'package:football_predictions/features/auth/presentation/pages/login_page.dart';
 import 'package:football_predictions/features/auth/presentation/pages/splash_page.dart';
+import 'package:football_predictions/features/auth/presentation/pages/forgot_password_page.dart';
 import 'package:football_predictions/features/auth/presentation/pages/edit_profile_page.dart';
 import 'package:football_predictions/features/auth/presentation/pages/settings_page.dart';
+import 'package:football_predictions/features/auth/presentation/pages/change_password_page.dart';
+import 'package:football_predictions/features/auth/presentation/pages/signup_page.dart';
+import 'package:football_predictions/features/auth/presentation/pages/verify_email_page.dart';
 import 'package:football_predictions/features/auth/presentation/pages/profile_page.dart';
 import 'package:football_predictions/features/competitions/presentation/pages/competitions_page.dart';
 import 'package:football_predictions/features/home/presentation/pages/home_page.dart';
@@ -27,6 +31,9 @@ GoRouter appRouter(AuthNotifier authNotifier) {
 
       final isSplash = state.matchedLocation == '/';
       final isLogin = state.matchedLocation == '/entrar';
+      final isForgotPassword = state.matchedLocation == '/recuperar-senha';
+      final isSignUp = state.matchedLocation == '/cadastro';
+      final isVerifyPage = state.matchedLocation == '/verificar-email';
 
       // Lógica de Convite (Deep Link): Captura o código da URL
       final inviteCode = state.uri.queryParameters['code'];
@@ -60,9 +67,20 @@ GoRouter appRouter(AuthNotifier authNotifier) {
         return null; // Já estamos na Splash, aguarda.
       }
 
+      // 1.5. Verificação de E-mail
+      // Se está logado, MAS o e-mail não foi verificado
+      final isVerified = authNotifier.user?.emailVerified ?? false;
+      if (isLoggedIn && !isVerified) {
+        if (!isVerifyPage) return '/verificar-email';
+        return null;
+      }
+
       // 2. Inicializou e está na Splash (Raiz)
       if (isSplash && isInitialized) {
         final originalPath = authNotifier.redirectPath;
+
+        // Se não verificado, a regra 1.5 já pegou. Se chegou aqui, está verificado ou não logado.
+        if (isLoggedIn && !isVerified) return '/verificar-email';
 
         // Se tinha um destino salvo (e não era a própria raiz), vai pra lá
         if (originalPath != null && originalPath != '/') {
@@ -73,15 +91,21 @@ GoRouter appRouter(AuthNotifier authNotifier) {
       }
 
       // 3. Se não está logado e tenta acessar página protegida (nem Splash nem Login)
-      if (!isLoggedIn && !isLogin && !isSplash) {
+      if (!isLoggedIn &&
+          !isLogin &&
+          !isSplash &&
+          !isForgotPassword &&
+          !isSignUp) {
         authNotifier.setRedirectPath(state.uri.toString());
         return '/entrar';
       }
 
-      // 4. Se está logado e tenta acessar Login, vai para Home
-      if (isLoggedIn && isLogin) {
+      // 4. Se está logado (e verificado) e tenta acessar Login ou Verificar Email, vai para Home
+      if (isLoggedIn && (isLogin || isVerifyPage)) {
         final originalPath = authNotifier.redirectPath;
-        if (originalPath != null && originalPath != '/entrar') {
+        if (originalPath != null &&
+            originalPath != '/entrar' &&
+            originalPath != '/verificar-email') {
           return originalPath;
         }
         return '/ligas';
@@ -99,6 +123,21 @@ GoRouter appRouter(AuthNotifier authNotifier) {
         path: '/entrar',
         name: 'Login',
         builder: (context, state) => const LoginPage(),
+      ),
+      GoRoute(
+        path: '/recuperar-senha',
+        name: 'ForgotPassword',
+        builder: (context, state) => const ForgotPasswordPage(),
+      ),
+      GoRoute(
+        path: '/cadastro',
+        name: 'SignUp',
+        builder: (context, state) => const SignUpPage(),
+      ),
+      GoRoute(
+        path: '/verificar-email',
+        name: 'VerifyEmail',
+        builder: (context, state) => const VerifyEmailPage(),
       ),
       // Shell Route que envolve as abas principais
       StatefulShellRoute.indexedStack(
@@ -136,8 +175,11 @@ GoRouter appRouter(AuthNotifier authNotifier) {
                         builder: (context, state) => PredictionPage(
                           leagueId: state.pathParameters['id']!,
                           matchId: int.parse(state.pathParameters['matchId']!),
-                          predictionId: state.uri.queryParameters['predictionId'] != null
-                              ? int.parse(state.uri.queryParameters['predictionId']!)
+                          predictionId:
+                              state.uri.queryParameters['predictionId'] != null
+                              ? int.parse(
+                                  state.uri.queryParameters['predictionId']!,
+                                )
                               : null,
                         ),
                       ),
@@ -176,7 +218,8 @@ GoRouter appRouter(AuthNotifier authNotifier) {
                     path: '/:id/partidas',
                     name: 'Matches',
                     builder: (context, state) => MatchesPage(
-                        competitionId: int.parse(state.pathParameters['id']!)),
+                      competitionId: int.parse(state.pathParameters['id']!),
+                    ),
                   ),
                 ],
               ),
@@ -199,6 +242,13 @@ GoRouter appRouter(AuthNotifier authNotifier) {
                     path: 'configuracoes',
                     name: 'Settings',
                     builder: (context, state) => const SettingsPage(),
+                    routes: [
+                      GoRoute(
+                        path: 'alterar-senha',
+                        name: 'ChangePassword',
+                        builder: (context, state) => const ChangePasswordPage(),
+                      ),
+                    ],
                   ),
                   GoRoute(
                     path: 'usuario/:userId',

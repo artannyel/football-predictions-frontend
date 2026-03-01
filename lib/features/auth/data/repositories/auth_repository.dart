@@ -63,6 +63,7 @@ class AuthRepository {
         password: password,
       );
       await userCredential.user?.updateDisplayName(name);
+      await sendEmailVerification();
 
       final formData = FormData.fromMap({'name': name, 'email': email});
 
@@ -105,6 +106,13 @@ class AuthRepository {
     }
   }
 
+  Future<void> sendEmailVerification() async {
+    final user = _firebaseAuth.currentUser;
+    if (user != null && !user.emailVerified) {
+      await user.sendEmailVerification();
+    }
+  }
+
   Future<UserModel> updateProfile({String? name, XFile? photo}) async {
     try {
       final user = _firebaseAuth.currentUser;
@@ -144,6 +152,30 @@ class AuthRepository {
       return _backendUser!;
     } catch (e) {
       throw AuthException('Falha ao atualizar perfil: $e');
+    }
+  }
+
+  Future<void> updatePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      final user = _firebaseAuth.currentUser;
+      if (user == null || user.email == null) {
+        throw AuthException('Usuário não autenticado');
+      }
+
+      final credential = EmailAuthProvider.credential(
+        email: user.email!,
+        password: currentPassword,
+      );
+
+      await user.reauthenticateWithCredential(credential);
+      await user.updatePassword(newPassword);
+    } on FirebaseAuthException catch (e) {
+      throw AuthException(_mapFirebaseError(e.code));
+    } catch (e) {
+      throw AuthException('Erro ao atualizar senha: $e');
     }
   }
 

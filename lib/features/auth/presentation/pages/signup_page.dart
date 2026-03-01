@@ -20,22 +20,78 @@ class _SignUpPageState extends State<SignUpPage> {
   final _confirmPasswordController = TextEditingController();
   XFile? _selectedImage;
   bool _isLoading = false;
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
+  double _passwordStrength = 0.0;
+
+  void _updatePasswordStrength(String password) {
+    double strength = 0.0;
+    if (password.isEmpty) {
+      setState(() => _passwordStrength = 0.0);
+      return;
+    }
+
+    if (password.length >= 8) strength += 0.2;
+    if (password.contains(RegExp(r'[A-Z]'))) strength += 0.2;
+    if (password.contains(RegExp(r'[a-z]'))) strength += 0.2;
+    if (password.contains(RegExp(r'[0-9]'))) strength += 0.2;
+    if (password.contains(RegExp(r'[\W_]'))) strength += 0.2;
+
+    setState(() => _passwordStrength = strength);
+  }
+
+  Color _getStrengthColor() {
+    if (_passwordStrength <= 0.2) return Colors.red;
+    if (_passwordStrength <= 0.4) return Colors.orange;
+    if (_passwordStrength <= 0.6) return Colors.yellow;
+    if (_passwordStrength <= 0.8) return Colors.lightGreen;
+    return Colors.green;
+  }
+
+  String _getStrengthText() {
+    if (_passwordStrength <= 0.4) return 'Fraca';
+    if (_passwordStrength <= 0.8) return 'Média';
+    return 'Forte';
+  }
 
   Future<void> _signUp() async {
     if (_nameController.text.isEmpty ||
         _emailController.text.isEmpty ||
         _passwordController.text.isEmpty ||
         _confirmPasswordController.text.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Preencha todos os campos')));
+      return;
+    }
+
+    final emailRegex = RegExp(r'^[\w-\.\+]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (!emailRegex.hasMatch(_emailController.text.trim())) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Preencha todos os campos')),
+        const SnackBar(content: Text('Por favor, informe um e-mail válido')),
+      );
+      return;
+    }
+
+    // Validação de senha forte: Pelo menos 8 caracteres, contendo letras maiúsculas, minúsculas, números e caracteres especiais
+    final passwordRegex = RegExp(
+      r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$',
+    );
+    if (!passwordRegex.hasMatch(_passwordController.text)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'A senha deve ter no mínimo 8 caracteres, com letras maiúsculas, minúsculas, números e caracteres especiais',
+          ),
+        ),
       );
       return;
     }
 
     if (_passwordController.text != _confirmPasswordController.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('As senhas não conferem')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('As senhas não conferem')));
       return;
     }
 
@@ -50,12 +106,9 @@ class _SignUpPageState extends State<SignUpPage> {
         password: _passwordController.text.trim(),
         photo: _selectedImage,
       );
-      
-      if (mounted) {
-        // O cadastro faz login automático. O StreamBuilder no main.dart atualizará a UI.
-        // Precisamos apenas fechar a tela de cadastro.
-        Navigator.of(context).pop();
-      }
+
+      // Não precisamos fazer pop manual. O AuthNotifier detectará o login,
+      // e o AppRouter redirecionará automaticamente para /verificar-email.
     } on AuthException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -113,22 +166,64 @@ class _SignUpPageState extends State<SignUpPage> {
               const SizedBox(height: 16),
               TextField(
                 controller: _passwordController,
-                decoration: const InputDecoration(
+                onChanged: _updatePasswordStrength,
+                decoration: InputDecoration(
                   labelText: 'Senha',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.lock),
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.lock),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscurePassword
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                    ),
+                    onPressed: () =>
+                        setState(() => _obscurePassword = !_obscurePassword),
+                  ),
                 ),
-                obscureText: true,
+                obscureText: _obscurePassword,
               ),
+              if (_passwordController.text.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                LinearProgressIndicator(
+                  value: _passwordStrength,
+                  backgroundColor: Colors.grey[300],
+                  color: _getStrengthColor(),
+                  minHeight: 5,
+                  borderRadius: BorderRadius.circular(5),
+                ),
+                const SizedBox(height: 4),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    _getStrengthText(),
+                    style: TextStyle(
+                      color: _getStrengthColor(),
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
               const SizedBox(height: 16),
               TextField(
                 controller: _confirmPasswordController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Confirmar Senha',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.lock_outline),
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.lock_outline),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscureConfirmPassword
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                    ),
+                    onPressed: () => setState(
+                      () => _obscureConfirmPassword = !_obscureConfirmPassword,
+                    ),
+                  ),
                 ),
-                obscureText: true,
+                obscureText: _obscureConfirmPassword,
               ),
               const SizedBox(height: 24),
               SizedBox(

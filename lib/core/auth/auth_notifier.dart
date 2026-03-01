@@ -132,6 +132,15 @@ class AuthNotifier extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Verifica se o e-mail foi validado recarregando o usuário do Firebase.
+  Future<void> checkEmailVerification() async {
+    if (_user != null) {
+      await _user!.reload();
+      _user = _auth.currentUser;
+      notifyListeners();
+    }
+  }
+
   /// Atualiza os dados do usuário do backend (ex: após edição de perfil).
   Future<void> refreshUser([UserModel? updatedUser]) async {
     if (updatedUser != null) {
