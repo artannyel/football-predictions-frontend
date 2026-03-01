@@ -20,6 +20,8 @@ class AuthNotifier extends ChangeNotifier {
   UserModel? get backendUser => _backendUser;
   String? _redirectPath;
   String? get redirectPath => _redirectPath;
+  String? _inviteCode;
+  String? get inviteCode => _inviteCode;
 
   bool _isInitialized = false;
   bool get isInitialized => _isInitialized;
@@ -37,6 +39,18 @@ class AuthNotifier extends ChangeNotifier {
   /// Salva a rota que o usuário tentou acessar para redirecionar após o login/inicialização.
   void setRedirectPath(String? path) {
     _redirectPath = path;
+  }
+
+  /// Define o código de convite recebido via Deep Link.
+  void setInviteCode(String? code) {
+    if (_inviteCode != code) {
+      _inviteCode = code;
+      notifyListeners();
+    }
+  }
+
+  void clearInviteCode() {
+    _inviteCode = null;
   }
 
   void _listenToAuthStateChanges() {

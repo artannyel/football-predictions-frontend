@@ -21,6 +21,7 @@ import 'package:go_router/go_router.dart';
 import '../widgets/glass_card.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:share_plus/share_plus.dart';
 
 class LeagueDetailsPage extends StatefulWidget {
   final String leagueId;
@@ -1078,94 +1079,152 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                 ),
                 if (league.isActive) ...[
                   const SizedBox(height: 16),
-                  InkWell(
-                    onTap: () {
-                      Clipboard.setData(ClipboardData(text: league.code));
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'Código copiado para a área de transferência!',
-                          ),
-                        ),
-                      );
-                    },
-                    child: ScaleTransition(
-                      scale: Tween<double>(begin: 1.0, end: 1.05).animate(
-                        CurvedAnimation(
-                          parent: _pulseController,
-                          curve: Curves.easeInOut,
+                  ScaleTransition(
+                    scale: Tween<double>(begin: 1.0, end: 1.05).animate(
+                      CurvedAnimation(
+                        parent: _pulseController,
+                        curve: Curves.easeInOut,
+                      ),
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Theme.of(context).colorScheme.primary,
+                          width: 1,
                         ),
                       ),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 10,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.primary.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: Theme.of(context).colorScheme.primary,
-                            width: 1,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.vpn_key,
-                                  size: 18,
-                                  color: Theme.of(context).colorScheme.primary,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  league.code,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                    letterSpacing: 1,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Theme.of(context).colorScheme.primary,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Row(
-                                children: [
-                                  Text(
-                                    'COPIAR CÓDIGO',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.bold,
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.onPrimary,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: InkWell(
+                              onTap: () {
+                                Clipboard.setData(
+                                  ClipboardData(text: league.code),
+                                );
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Código copiado para a área de transferência!',
                                     ),
                                   ),
-                                  const SizedBox(width: 4),
+                                );
+                              },
+                              child: Row(
+                                children: [
                                   Icon(
-                                    Icons.copy,
-                                    size: 14,
+                                    Icons.vpn_key,
+                                    size: 18,
                                     color: Theme.of(
                                       context,
-                                    ).colorScheme.onPrimary,
+                                    ).colorScheme.primary,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    league.code,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                      letterSpacing: 1,
+                                    ),
                                   ),
                                 ],
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                          Row(
+                            children: [
+                              InkWell(
+                                onTap: () {
+                                  Clipboard.setData(
+                                    ClipboardData(text: league.code),
+                                  );
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'Código copiado para a área de transferência!',
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 8,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Text(
+                                        'COPIAR',
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.onPrimary,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Icon(
+                                        Icons.copy,
+                                        size: 14,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onPrimary,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              InkWell(
+                                onTap: () {
+                                  // TODO: Substituir pelo domínio real do seu app
+                                  const String domain =
+                                      'https://palpitesfutebol-b0f33.web.app';
+                                  final String link =
+                                      '$domain/?code=${league.code}';
+                                  SharePlus.instance.share(
+                                    ShareParams(
+                                      text:
+                                          'Venha participar da minha liga "${league.name}" no Football Predictions!\n\nEntre com o código: ${league.code}\nOu clique no link: $link',
+                                    ),
+                                  );
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.secondary,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Icon(
+                                    Icons.share,
+                                    size: 16,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSecondary,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
                   ),

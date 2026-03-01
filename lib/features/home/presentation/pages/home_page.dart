@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:football_predictions/core/auth/auth_notifier.dart';
 import 'package:football_predictions/core/presentation/widgets/app_network_image.dart';
 import 'package:football_predictions/core/presentation/widgets/loading_widget.dart';
 import 'package:football_predictions/features/competitions/data/models/competition_model.dart';
@@ -18,6 +19,38 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final GlobalKey<_LeaguesTabState> _activeTabKey = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+    // Escuta alterações no AuthNotifier para detectar códigos de convite (Deep Link)
+    final authNotifier = context.read<AuthNotifier>();
+    authNotifier.addListener(_checkInviteCode);
+
+    // Verifica se já existe um código ao iniciar (caso venha do login)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkInviteCode();
+    });
+  }
+
+  @override
+  void dispose() {
+    context.read<AuthNotifier>().removeListener(_checkInviteCode);
+    super.dispose();
+  }
+
+  void _checkInviteCode() {
+    if (!mounted) return;
+    final authNotifier = context.read<AuthNotifier>();
+    final code = authNotifier.inviteCode;
+
+    if (code != null) {
+      // Limpa o código para não abrir novamente em rebuilds futuros
+      authNotifier.clearInviteCode();
+      // Abre o modal automaticamente
+      _openJoinLeagueDialog(code);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -78,18 +111,7 @@ class _HomePageState extends State<HomePage> {
                 title: const Text('Entrar com código'),
                 onTap: () async {
                   Navigator.pop(modalContext);
-                  final result = await showDialog(
-                    context: context,
-                    builder: (context) => const _JoinLeagueDialog(),
-                  );
-                  if (result is LeagueModel) {
-                    _activeTabKey.currentState?.refresh();
-                    if (mounted) {
-                      context.go('/ligas/${result.id}');
-                    }
-                  } else if (result == true) {
-                    _activeTabKey.currentState?.refresh();
-                  }
+                  _openJoinLeagueDialog();
                 },
               ),
             ],
@@ -97,6 +119,21 @@ class _HomePageState extends State<HomePage> {
         );
       },
     );
+  }
+
+  Future<void> _openJoinLeagueDialog([String? initialCode]) async {
+    final result = await showDialog(
+      context: context,
+      builder: (context) => _JoinLeagueDialog(initialCode: initialCode),
+    );
+    if (result is LeagueModel) {
+      _activeTabKey.currentState?.refresh();
+      if (mounted) {
+        context.go('/ligas/${result.id}');
+      }
+    } else if (result == true) {
+      _activeTabKey.currentState?.refresh();
+    }
   }
 }
 
@@ -597,15 +634,22 @@ class _LeaguesTabState extends State<_LeaguesTab>
 }
 
 class _JoinLeagueDialog extends StatefulWidget {
-  const _JoinLeagueDialog();
+  final String? initialCode;
+  const _JoinLeagueDialog({this.initialCode});
 
   @override
   State<_JoinLeagueDialog> createState() => _JoinLeagueDialogState();
 }
 
 class _JoinLeagueDialogState extends State<_JoinLeagueDialog> {
-  final _codeController = TextEditingController();
+  late final TextEditingController _codeController;
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _codeController = TextEditingController(text: widget.initialCode);
+  }
 
   @override
   void dispose() {

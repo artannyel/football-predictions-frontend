@@ -28,6 +28,13 @@ GoRouter appRouter(AuthNotifier authNotifier) {
       final isSplash = state.matchedLocation == '/';
       final isLogin = state.matchedLocation == '/entrar';
 
+      // Lógica de Convite (Deep Link): Captura o código da URL
+      final inviteCode = state.uri.queryParameters['code'];
+      if (inviteCode != null && authNotifier.inviteCode != inviteCode) {
+        // Salva o código para ser usado após login ou na Home
+        Future.microtask(() => authNotifier.setInviteCode(inviteCode));
+      }
+
       // 0. Limpeza: Se já estamos na rota de destino salva, limpamos o redirectPath.
       // Isso garante que o path só seja descartado quando o usuário realmente chegar lá.
       if (isInitialized && authNotifier.redirectPath != null) {
