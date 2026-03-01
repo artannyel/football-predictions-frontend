@@ -5,14 +5,14 @@ class LeagueFeedModel {
   final String createdAt;
   final UserModel user;
   final BadgeModel badge;
-  final FeedMatchModel match;
+  final FeedMatchModel? match;
 
   LeagueFeedModel({
     required this.id,
     required this.createdAt,
     required this.user,
     required this.badge,
-    required this.match,
+    this.match,
   });
 
   factory LeagueFeedModel.fromJson(Map<String, dynamic> json) {
@@ -21,7 +21,9 @@ class LeagueFeedModel {
       createdAt: json['created_at'],
       user: UserModel.fromJson(json['user']),
       badge: BadgeModel.fromJson(json['badge']),
-      match: FeedMatchModel.fromJson(json['match']),
+      match: json['match'] != null
+          ? FeedMatchModel.fromJson(json['match'])
+          : null,
     );
   }
 }

@@ -1731,34 +1731,41 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                             ).colorScheme.surface.withOpacity(0.3),
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: Column(
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  _buildTeamLogo(match.homeTeamCrest),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    '${match.homeScore ?? '-'} x ${match.awayScore ?? '-'}',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
+                          child: match != null
+                              ? Column(
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        _buildTeamLogo(match.homeTeamCrest),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          '${match.homeScore ?? '-'} x ${match.awayScore ?? '-'}',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        _buildTeamLogo(match.awayTeamCrest),
+                                      ],
                                     ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  _buildTeamLogo(match.awayTeamCrest),
-                                ],
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                '${match.homeTeamName} vs ${match.awayTeamName}',
-                                style: const TextStyle(fontSize: 10),
-                                textAlign: TextAlign.center,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '${match.homeTeamName} vs ${match.awayTeamName}',
+                                      style: const TextStyle(fontSize: 10),
+                                      textAlign: TextAlign.center,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                )
+                              : Text(
+                                  badge.description.replaceAll('em uma', 'na'),
+                                  style: const TextStyle(fontSize: 12),
+                                  textAlign: TextAlign.center,
+                                ),
                         ),
                       ),
                     ],
@@ -2755,6 +2762,43 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                             subtitle: Text(tb.description),
                           ),
                           if (tb != rules.tieBreakers.last) const Divider(),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            if (rules.powerups.isNotEmpty)
+              GlassCard(
+                margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '⚡ Powerups',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 16),
+                    ...rules.powerups.map(
+                      (powerup) => Column(
+                        children: [
+                          ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            leading: CircleAvatar(
+                              backgroundColor: Colors.deepPurpleAccent,
+                              foregroundColor: Colors.white,
+                              child: const Icon(Icons.style, size: 20),
+                            ),
+                            title: Text(
+                              powerup.name,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            subtitle: Text(powerup.description),
+                          ),
+                          if (powerup != rules.powerups.last) const Divider(),
                         ],
                       ),
                     ),
