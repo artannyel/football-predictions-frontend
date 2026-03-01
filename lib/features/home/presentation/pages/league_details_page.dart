@@ -1201,7 +1201,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                                   SharePlus.instance.share(
                                     ShareParams(
                                       text:
-                                          'Venha participar da minha liga "${league.name}" no Football Predictions!\n\nEntre com o código: ${league.code}\nOu clique no link: $link',
+                                          'Venha participar da minha liga "${league.name}" no Palpites Futebol!\n\nEntre com o código: ${league.code}\nOu clique no link: $link',
                                     ),
                                   );
                                 },
