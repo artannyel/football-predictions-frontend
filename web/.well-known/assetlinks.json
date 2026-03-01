@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.arttecsoftware.football_predictions",
+      "sha256_cert_fingerprints": [
+        "8F:FF:7F:87:D8:78:1B:98:7B:CE:AE:DA:68:D1:A3:27:5C:E1:AA:F7:85:04:27:EE:02:E6:A9:D3:45:27:D4:6C"
+      ]
+    }
+  }
+]
