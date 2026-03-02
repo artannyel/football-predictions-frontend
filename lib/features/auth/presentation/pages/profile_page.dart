@@ -208,7 +208,10 @@ class _ProfilePageState extends State<ProfilePage> {
               const SizedBox(height: 8),
               Text(
                 user.email,
-                style: TextStyle(fontSize: 14, color: onSurface.withOpacity(0.7)),
+                style: TextStyle(
+                  fontSize: 14,
+                  color: onSurface.withOpacity(0.7),
+                ),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -286,7 +289,9 @@ class _ProfilePageState extends State<ProfilePage> {
                       values1: values,
                       labels: displayLabels,
                       maxValue: 100,
-                      color1: isDark ? Colors.greenAccent : Theme.of(context).colorScheme.primary,
+                      color1: isDark
+                          ? Colors.greenAccent
+                          : Theme.of(context).colorScheme.primary,
                       animationValue: value,
                     );
                   },
@@ -295,7 +300,10 @@ class _ProfilePageState extends State<ProfilePage> {
               const SizedBox(height: 16),
               Text(
                 'Palpites Recente',
-                style: TextStyle(color: onSurface.withOpacity(0.7), fontSize: 12),
+                style: TextStyle(
+                  color: onSurface.withOpacity(0.7),
+                  fontSize: 12,
+                ),
               ),
               const SizedBox(height: 8),
               Row(
@@ -350,7 +358,10 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
         Text(
           label,
-          style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
+          style: TextStyle(
+            fontSize: 10,
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+          ),
         ),
       ],
     );
@@ -364,162 +375,73 @@ class _ProfilePageState extends State<ProfilePage> {
 
     return GlassCard(
       padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '🏆 Hall da Fama',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: onSurface,
+      child: SizedBox(
+        width: double.infinity,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '🏆 Hall da Fama',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: onSurface,
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-          if (hallOfFame.isEmpty)
-            Center(
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.emoji_events_outlined,
-                    size: 48,
-                    color: Colors.grey,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    widget.userId == null
-                        ? 'Seu Hall da Fama está vazio.'
-                        : 'Hall da Fama está vazio.',
-                    style: TextStyle(color: onSurface.withOpacity(0.7)),
-                  ),
-                  if (widget.userId == null)
+            const SizedBox(height: 16),
+            if (hallOfFame.isEmpty)
+              Center(
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.emoji_events_outlined,
+                      size: 48,
+                      color: Colors.grey,
+                    ),
+                    const SizedBox(height: 16),
                     Text(
-                      'Continue disputando as ligas para conquistar troféus!',
-                      style: TextStyle(color: onSurface.withOpacity(0.5), fontSize: 12),
-                      textAlign: TextAlign.center,
+                      widget.userId == null
+                          ? 'Seu Hall da Fama está vazio.'
+                          : 'Hall da Fama está vazio.',
+                      style: TextStyle(color: onSurface.withOpacity(0.7)),
                     ),
-                ],
-              ),
-            )
-          else
-            SizedBox(
-              height: 160,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: hallOfFame.length,
-                itemBuilder: (context, index) {
-                  final item = hallOfFame[index];
-                  Color trophyColor;
-                  String trophyIcon;
-                  if (item.position == 1) {
-                    trophyColor = Colors.amber;
-                    trophyIcon = '🏆';
-                  } else if (item.position == 2) {
-                    trophyColor = const Color(0xFFC0C0C0);
-                    trophyIcon = '🥈';
-                  } else {
-                    trophyColor = const Color(0xFFCD7F32);
-                    trophyIcon = '🥉';
-                  }
-
-                  return Container(
-                    width: 140,
-                    margin: const EdgeInsets.only(right: 8),
-                    child: GlassCard(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Stack(
-                            alignment: Alignment.topRight,
-                            children: [
-                              Container(
-                                margin: const EdgeInsets.only(top: 4, right: 4),
-                                width: 48,
-                                height: 48,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: trophyColor,
-                                    width: 2,
-                                  ),
-                                ),
-                                child: ClipOval(
-                                  child: item.avatarUrl != null
-                                      ? AppNetworkImage(
-                                          url: item.avatarUrl!,
-                                          fit: BoxFit.cover,
-                                          errorWidget: CircleAvatar(
-                                            backgroundColor:
-                                                Colors.grey.shade800,
-                                            child: Text(
-                                              item.name.isNotEmpty
-                                                  ? item.name[0].toUpperCase()
-                                                  : '?',
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                              ),
-                                            ),
-                                          ),
-                                        )
-                                      : CircleAvatar(
-                                          backgroundColor: Colors.grey.shade800,
-                                          child: Text(
-                                            item.name.isNotEmpty
-                                                ? item.name[0].toUpperCase()
-                                                : '?',
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                        ),
-                                ),
-                              ),
-                              Text(
-                                trophyIcon,
-                                style: const TextStyle(fontSize: 20),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            item.name,
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                              color: onSurface,
-                            ),
-                            textAlign: TextAlign.center,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          Text(
-                            item.competitionName,
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: onSurface.withOpacity(0.7),
-                            ),
-                            textAlign: TextAlign.center,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            item.year,
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: trophyColor,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
+                    if (widget.userId == null)
+                      Text(
+                        'Continue disputando as ligas para conquistar troféus!',
+                        style: TextStyle(
+                          color: onSurface.withOpacity(0.5),
+                          fontSize: 12,
+                        ),
+                        textAlign: TextAlign.center,
                       ),
-                    ),
-                  );
-                },
+                  ],
+                ),
+              )
+            else if (MediaQuery.of(context).size.width < 600)
+              SizedBox(
+                height: 160,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: hallOfFame.length,
+                  itemBuilder: (context, index) {
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: _buildHallOfFameCard(context, hallOfFame[index]),
+                    );
+                  },
+                ),
+              )
+            else
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                alignment: WrapAlignment.start,
+                children: hallOfFame
+                    .map((item) => _buildHallOfFameCard(context, item))
+                    .toList(),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -529,133 +451,250 @@ class _ProfilePageState extends State<ProfilePage> {
 
     return GlassCard(
       padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Medalhas e Conquistas',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: onSurface,
-            ),
-          ),
-          const SizedBox(height: 16),
-          if (badges.isEmpty)
-            Center(
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.emoji_events_outlined,
-                    size: 48,
-                    color: Colors.grey,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    widget.userId == null
-                        ? 'Você ainda não possui medalhas.'
-                        : 'Não possui medalhas',
-                    style: TextStyle(color: onSurface.withOpacity(0.7)),
-                  ),
-                  if (widget.userId == null)
-                    Text(
-                      'Participe das ligas e acerte palpites para ganhar!',
-                      style: TextStyle(color: onSurface.withOpacity(0.5), fontSize: 12),
-                      textAlign: TextAlign.center,
-                    ),
-                ],
+      child: SizedBox(
+        width: double.infinity,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Medalhas e Conquistas',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: onSurface,
               ),
-            )
-          else
-            SizedBox(
-              height: 130,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: badges.length,
-                itemBuilder: (context, index) {
-                  final badge = badges[index];
-                  return Container(
-                    width: 110,
-                    margin: const EdgeInsets.only(right: 8),
-                    child: Tooltip(
-                      message: badge.description,
-                      triggerMode: TooltipTriggerMode.tap,
-                      child: GlassCard(
-                        padding: const EdgeInsets.all(8),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Expanded(
-                              child: badge.iconUrl != null
-                                  ? AppNetworkImage(
-                                      url: badge.iconUrl!,
-                                      fit: BoxFit.contain,
-                                    )
-                                  : const Icon(
-                                      Icons.military_tech,
-                                      size: 40,
-                                      color: Colors.amber,
-                                    ),
-                            ),
-                            const SizedBox(height: 8),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Flexible(
-                                  child: Text(
-                                    badge.name,
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                      color: onSurface,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                if (badge.count > 1) ...[
-                                  const SizedBox(width: 4),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 6,
-                                      vertical: 2,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.amber,
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: TweenAnimationBuilder<double>(
-                                      tween: Tween<double>(
-                                        begin: 0,
-                                        end: badge.count.toDouble(),
-                                      ),
-                                      duration: const Duration(seconds: 1),
-                                      curve: Curves.easeOut,
-                                      builder: (context, val, child) {
-                                        return Text(
-                                          'x${val.toInt()}',
-                                          style: const TextStyle(
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.black,
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ],
+            ),
+            const SizedBox(height: 16),
+            if (badges.isEmpty)
+              Center(
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.emoji_events_outlined,
+                      size: 48,
+                      color: Colors.grey,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      widget.userId == null
+                          ? 'Você ainda não possui medalhas.'
+                          : 'Não possui medalhas',
+                      style: TextStyle(color: onSurface.withOpacity(0.7)),
+                    ),
+                    if (widget.userId == null)
+                      Text(
+                        'Participe das ligas e acerte palpites para ganhar!',
+                        style: TextStyle(
+                          color: onSurface.withOpacity(0.5),
+                          fontSize: 12,
                         ),
+                        textAlign: TextAlign.center,
+                      ),
+                  ],
+                ),
+              )
+            else if (MediaQuery.of(context).size.width < 600)
+              SizedBox(
+                height: 130,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: badges.length,
+                  itemBuilder: (context, index) {
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: _buildBadgeCard(context, badges[index]),
+                    );
+                  },
+                ),
+              )
+            else
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                alignment: WrapAlignment.start,
+                children: badges
+                    .map((badge) => _buildBadgeCard(context, badge))
+                    .toList(),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBadgeCard(BuildContext context, BadgeModel badge) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+
+    return SizedBox(
+      width: 110,
+      height: 130,
+      child: Tooltip(
+        message: badge.description,
+        triggerMode: TooltipTriggerMode.tap,
+        child: GlassCard(
+          padding: const EdgeInsets.all(8),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Expanded(
+                child: badge.iconUrl != null
+                    ? AppNetworkImage(url: badge.iconUrl!, fit: BoxFit.contain)
+                    : const Icon(
+                        Icons.military_tech,
+                        size: 40,
+                        color: Colors.amber,
+                      ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Flexible(
+                    child: Text(
+                      badge.name,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: onSurface,
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  if (badge.count > 1) ...[
+                    const SizedBox(width: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.amber,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: TweenAnimationBuilder<double>(
+                        tween: Tween<double>(
+                          begin: 0,
+                          end: badge.count.toDouble(),
+                        ),
+                        duration: const Duration(seconds: 1),
+                        curve: Curves.easeOut,
+                        builder: (context, val, child) {
+                          return Text(
+                            'x${val.toInt()}',
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                          );
+                        },
                       ),
                     ),
-                  );
-                },
+                  ],
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHallOfFameCard(BuildContext context, HallOfFameModel item) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+    Color trophyColor;
+    String trophyIcon;
+    if (item.position == 1) {
+      trophyColor = Colors.amber;
+      trophyIcon = '🏆';
+    } else if (item.position == 2) {
+      trophyColor = const Color(0xFFC0C0C0);
+      trophyIcon = '🥈';
+    } else {
+      trophyColor = const Color(0xFFCD7F32);
+      trophyIcon = '🥉';
+    }
+
+    return SizedBox(
+      width: 140,
+      height: 160,
+      child: GlassCard(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Stack(
+              alignment: Alignment.topRight,
+              children: [
+                Container(
+                  margin: const EdgeInsets.only(top: 4, right: 4),
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: trophyColor, width: 2),
+                  ),
+                  child: ClipOval(
+                    child: item.avatarUrl != null
+                        ? AppNetworkImage(
+                            url: item.avatarUrl!,
+                            fit: BoxFit.cover,
+                            errorWidget: CircleAvatar(
+                              backgroundColor: Colors.grey.shade800,
+                              child: Text(
+                                item.name.isNotEmpty
+                                    ? item.name[0].toUpperCase()
+                                    : '?',
+                                style: const TextStyle(color: Colors.white),
+                              ),
+                            ),
+                          )
+                        : CircleAvatar(
+                            backgroundColor: Colors.grey.shade800,
+                            child: Text(
+                              item.name.isNotEmpty
+                                  ? item.name[0].toUpperCase()
+                                  : '?',
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                          ),
+                  ),
+                ),
+                Text(trophyIcon, style: const TextStyle(fontSize: 20)),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              item.name,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+                color: onSurface,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            Text(
+              item.competitionName,
+              style: TextStyle(fontSize: 10, color: onSurface.withOpacity(0.7)),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              item.year,
+              style: TextStyle(
+                fontSize: 10,
+                color: trophyColor,
+                fontWeight: FontWeight.bold,
               ),
             ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -1398,169 +1398,228 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
         physics: const AlwaysScrollableScrollPhysics(),
         children: [
           WebConstrainedBox(
-            child: GlassCard(
-              margin: EdgeInsets.zero,
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: DataTable(
-                  showCheckboxColumn: false,
-                  columnSpacing: 20,
-                  headingRowHeight: 40,
-                  dataRowMinHeight: 48,
-                  dataRowMaxHeight: 48,
-                  columns: const [
-                    DataColumn(label: Text('#'), numeric: true),
-                    DataColumn(label: Text('Nome')),
-                    DataColumn(label: Text('Pts'), numeric: true),
-                    DataColumn(
-                      label: Tooltip(
-                        message: 'Placar Exato',
-                        triggerMode: TooltipTriggerMode.tap,
-                        child: Text('PE'),
-                      ),
-                      numeric: true,
-                    ),
-                    DataColumn(
-                      label: Tooltip(
-                        message: 'Vencedor + Saldo',
-                        triggerMode: TooltipTriggerMode.tap,
-                        child: Text('VS'),
-                      ),
-                      numeric: true,
-                    ),
-                    DataColumn(
-                      label: Tooltip(
-                        message: 'Vencedor + Gols',
-                        triggerMode: TooltipTriggerMode.tap,
-                        child: Text('VG'),
-                      ),
-                      numeric: true,
-                    ),
-                    DataColumn(
-                      label: Tooltip(
-                        message: 'Apenas Vencedor',
-                        triggerMode: TooltipTriggerMode.tap,
-                        child: Text('AV'),
-                      ),
-                      numeric: true,
-                    ),
-                    DataColumn(
-                      label: Tooltip(
-                        message: 'Erros',
-                        triggerMode: TooltipTriggerMode.tap,
-                        child: Text('ER'),
-                      ),
-                      numeric: true,
-                    ),
-                    DataColumn(
-                      label: Tooltip(
-                        message: 'Total de Palpites',
-                        triggerMode: TooltipTriggerMode.tap,
-                        child: Text('TOT'),
-                      ),
-                      numeric: true,
-                    ),
-                  ],
-                  rows: _rankings.map((member) {
-                    final isCurrentUser = member.id == _currentUserId;
-                    return DataRow(
-                      onSelectChanged: isCurrentUser
-                          ? null
-                          : (_) {
-                              context.go(
-                                '/ligas/${widget.leagueId}/usuario/${member.id}',
-                              );
-                            },
-                      color: isCurrentUser
-                          ? MaterialStateProperty.all(
-                              Theme.of(context).colorScheme.primaryContainer
-                                  .withValues(alpha: 0.3),
-                            )
-                          : null,
-                      cells: [
-                        DataCell(
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [Text('${member.rank}')],
-                          ),
-                        ),
-                        DataCell(
-                          Row(
-                            children: [
-                              SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: ClipOval(
-                                  child: member.photoUrl != null
-                                      ? AppNetworkImage(
-                                          url: member.photoUrl!,
-                                          fit: BoxFit.cover,
-                                          errorWidget: CircleAvatar(
-                                            radius: 10,
-                                            child: Text(
-                                              member.name.isNotEmpty
-                                                  ? member.name[0]
-                                                  : '?',
-                                              style: const TextStyle(
-                                                fontSize: 10,
-                                              ),
-                                            ),
-                                          ),
-                                        )
-                                      : CircleAvatar(
-                                          radius: 10,
-                                          child: Text(
-                                            member.name.isNotEmpty
-                                                ? member.name[0]
-                                                : '?',
-                                            style: const TextStyle(
-                                              fontSize: 10,
-                                            ),
-                                          ),
-                                        ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Flexible(
+                  fit: FlexFit.tight,
+                  child: GlassCard(
+                    margin: EdgeInsets.zero,
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final double fixedColumnsWidth = 350;
+                        final double availableWidth = constraints.maxWidth;
+                        final double nameWidth =
+                            (availableWidth - fixedColumnsWidth).clamp(
+                              150.0,
+                              440.0,
+                            );
+
+                        return Center(
+                          child: SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: DataTable(
+                              showCheckboxColumn: false,
+                              columnSpacing: 20,
+                              headingRowHeight: 40,
+                              dataRowMinHeight: 48,
+                              dataRowMaxHeight: 48,
+                              columns: [
+                                const DataColumn(
+                                  label: Text('#'),
+                                  numeric: true,
                                 ),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                member.name,
-                                style: TextStyle(
-                                  fontWeight: isCurrentUser
-                                      ? FontWeight.bold
-                                      : FontWeight.normal,
+                                DataColumn(
+                                  label: SizedBox(
+                                    width: nameWidth,
+                                    child: const Text(
+                                      'Nome',
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
                                 ),
-                              ),
-                              if (!isLeagueActive &&
-                                  member.rank >= 1 &&
-                                  member.rank <= 3) ...[
-                                const SizedBox(width: 8),
-                                Text(
-                                  member.rank == 1
-                                      ? '🏆'
-                                      : member.rank == 2
-                                      ? '🥈'
-                                      : '🥉',
+                                const DataColumn(
+                                  label: Text('Pts'),
+                                  numeric: true,
+                                ),
+                                const DataColumn(
+                                  label: Tooltip(
+                                    message: 'Placar Exato',
+                                    triggerMode: TooltipTriggerMode.tap,
+                                    child: Text('PE'),
+                                  ),
+                                  numeric: true,
+                                ),
+                                const DataColumn(
+                                  label: Tooltip(
+                                    message: 'Vencedor + Saldo',
+                                    triggerMode: TooltipTriggerMode.tap,
+                                    child: Text('VS'),
+                                  ),
+                                  numeric: true,
+                                ),
+                                const DataColumn(
+                                  label: Tooltip(
+                                    message: 'Vencedor + Gols',
+                                    triggerMode: TooltipTriggerMode.tap,
+                                    child: Text('VG'),
+                                  ),
+                                  numeric: true,
+                                ),
+                                const DataColumn(
+                                  label: Tooltip(
+                                    message: 'Apenas Vencedor',
+                                    triggerMode: TooltipTriggerMode.tap,
+                                    child: Text('AV'),
+                                  ),
+                                  numeric: true,
+                                ),
+                                const DataColumn(
+                                  label: Tooltip(
+                                    message: 'Erros',
+                                    triggerMode: TooltipTriggerMode.tap,
+                                    child: Text('ER'),
+                                  ),
+                                  numeric: true,
+                                ),
+                                const DataColumn(
+                                  label: Tooltip(
+                                    message: 'Total de Palpites',
+                                    triggerMode: TooltipTriggerMode.tap,
+                                    child: Text('TOT'),
+                                  ),
+                                  numeric: true,
                                 ),
                               ],
-                            ],
+                              rows: _rankings.map((member) {
+                                final isCurrentUser =
+                                    member.id == _currentUserId;
+                                return DataRow(
+                                  onSelectChanged: isCurrentUser
+                                      ? null
+                                      : (_) {
+                                          context.go(
+                                            '/ligas/${widget.leagueId}/usuario/${member.id}',
+                                          );
+                                        },
+                                  color: isCurrentUser
+                                      ? MaterialStateProperty.all(
+                                          Theme.of(context)
+                                              .colorScheme
+                                              .primaryContainer
+                                              .withValues(alpha: 0.3),
+                                        )
+                                      : null,
+                                  cells: [
+                                    DataCell(
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [Text('${member.rank}')],
+                                      ),
+                                    ),
+                                    DataCell(
+                                      SizedBox(
+                                        width: nameWidth,
+                                        child: Row(
+                                          children: [
+                                            SizedBox(
+                                              width: 20,
+                                              height: 20,
+                                              child: ClipOval(
+                                                child: member.photoUrl != null
+                                                    ? AppNetworkImage(
+                                                        url: member.photoUrl!,
+                                                        fit: BoxFit.cover,
+                                                        errorWidget: CircleAvatar(
+                                                          radius: 10,
+                                                          child: Text(
+                                                            member
+                                                                    .name
+                                                                    .isNotEmpty
+                                                                ? member.name[0]
+                                                                : '?',
+                                                            style:
+                                                                const TextStyle(
+                                                                  fontSize: 10,
+                                                                ),
+                                                          ),
+                                                        ),
+                                                      )
+                                                    : CircleAvatar(
+                                                        radius: 10,
+                                                        child: Text(
+                                                          member.name.isNotEmpty
+                                                              ? member.name[0]
+                                                              : '?',
+                                                          style:
+                                                              const TextStyle(
+                                                                fontSize: 10,
+                                                              ),
+                                                        ),
+                                                      ),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Expanded(
+                                              child: Text(
+                                                member.name,
+                                                style: TextStyle(
+                                                  fontWeight: isCurrentUser
+                                                      ? FontWeight.bold
+                                                      : FontWeight.normal,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                            if (!isLeagueActive &&
+                                                member.rank >= 1 &&
+                                                member.rank <= 3) ...[
+                                              const SizedBox(width: 8),
+                                              Text(
+                                                member.rank == 1
+                                                    ? '🏆'
+                                                    : member.rank == 2
+                                                    ? '🥈'
+                                                    : '🥉',
+                                              ),
+                                            ],
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    DataCell(
+                                      Text(
+                                        '${member.points}',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                    DataCell(
+                                      Text('${member.stats.exactScore}'),
+                                    ),
+                                    DataCell(
+                                      Text('${member.stats.winnerDiff}'),
+                                    ),
+                                    DataCell(
+                                      Text('${member.stats.winnerGoal}'),
+                                    ),
+                                    DataCell(
+                                      Text('${member.stats.winnerOnly}'),
+                                    ),
+                                    DataCell(Text('${member.stats.errors}')),
+                                    DataCell(Text('${member.stats.total}')),
+                                  ],
+                                );
+                              }).toList(),
+                            ),
                           ),
-                        ),
-                        DataCell(
-                          Text(
-                            '${member.points}',
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        DataCell(Text('${member.stats.exactScore}')),
-                        DataCell(Text('${member.stats.winnerDiff}')),
-                        DataCell(Text('${member.stats.winnerGoal}')),
-                        DataCell(Text('${member.stats.winnerOnly}')),
-                        DataCell(Text('${member.stats.errors}')),
-                        DataCell(Text('${member.stats.total}')),
-                      ],
-                    );
-                  }).toList(),
+                        );
+                      },
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
           if (_isRankingLoading)

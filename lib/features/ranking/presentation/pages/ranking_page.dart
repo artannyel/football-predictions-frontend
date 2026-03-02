@@ -297,6 +297,7 @@ class _RankingListTabState extends State<_RankingListTab>
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Flexible(
+                  fit: FlexFit.tight,
                   child: GlassCard(
                     padding: EdgeInsets.zero,
                     child: Column(
@@ -362,131 +363,158 @@ class _RankingListTabState extends State<_RankingListTab>
   Widget _buildRankingTable() {
     final currentUserId = context.read<AuthNotifier>().backendUser?.id;
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: DataTable(
-        showCheckboxColumn: false,
-        columnSpacing: 20,
-        headingRowHeight: 40,
-        dataRowMinHeight: 48,
-        dataRowMaxHeight: 48,
-        columns: const [
-          DataColumn(label: Text('#'), numeric: true),
-          DataColumn(label: Text('Jogador')),
-          DataColumn(
-            label: Tooltip(message: 'Placar Exato', child: Text('PE')),
-            numeric: true,
-          ),
-          DataColumn(
-            label: Tooltip(message: 'Vencedor + Saldo', child: Text('VS')),
-            numeric: true,
-          ),
-          DataColumn(
-            label: Tooltip(message: 'Vencedor + Gols', child: Text('VG')),
-            numeric: true,
-          ),
-          DataColumn(
-            label: Tooltip(message: 'Apenas Vencedor', child: Text('AV')),
-            numeric: true,
-          ),
-          DataColumn(label: Text('Pts'), numeric: true),
-          DataColumn(
-            label: Tooltip(message: 'Erros', child: Text('ER')),
-            numeric: true,
-          ),
-          DataColumn(
-            label: Tooltip(message: 'Total de Palpites', child: Text('TOT')),
-            numeric: true,
-          ),
-        ],
-        rows: _rankingData!.topList.map((user) {
-          final isCurrentUser = user.userId == currentUserId;
-          return DataRow(
-            color: isCurrentUser
-                ? MaterialStateProperty.all(
-                    Theme.of(
-                      context,
-                    ).colorScheme.primaryContainer.withValues(alpha: 0.3),
-                  )
-                : null,
-            onSelectChanged: (user.userId != null && !isCurrentUser)
-                ? (_) {
-                    context.pushNamed(
-                      'UserProfile',
-                      pathParameters: {'userId': user.userId!},
-                    );
-                  }
-                : null,
-            cells: [
-              DataCell(
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      '${user.rank}',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: _getRankColor(user.rank),
-                      ),
-                    ),
-                    if (user.rank <= 3) ...[
-                      const SizedBox(width: 4),
-                      Icon(
-                        Icons.emoji_events,
-                        size: 14,
-                        color: _getRankColor(user.rank),
-                      ),
-                    ],
-                  ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final double fixedColumnsWidth = 350;
+        final double availableWidth = constraints.maxWidth;
+        final double nameWidth = (availableWidth - fixedColumnsWidth).clamp(
+          150.0,
+          415.0,
+        );
+
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: DataTable(
+            showCheckboxColumn: false,
+            columnSpacing: 20,
+            headingRowHeight: 40,
+            dataRowMinHeight: 48,
+            dataRowMaxHeight: 48,
+            columns: [
+              const DataColumn(label: Text('#'), numeric: true),
+              DataColumn(
+                label: SizedBox(
+                  width: nameWidth,
+                  child: const Text('Jogador', overflow: TextOverflow.ellipsis),
                 ),
               ),
-              DataCell(
-                Row(
-                  children: [
-                    SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: ClipOval(
-                        child: user.photoUrl != null
-                            ? AppNetworkImage(
-                                url: user.photoUrl!,
-                                fit: BoxFit.cover,
-                              )
-                            : Container(
-                                color: Colors.grey,
-                                child: Center(
-                                  child: Text(
-                                    user.name.isNotEmpty
-                                        ? user.name[0].toUpperCase()
-                                        : '?',
-                                    style: const TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      user.name,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                ),
+              const DataColumn(
+                label: Tooltip(message: 'Placar Exato', child: Text('PE')),
+                numeric: true,
               ),
-              DataCell(Text('${user.stats.exactScore}')),
-              DataCell(Text('${user.stats.winnerDiff}')),
-              DataCell(Text('${user.stats.winnerGoal}')),
-              DataCell(Text('${user.stats.winnerOnly}')),
-              DataCell(Text('${user.points}')),
-              DataCell(Text('${user.stats.errors}')),
-              DataCell(Text('${user.stats.total}')),
+              const DataColumn(
+                label: Tooltip(message: 'Vencedor + Saldo', child: Text('VS')),
+                numeric: true,
+              ),
+              const DataColumn(
+                label: Tooltip(message: 'Vencedor + Gols', child: Text('VG')),
+                numeric: true,
+              ),
+              const DataColumn(
+                label: Tooltip(message: 'Apenas Vencedor', child: Text('AV')),
+                numeric: true,
+              ),
+              const DataColumn(label: Text('Pts'), numeric: true),
+              const DataColumn(
+                label: Tooltip(message: 'Erros', child: Text('ER')),
+                numeric: true,
+              ),
+              const DataColumn(
+                label: Tooltip(
+                  message: 'Total de Palpites',
+                  child: Text('TOT'),
+                ),
+                numeric: true,
+              ),
             ],
-          );
-        }).toList(),
-      ),
+            rows: _rankingData!.topList.map((user) {
+              final isCurrentUser = user.userId == currentUserId;
+              return DataRow(
+                color: isCurrentUser
+                    ? MaterialStateProperty.all(
+                        Theme.of(
+                          context,
+                        ).colorScheme.primaryContainer.withValues(alpha: 0.3),
+                      )
+                    : null,
+                onSelectChanged: (user.userId != null && !isCurrentUser)
+                    ? (_) {
+                        context.pushNamed(
+                          'UserProfile',
+                          pathParameters: {'userId': user.userId!},
+                        );
+                      }
+                    : null,
+                cells: [
+                  DataCell(
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '${user.rank}',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: _getRankColor(user.rank),
+                          ),
+                        ),
+                        if (user.rank <= 3) ...[
+                          const SizedBox(width: 4),
+                          Icon(
+                            Icons.emoji_events,
+                            size: 14,
+                            color: _getRankColor(user.rank),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  DataCell(
+                    SizedBox(
+                      width: nameWidth,
+                      child: Row(
+                        children: [
+                          SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: ClipOval(
+                              child: user.photoUrl != null
+                                  ? AppNetworkImage(
+                                      url: user.photoUrl!,
+                                      fit: BoxFit.cover,
+                                    )
+                                  : Container(
+                                      color: Colors.grey,
+                                      child: Center(
+                                        child: Text(
+                                          user.name.isNotEmpty
+                                              ? user.name[0].toUpperCase()
+                                              : '?',
+                                          style: const TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              user.name,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  DataCell(Text('${user.stats.exactScore}')),
+                  DataCell(Text('${user.stats.winnerDiff}')),
+                  DataCell(Text('${user.stats.winnerGoal}')),
+                  DataCell(Text('${user.stats.winnerOnly}')),
+                  DataCell(Text('${user.points}')),
+                  DataCell(Text('${user.stats.errors}')),
+                  DataCell(Text('${user.stats.total}')),
+                ],
+              );
+            }).toList(),
+          ),
+        );
+      },
     );
   }
 
