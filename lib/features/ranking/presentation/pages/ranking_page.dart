@@ -320,7 +320,9 @@ class _RankingListTabState extends State<_RankingListTab>
                               Text(
                                 'TOP 10 JOGADORES',
                                 style: TextStyle(
-                                  color: Theme.of(context).colorScheme.onSurface,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface,
                                   fontWeight: FontWeight.bold,
                                   letterSpacing: 1.2,
                                 ),
@@ -387,11 +389,11 @@ class _RankingListTabState extends State<_RankingListTab>
             label: Tooltip(message: 'Apenas Vencedor', child: Text('AV')),
             numeric: true,
           ),
+          DataColumn(label: Text('Pts'), numeric: true),
           DataColumn(
             label: Tooltip(message: 'Erros', child: Text('ER')),
             numeric: true,
           ),
-          DataColumn(label: Text('Pts'), numeric: true),
           DataColumn(
             label: Tooltip(message: 'Total de Palpites', child: Text('TOT')),
             numeric: true,
@@ -478,8 +480,8 @@ class _RankingListTabState extends State<_RankingListTab>
               DataCell(Text('${user.stats.winnerDiff}')),
               DataCell(Text('${user.stats.winnerGoal}')),
               DataCell(Text('${user.stats.winnerOnly}')),
-              DataCell(Text('${user.stats.errors}')),
               DataCell(Text('${user.points}')),
+              DataCell(Text('${user.stats.errors}')),
               DataCell(Text('${user.stats.total}')),
             ],
           );
