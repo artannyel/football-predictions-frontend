@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:football_predictions/core/auth/auth_notifier.dart';
 import 'package:football_predictions/core/presentation/widgets/app_network_image.dart';
 import 'package:football_predictions/core/presentation/widgets/loading_widget.dart';
+import 'package:football_predictions/core/presentation/widgets/web_constrained_box.dart';
 import 'package:football_predictions/features/competitions/data/models/competition_model.dart';
 import 'package:football_predictions/features/competitions/data/repositories/competitions_repository.dart';
 import 'package:football_predictions/features/home/data/models/league_model.dart';
@@ -239,7 +240,7 @@ class _LeaguesTabState extends State<_LeaguesTab>
     super.build(context);
     return Column(
       children: [
-        _buildFilters(),
+        WebConstrainedBox(child: _buildFilters()),
         Expanded(child: _buildList()),
       ],
     );
@@ -377,29 +378,32 @@ class _LeaguesTabState extends State<_LeaguesTab>
           children: [
             SizedBox(
               height: MediaQuery.of(context).size.height * 0.7,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.groups_outlined,
-                    size: 64,
-                    color: Colors.grey,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    widget.status == 'finished'
-                        ? 'Você ainda não participou de nenhuma liga finalizada.'
-                        : 'Você ainda não participa de nenhuma liga.',
-                    style: const TextStyle(fontSize: 16, color: Colors.grey),
-                  ),
-                  const SizedBox(height: 8),
-                  TextButton(
-                    onPressed: () {
-                      context.go('/competicoes');
-                    },
-                    child: const Text('Explorar competições'),
-                  ),
-                ],
+              child: WebConstrainedBox(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.groups_outlined,
+                      size: 64,
+                      color: Colors.grey,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      widget.status == 'finished'
+                          ? 'Você ainda não participou de nenhuma liga finalizada.'
+                          : 'Você ainda não participa de nenhuma liga.',
+                      style: const TextStyle(fontSize: 16, color: Colors.grey),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    TextButton(
+                      onPressed: () {
+                        context.go('/competicoes');
+                      },
+                      child: const Text('Explorar competições'),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -433,196 +437,198 @@ class _LeaguesTabState extends State<_LeaguesTab>
             final isNextMatchToday =
                 league.nextMatch != null && _isToday(league.nextMatch!.utcDate);
 
-            return Card(
-              elevation: isNextMatchToday ? 3 : 1,
-              shape: isNextMatchToday
-                  ? RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      side: const BorderSide(color: Colors.green, width: 1.5),
-                    )
-                  : null,
-              child: ListTile(
-                onTap: () {
-                  context.go('/ligas/${league.id}');
-                },
-                leading: SizedBox(
-                  width: 40,
-                  height: 40,
-                  child: ClipOval(
-                    child: league.avatar != null
-                        ? AppNetworkImage(
-                            url: league.avatar!,
-                            fit: BoxFit.cover,
-                            errorWidget: CircleAvatar(
+            return WebConstrainedBox(
+              child: Card(
+                elevation: isNextMatchToday ? 3 : 1,
+                shape: isNextMatchToday
+                    ? RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        side: const BorderSide(color: Colors.green, width: 1.5),
+                      )
+                    : null,
+                child: ListTile(
+                  onTap: () {
+                    context.go('/ligas/${league.id}');
+                  },
+                  leading: SizedBox(
+                    width: 40,
+                    height: 40,
+                    child: ClipOval(
+                      child: league.avatar != null
+                          ? AppNetworkImage(
+                              url: league.avatar!,
+                              fit: BoxFit.cover,
+                              errorWidget: CircleAvatar(
+                                child: Text(league.name[0].toUpperCase()),
+                              ),
+                            )
+                          : CircleAvatar(
                               child: Text(league.name[0].toUpperCase()),
                             ),
-                          )
-                        : CircleAvatar(
-                            child: Text(league.name[0].toUpperCase()),
-                          ),
+                    ),
                   ),
-                ),
-                title: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        league.name,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
+                  title: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          league.name,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        '${league.myPoints}',
+                        style: TextStyle(
                           fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: league.myPoints > 0 ? Colors.green : null,
                         ),
                       ),
-                    ),
-                    Text(
-                      '${league.myPoints}',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: league.myPoints > 0 ? Colors.green : null,
-                      ),
-                    ),
-                    Text(' pts', style: TextStyle(fontSize: 16)),
-                  ],
-                ),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(league.competition.name),
-                    Row(
-                      children: [
-                        Card(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onSurface.withValues(alpha: 0.2),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8.0,
-                              vertical: 4,
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(Icons.person_rounded),
-                                const SizedBox(width: 4),
-                                Text('${league.membersCount}'),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(child: Text('Por: ${league.owner.name}')),
-                        if (league.pendingPredictionsCount != null &&
-                            league.pendingPredictionsCount! > 0)
-                          Container(
-                            margin: const EdgeInsets.only(top: 4),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.redAccent,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Text(
-                              '${league.pendingPredictionsCount} palpites',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                    if (league.nextMatch != null) ...[
-                      const SizedBox(height: 4),
+                      Text(' pts', style: TextStyle(fontSize: 16)),
+                    ],
+                  ),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(league.competition.name),
                       Row(
                         children: [
-                          const Text(
-                            'Próximo: ',
-                            style: TextStyle(fontSize: 12, color: Colors.grey),
-                          ),
-                          if (league.nextMatch!.homeTeamCrest != null) ...[
-                            AppNetworkImage(
-                              url: league.nextMatch!.homeTeamCrest!,
-                              width: 16,
-                              height: 16,
-                              fit: BoxFit.contain,
-                              errorWidget: const Icon(
-                                Icons.sports_soccer,
-                                size: 16,
-                                color: Colors.grey,
+                          Card(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withValues(alpha: 0.2),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8.0,
+                                vertical: 4,
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.person_rounded),
+                                  const SizedBox(width: 4),
+                                  Text('${league.membersCount}'),
+                                ],
                               ),
                             ),
-                            const SizedBox(width: 4),
-                          ],
-                          Flexible(
-                            child: Text(
-                              league.nextMatch!.homeTeamName,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(child: Text('Por: ${league.owner.name}')),
+                          if (league.pendingPredictionsCount != null &&
+                              league.pendingPredictionsCount! > 0)
+                            Container(
+                              margin: const EdgeInsets.only(top: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
                               ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          const Text(
-                            ' x ',
-                            style: TextStyle(fontSize: 12, color: Colors.grey),
-                          ),
-                          Flexible(
-                            child: Text(
-                              league.nextMatch!.awayTeamName,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey,
+                              decoration: BoxDecoration(
+                                color: Colors.redAccent,
+                                borderRadius: BorderRadius.circular(10),
                               ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          if (league.nextMatch!.awayTeamCrest != null) ...[
-                            const SizedBox(width: 4),
-                            AppNetworkImage(
-                              url: league.nextMatch!.awayTeamCrest!,
-                              width: 16,
-                              height: 16,
-                              fit: BoxFit.contain,
-                              errorWidget: const Icon(
-                                Icons.sports_soccer,
-                                size: 16,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          ],
-                          const SizedBox(width: 4),
-                          Text(
-                            '• ${_formatDate(league.nextMatch!.utcDate)}',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: isNextMatchToday
-                                  ? Colors.green
-                                  : Colors.grey,
-                              fontWeight: isNextMatchToday
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
-                            ),
-                          ),
-                          if (isNextMatchToday)
-                            const Padding(
-                              padding: EdgeInsets.only(left: 4),
                               child: Text(
-                                'HOJE',
-                                style: TextStyle(
+                                '${league.pendingPredictionsCount} palpites',
+                                style: const TextStyle(
+                                  color: Colors.white,
                                   fontSize: 10,
-                                  color: Colors.green,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ),
                         ],
                       ),
+                      if (league.nextMatch != null) ...[
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            const Text(
+                              'Próximo: ',
+                              style: TextStyle(fontSize: 12, color: Colors.grey),
+                            ),
+                            if (league.nextMatch!.homeTeamCrest != null) ...[
+                              AppNetworkImage(
+                                url: league.nextMatch!.homeTeamCrest!,
+                                width: 16,
+                                height: 16,
+                                fit: BoxFit.contain,
+                                errorWidget: const Icon(
+                                  Icons.sports_soccer,
+                                  size: 16,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                            ],
+                            Flexible(
+                              child: Text(
+                                league.nextMatch!.homeTeamName,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const Text(
+                              ' x ',
+                              style: TextStyle(fontSize: 12, color: Colors.grey),
+                            ),
+                            Flexible(
+                              child: Text(
+                                league.nextMatch!.awayTeamName,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            if (league.nextMatch!.awayTeamCrest != null) ...[
+                              const SizedBox(width: 4),
+                              AppNetworkImage(
+                                url: league.nextMatch!.awayTeamCrest!,
+                                width: 16,
+                                height: 16,
+                                fit: BoxFit.contain,
+                                errorWidget: const Icon(
+                                  Icons.sports_soccer,
+                                  size: 16,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ],
+                            const SizedBox(width: 4),
+                            Text(
+                              '• ${_formatDate(league.nextMatch!.utcDate)}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: isNextMatchToday
+                                    ? Colors.green
+                                    : Colors.grey,
+                                fontWeight: isNextMatchToday
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                              ),
+                            ),
+                            if (isNextMatchToday)
+                              const Padding(
+                                padding: EdgeInsets.only(left: 4),
+                                child: Text(
+                                  'HOJE',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.green,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
               ),
             );

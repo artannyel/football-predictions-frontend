@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:football_predictions/core/presentation/widgets/app_network_image.dart';
 import 'package:football_predictions/core/presentation/widgets/loading_widget.dart';
+import 'package:football_predictions/core/presentation/widgets/web_constrained_box.dart';
 import 'package:football_predictions/features/auth/data/repositories/auth_repository.dart';
 import 'package:football_predictions/features/home/data/repositories/leagues_repository.dart';
 import 'package:football_predictions/features/home/presentation/widgets/glass_card.dart';
@@ -236,22 +237,24 @@ class _LeagueChatPageState extends State<LeagueChatPage> {
                           ? const LoadingWidget()
                           : (_historyMessages.isEmpty && _newMessages.isEmpty)
                           ? Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.chat_bubble_outline,
-                                    size: 48,
-                                    color: Colors.white.withOpacity(0.5),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Text(
-                                    'Seja o primeiro a falar!',
-                                    style: TextStyle(
-                                      color: Colors.white.withOpacity(0.7),
+                              child: WebConstrainedBox(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.chat_bubble_outline,
+                                      size: 48,
+                                      color: Colors.white.withOpacity(0.5),
                                     ),
-                                  ),
-                                ],
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      'Seja o primeiro a falar!',
+                                      style: TextStyle(
+                                        color: Colors.white.withOpacity(0.7),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             )
                           : ListView.builder(
@@ -267,10 +270,12 @@ class _LeagueChatPageState extends State<LeagueChatPage> {
                                 if (index ==
                                     _newMessages.length +
                                         _historyMessages.length) {
-                                  return const Padding(
-                                    padding: EdgeInsets.all(16.0),
-                                    child: Center(
-                                      child: LoadingWidget(size: 20),
+                                  return const WebConstrainedBox(
+                                    child: Padding(
+                                      padding: EdgeInsets.all(16.0),
+                                      child: Center(
+                                        child: LoadingWidget(size: 20),
+                                      ),
                                     ),
                                   );
                                 }
@@ -311,15 +316,17 @@ class _LeagueChatPageState extends State<LeagueChatPage> {
                                     : _buildChatBubble(data, isMe);
 
                                 if (showHeader) {
-                                  return Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      _buildDateHeader(currentDate),
-                                      messageWidget,
-                                    ],
+                                  return WebConstrainedBox(
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        _buildDateHeader(currentDate),
+                                        messageWidget,
+                                      ],
+                                    ),
                                   );
                                 }
-                                return messageWidget;
+                                return WebConstrainedBox(child: messageWidget);
                               },
                             ),
                     ),
@@ -367,7 +374,7 @@ class _LeagueChatPageState extends State<LeagueChatPage> {
                   ],
                 ),
               ),
-              _buildChatInput(),
+              WebConstrainedBox(child: _buildChatInput()),
             ],
           ),
         ],

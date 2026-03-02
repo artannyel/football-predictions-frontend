@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:football_predictions/core/errors/auth_exception.dart';
 import 'package:football_predictions/core/presentation/widgets/loading_widget.dart';
+import 'package:football_predictions/core/presentation/widgets/web_constrained_box.dart';
 import 'package:football_predictions/features/auth/data/repositories/auth_repository.dart';
 import 'package:provider/provider.dart';
 
@@ -56,9 +57,9 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     if (_currentPasswordController.text.isEmpty ||
         _newPasswordController.text.isEmpty ||
         _confirmPasswordController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Preencha todos os campos')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Preencha todos os campos')));
       return;
     }
 
@@ -87,9 +88,9 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
 
     try {
       await context.read<AuthRepository>().updatePassword(
-            currentPassword: _currentPasswordController.text,
-            newPassword: _newPasswordController.text,
-          );
+        currentPassword: _currentPasswordController.text,
+        newPassword: _newPasswordController.text,
+      );
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -129,7 +130,9 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
         prefixIcon: const Icon(Icons.lock_outline),
         suffixIcon: IconButton(
           icon: Icon(
-            obscureText ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+            obscureText
+                ? Icons.visibility_outlined
+                : Icons.visibility_off_outlined,
           ),
           onPressed: onToggleVisibility,
         ),
@@ -145,65 +148,74 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
         title: const Text('Alterar Senha'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            _buildPasswordField(
-              controller: _currentPasswordController,
-              label: 'Senha Atual',
-              obscureText: _obscureCurrent,
-              onToggleVisibility: () => setState(() => _obscureCurrent = !_obscureCurrent),
-            ),
-            const SizedBox(height: 16),
-            _buildPasswordField(
-              controller: _newPasswordController,
-              label: 'Nova Senha',
-              obscureText: _obscureNew,
-              onToggleVisibility: () => setState(() => _obscureNew = !_obscureNew),
-              onChanged: _updatePasswordStrength,
-            ),
-            if (_newPasswordController.text.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              LinearProgressIndicator(
-                value: _passwordStrength,
-                backgroundColor: Colors.grey[300],
-                color: _getStrengthColor(),
-                minHeight: 5,
-                borderRadius: BorderRadius.circular(5),
-              ),
-              const SizedBox(height: 4),
-              Align(
-                alignment: Alignment.centerRight,
-                child: Text(
-                  _getStrengthText(),
-                  style: TextStyle(
-                    color: _getStrengthColor(),
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
+      body: Center(
+        child: SingleChildScrollView(
+          child: WebConstrainedBox(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  _buildPasswordField(
+                    controller: _currentPasswordController,
+                    label: 'Senha Atual',
+                    obscureText: _obscureCurrent,
+                    onToggleVisibility: () =>
+                        setState(() => _obscureCurrent = !_obscureCurrent),
                   ),
-                ),
-              ),
-            ],
-            const SizedBox(height: 16),
-            _buildPasswordField(
-              controller: _confirmPasswordController,
-              label: 'Confirmar Nova Senha',
-              obscureText: _obscureConfirm,
-              onToggleVisibility: () => setState(() => _obscureConfirm = !_obscureConfirm),
-            ),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: _isLoading
-                  ? const Center(child: LoadingWidget())
-                  : FilledButton(
-                      onPressed: _changePassword,
-                      child: const Text('SALVAR NOVA SENHA'),
+                  const SizedBox(height: 16),
+                  _buildPasswordField(
+                    controller: _newPasswordController,
+                    label: 'Nova Senha',
+                    obscureText: _obscureNew,
+                    onToggleVisibility: () =>
+                        setState(() => _obscureNew = !_obscureNew),
+                    onChanged: _updatePasswordStrength,
+                  ),
+                  if (_newPasswordController.text.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    LinearProgressIndicator(
+                      value: _passwordStrength,
+                      backgroundColor: Colors.grey[300],
+                      color: _getStrengthColor(),
+                      minHeight: 5,
+                      borderRadius: BorderRadius.circular(5),
                     ),
+                    const SizedBox(height: 4),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: Text(
+                        _getStrengthText(),
+                        style: TextStyle(
+                          color: _getStrengthColor(),
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 16),
+                  _buildPasswordField(
+                    controller: _confirmPasswordController,
+                    label: 'Confirmar Nova Senha',
+                    obscureText: _obscureConfirm,
+                    onToggleVisibility: () =>
+                        setState(() => _obscureConfirm = !_obscureConfirm),
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: _isLoading
+                        ? const Center(child: LoadingWidget())
+                        : FilledButton(
+                            onPressed: _changePassword,
+                            child: const Text('SALVAR NOVA SENHA'),
+                          ),
+                  ),
+                ],
+              ),
             ),
-          ],
+          ),
         ),
       ),
     );

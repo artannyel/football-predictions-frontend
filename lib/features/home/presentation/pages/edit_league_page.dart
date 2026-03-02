@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:football_predictions/core/presentation/widgets/image_picker_widget.dart';
 import 'package:football_predictions/core/presentation/widgets/loading_widget.dart';
+import 'package:football_predictions/core/presentation/widgets/web_constrained_box.dart';
 import 'package:football_predictions/features/home/data/models/league_details_model.dart';
 import 'package:football_predictions/features/home/data/repositories/leagues_repository.dart';
 import 'package:image_picker/image_picker.dart';
@@ -35,7 +36,9 @@ class _EditLeaguePageState extends State<EditLeaguePage> {
 
   Future<void> _fetchLeagueDetails() async {
     try {
-      final league = await context.read<LeaguesRepository>().getLeagueDetails(widget.leagueId);
+      final league = await context.read<LeaguesRepository>().getLeagueDetails(
+        widget.leagueId,
+      );
       if (mounted) {
         setState(() {
           _league = league;
@@ -46,7 +49,10 @@ class _EditLeaguePageState extends State<EditLeaguePage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao carregar dados da liga: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('Erro ao carregar dados da liga: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
         Navigator.of(context).pop();
       }
@@ -107,13 +113,13 @@ class _EditLeaguePageState extends State<EditLeaguePage> {
 
     try {
       await context.read<LeaguesRepository>().updateLeague(
-            id: widget.leagueId,
-            name: _nameController.text,
-            description: _descriptionController.text.isNotEmpty
-                ? _descriptionController.text
-                : null,
-            avatar: _selectedImage,
-          );
+        id: widget.leagueId,
+        name: _nameController.text,
+        description: _descriptionController.text.isNotEmpty
+            ? _descriptionController.text
+            : null,
+        avatar: _selectedImage,
+      );
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -154,51 +160,57 @@ class _EditLeaguePageState extends State<EditLeaguePage> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              ImagePickerWidget(
-                image: _selectedImage,
-                initialUrl: _league!.avatar,
-                onImageSelected: (file) => setState(() {
-                  _selectedImage = file;
-                }),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Nome da Liga *',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) => value == null || value.isEmpty
-                    ? 'Por favor, insira o nome da liga'
-                    : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _descriptionController,
-                decoration: const InputDecoration(
-                  labelText: 'Descrição',
-                  border: OutlineInputBorder(),
-                ),
-                maxLines: 3,
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: _isLoading
-                    ? const Center(child: LoadingWidget())
-                    : FilledButton(
-                        onPressed: _hasChanges ? _updateLeague : null,
-                        child: const Text('SALVAR ALTERAÇÕES'),
+      body: Center(
+        child: SingleChildScrollView(
+          child: WebConstrainedBox(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    ImagePickerWidget(
+                      image: _selectedImage,
+                      initialUrl: _league!.avatar,
+                      onImageSelected: (file) => setState(() {
+                        _selectedImage = file;
+                      }),
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _nameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Nome da Liga *',
+                        border: OutlineInputBorder(),
                       ),
+                      validator: (value) => value == null || value.isEmpty
+                          ? 'Por favor, insira o nome da liga'
+                          : null,
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _descriptionController,
+                      decoration: const InputDecoration(
+                        labelText: 'Descrição',
+                        border: OutlineInputBorder(),
+                      ),
+                      maxLines: 3,
+                    ),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: _isLoading
+                          ? const Center(child: LoadingWidget())
+                          : FilledButton(
+                              onPressed: _hasChanges ? _updateLeague : null,
+                              child: const Text('SALVAR ALTERAÇÕES'),
+                            ),
+                    ),
+                  ],
+                ),
               ),
-            ],
+            ),
           ),
         ),
       ),

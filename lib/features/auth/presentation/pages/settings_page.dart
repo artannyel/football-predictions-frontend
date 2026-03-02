@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:football_predictions/core/auth/auth_notifier.dart';
+import 'package:football_predictions/core/presentation/widgets/web_constrained_box.dart';
 import 'package:football_predictions/core/providers/theme_provider.dart';
 import 'package:football_predictions/dio_client.dart';
 import 'package:go_router/go_router.dart';
@@ -43,7 +44,6 @@ class _SettingsPageState extends State<SettingsPage> {
     final newReminders = notifyReminders ?? user.notifyReminders;
     final newChat = notifyChat ?? user.notifyChat;
 
-
     // Atualização otimista local
     final updatedUser = user.copyWith(
       notifyResults: newResults,
@@ -53,11 +53,14 @@ class _SettingsPageState extends State<SettingsPage> {
     authNotifier.refreshUser(updatedUser);
 
     try {
-      await context.read<DioClient>().dio.post('user/settings', data: {
-        'notify_results': newResults,
-        'notify_reminders': newReminders,
-        'notify_chat': newChat,
-      });
+      await context.read<DioClient>().dio.post(
+        'user/settings',
+        data: {
+          'notify_results': newResults,
+          'notify_reminders': newReminders,
+          'notify_chat': newChat,
+        },
+      );
 
       if (mounted) {
         String message = 'Configurações atualizadas!';
@@ -107,144 +110,149 @@ class _SettingsPageState extends State<SettingsPage> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Configurações'),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Card(
-            child: Column(
-              children: [
-                ListTile(
-                  leading: const Icon(Icons.edit),
-                  title: const Text(
-                    'Editar Perfil',
+      appBar: AppBar(title: const Text('Configurações')),
+      body: Center(
+        child: SingleChildScrollView(
+          child: WebConstrainedBox(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  Card(
+                    child: Column(
+                      children: [
+                        ListTile(
+                          leading: const Icon(Icons.edit),
+                          title: const Text('Editar Perfil'),
+                          trailing: const Icon(
+                            Icons.arrow_forward_ios,
+                            size: 16,
+                          ),
+                          onTap: () => context.push('/perfil/editar'),
+                        ),
+                        const Divider(height: 1),
+                        ListTile(
+                          leading: const Icon(Icons.lock_outline),
+                          title: const Text('Alterar Senha'),
+                          trailing: const Icon(
+                            Icons.arrow_forward_ios,
+                            size: 16,
+                          ),
+                          onTap: () => context.pushNamed('ChangePassword'),
+                        ),
+                        const Divider(height: 1),
+                        SwitchListTile(
+                          secondary: const Icon(Icons.sports_soccer),
+                          title: const Text(
+                            'Resultados dos Jogos',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: const Text(
+                            'Receba notificações quando os jogos terminarem',
+                            style: TextStyle(fontSize: 12),
+                          ),
+                          value: user?.notifyResults ?? false,
+                          onChanged: _updatingResults
+                              ? null
+                              : (val) => _updateSettings(notifyResults: val),
+                          activeColor: isDark
+                              ? Colors.greenAccent
+                              : Theme.of(context).colorScheme.primary,
+                        ),
+                        const Divider(height: 1),
+                        SwitchListTile(
+                          secondary: const Icon(Icons.access_alarm),
+                          title: const Text(
+                            'Lembretes de Palpites',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: const Text(
+                            'Seja avisado de jogos próximos sem palpite',
+                            style: TextStyle(fontSize: 12),
+                          ),
+                          value: user?.notifyReminders ?? false,
+                          onChanged: _updatingReminders
+                              ? null
+                              : (val) => _updateSettings(notifyReminders: val),
+                          activeColor: isDark
+                              ? Colors.greenAccent
+                              : Theme.of(context).colorScheme.primary,
+                        ),
+                        const Divider(height: 1),
+                        SwitchListTile(
+                          secondary: const Icon(Icons.chat_bubble_outline),
+                          title: const Text(
+                            'Chat de ligas',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: const Text(
+                            'Receba notificações de mensagens de suas ligas',
+                            style: TextStyle(fontSize: 12),
+                          ),
+                          value: user?.notifyChat ?? false,
+                          onChanged: _updatingNotifyChat
+                              ? null
+                              : (val) => _updateSettings(notifyChat: val),
+                          activeColor: isDark
+                              ? Colors.greenAccent
+                              : Theme.of(context).colorScheme.primary,
+                        ),
+                        const Divider(height: 1),
+                        SwitchListTile(
+                          secondary: const Icon(Icons.dark_mode),
+                          title: const Text('Modo Escuro'),
+                          // Se for ThemeMode.system, verificamos o brilho atual do sistema
+                          value: themeProvider.themeMode == ThemeMode.system
+                              ? MediaQuery.of(context).platformBrightness ==
+                                    Brightness.dark
+                              : themeProvider.isDarkMode,
+                          onChanged: (val) {
+                            themeProvider.toggleTheme(val);
+                          },
+                          activeColor: isDark
+                              ? Colors.greenAccent
+                              : Theme.of(context).colorScheme.primary,
+                        ),
+                      ],
+                    ),
                   ),
-                  trailing: const Icon(
-                    Icons.arrow_forward_ios,
-                    size: 16,
+                  const SizedBox(height: 24),
+                  Card(
+                    child: ListTile(
+                      leading: const Icon(
+                        Icons.logout,
+                        color: Colors.redAccent,
+                      ),
+                      title: const Text(
+                        'Sair da Conta',
+                        style: TextStyle(
+                          color: Colors.redAccent,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      onTap: () async {
+                        await context.read<AuthNotifier>().logout();
+                        // O Router redirecionará automaticamente
+                      },
+                    ),
                   ),
-                  onTap: () => context.push('/perfil/editar'),
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(Icons.lock_outline),
-                  title: const Text('Alterar Senha'),
-                  trailing: const Icon(
-                    Icons.arrow_forward_ios,
-                    size: 16,
+                  const SizedBox(height: 24),
+                  Center(
+                    child: Text(
+                      'Versão 1.0.0',
+                      style: TextStyle(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withOpacity(0.3),
+                        fontSize: 12,
+                      ),
+                    ),
                   ),
-                  onTap: () => context.pushNamed('ChangePassword'),
-                ),
-                const Divider(height: 1),
-                SwitchListTile(
-                  secondary: const Icon(Icons.sports_soccer),
-                  title: const Text(
-                    'Resultados dos Jogos',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: const Text(
-                    'Receba notificações quando os jogos terminarem',
-                    style: TextStyle(fontSize: 12),
-                  ),
-                  value: user?.notifyResults ?? false,
-                  onChanged: _updatingResults
-                      ? null
-                      : (val) => _updateSettings(notifyResults: val),
-                  activeColor: isDark
-                      ? Colors.greenAccent
-                      : Theme.of(context).colorScheme.primary,
-                ),
-                const Divider(height: 1),
-                SwitchListTile(
-                  secondary: const Icon(Icons.access_alarm),
-                  title: const Text(
-                    'Lembretes de Palpites',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: const Text(
-                    'Seja avisado de jogos próximos sem palpite',
-                    style: TextStyle(fontSize: 12),
-                  ),
-                  value: user?.notifyReminders ?? false,
-                  onChanged: _updatingReminders
-                      ? null
-                      : (val) => _updateSettings(notifyReminders: val),
-                  activeColor: isDark
-                      ? Colors.greenAccent
-                      : Theme.of(context).colorScheme.primary,
-                ),
-                const Divider(height: 1),
-                SwitchListTile(
-                  secondary: const Icon(Icons.chat_bubble_outline),
-                  title: const Text(
-                    'Chat de ligas',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: const Text(
-                    'Receba notificações de mensagens de suas ligas',
-                    style: TextStyle(fontSize: 12),
-                  ),
-                  value: user?.notifyChat ?? false,
-                  onChanged: _updatingNotifyChat
-                      ? null
-                      : (val) => _updateSettings(notifyChat: val),
-                  activeColor: isDark
-                      ? Colors.greenAccent
-                      : Theme.of(context).colorScheme.primary,
-                ),
-                const Divider(height: 1),
-                SwitchListTile(
-                  secondary: const Icon(
-                    Icons.dark_mode,
-                  ),
-                  title: const Text(
-                    'Modo Escuro',
-                  ),
-                  // Se for ThemeMode.system, verificamos o brilho atual do sistema
-                  value: themeProvider.themeMode == ThemeMode.system
-                      ? MediaQuery.of(context).platformBrightness ==
-                          Brightness.dark
-                      : themeProvider.isDarkMode,
-                  onChanged: (val) {
-                    themeProvider.toggleTheme(val);
-                  },
-                  activeColor: isDark
-                      ? Colors.greenAccent
-                      : Theme.of(context).colorScheme.primary,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
-          Card(
-            child: ListTile(
-              leading: const Icon(Icons.logout, color: Colors.redAccent),
-              title: const Text(
-                'Sair da Conta',
-                style: TextStyle(
-                  color: Colors.redAccent,
-                  fontWeight: FontWeight.bold,
-                ),
+                ],
               ),
-              onTap: () async {
-                await context.read<AuthNotifier>().logout();
-                // O Router redirecionará automaticamente
-              },
             ),
           ),
-          const SizedBox(height: 24),
-          Center(
-            child: Text(
-              'Versão 1.0.0',
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
-                fontSize: 12,
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

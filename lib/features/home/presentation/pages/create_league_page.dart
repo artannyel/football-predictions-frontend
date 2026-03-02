@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:football_predictions/core/presentation/widgets/app_network_image.dart';
 import 'package:football_predictions/core/presentation/widgets/image_picker_widget.dart';
 import 'package:football_predictions/core/presentation/widgets/loading_widget.dart';
+import 'package:football_predictions/core/presentation/widgets/web_constrained_box.dart';
 import 'package:football_predictions/features/competitions/data/models/competition_model.dart';
 import 'package:football_predictions/features/competitions/data/repositories/competitions_repository.dart';
 import 'package:football_predictions/features/home/data/repositories/leagues_repository.dart';
@@ -68,103 +69,109 @@ class _CreateLeaguePageState extends State<CreateLeaguePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Criar Nova Liga')),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              ImagePickerWidget(
-                image: _selectedImage,
-                onImageSelected: (file) => setState(() {
-                  _selectedImage = file;
-                }),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Nome da Liga *',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor, insira o nome da liga';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              FutureBuilder<List<CompetitionModel>>(
-                future: context
-                    .read<CompetitionsRepository>()
-                    .getCompetitions(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const LoadingWidget();
-                  }
-                  return DropdownButtonFormField<int>(
-                    isExpanded: true,
-                    decoration: const InputDecoration(
-                      labelText: 'Competição *',
-                      border: OutlineInputBorder(),
+      body: Center(
+        child: SingleChildScrollView(
+          child: WebConstrainedBox(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    ImagePickerWidget(
+                      image: _selectedImage,
+                      onImageSelected: (file) => setState(() {
+                        _selectedImage = file;
+                      }),
                     ),
-                    initialValue: _selectedCompetitionId,
-                    items: snapshot.data?.map((competition) {
-                      return DropdownMenuItem(
-                        value: competition.id,
-                        child: Row(
-                          children: [
-                            if (competition.emblem != null) ...[
-                              AppNetworkImage(
-                                url: competition.emblem!,
-                                width: 24,
-                                height: 24,
-                                errorWidget: const Icon(Icons.sports_soccer, size: 24),
-                              ),
-                              const SizedBox(width: 8),
-                            ],
-                            Expanded(
-                              child: Text(
-                                competition.name,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedCompetitionId = value;
-                      });
-                    },
-                    validator: (value) =>
-                        value == null ? 'Selecione uma competição' : null,
-                  );
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _descriptionController,
-                decoration: const InputDecoration(
-                  labelText: 'Descrição',
-                  border: OutlineInputBorder(),
-                ),
-                maxLines: 3,
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: _isLoading
-                    ? const Center(child: LoadingWidget())
-                    : FilledButton(
-                        onPressed: _createLeague,
-                        child: const Text('CRIAR LIGA'),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _nameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Nome da Liga *',
+                        border: OutlineInputBorder(),
                       ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Por favor, insira o nome da liga';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    FutureBuilder<List<CompetitionModel>>(
+                      future: context
+                          .read<CompetitionsRepository>()
+                          .getCompetitions(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const LoadingWidget();
+                        }
+                        return DropdownButtonFormField<int>(
+                          isExpanded: true,
+                          decoration: const InputDecoration(
+                            labelText: 'Competição *',
+                            border: OutlineInputBorder(),
+                          ),
+                          initialValue: _selectedCompetitionId,
+                          items: snapshot.data?.map((competition) {
+                            return DropdownMenuItem(
+                              value: competition.id,
+                              child: Row(
+                                children: [
+                                  if (competition.emblem != null) ...[
+                                    AppNetworkImage(
+                                      url: competition.emblem!,
+                                      width: 24,
+                                      height: 24,
+                                      errorWidget: const Icon(Icons.sports_soccer, size: 24),
+                                    ),
+                                    const SizedBox(width: 8),
+                                  ],
+                                  Expanded(
+                                    child: Text(
+                                      competition.name,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedCompetitionId = value;
+                            });
+                          },
+                          validator: (value) =>
+                              value == null ? 'Selecione uma competição' : null,
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _descriptionController,
+                      decoration: const InputDecoration(
+                        labelText: 'Descrição',
+                        border: OutlineInputBorder(),
+                      ),
+                      maxLines: 3,
+                    ),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: _isLoading
+                          ? const Center(child: LoadingWidget())
+                          : FilledButton(
+                              onPressed: _createLeague,
+                              child: const Text('CRIAR LIGA'),
+                            ),
+                    ),
+                  ],
+                ),
               ),
-            ],
+            ),
           ),
         ),
       ),

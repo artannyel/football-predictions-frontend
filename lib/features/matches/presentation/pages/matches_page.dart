@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:football_predictions/core/presentation/widgets/app_network_image.dart';
 import 'package:football_predictions/core/presentation/widgets/blinking_live_indicator.dart';
 import 'package:football_predictions/core/presentation/widgets/loading_widget.dart';
+import 'package:football_predictions/core/presentation/widgets/web_constrained_box.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:football_predictions/features/competitions/data/models/competition_model.dart';
@@ -165,117 +166,121 @@ class _MatchesPageState extends State<MatchesPage> {
                   itemCount: matches.length,
                   itemBuilder: (context, index) {
                     final match = matches[index];
-                    return Card(
-                      margin: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      child: ListTile(
-                        title: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  Flexible(
-                                    child: Text(
-                                      match.homeTeamName,
-                                      textAlign: TextAlign.end,
-                                      overflow: TextOverflow.ellipsis,
+                    return WebConstrainedBox(
+                      child: Card(
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        child: ListTile(
+                          title: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    Flexible(
+                                      child: Text(
+                                        match.homeTeamName,
+                                        textAlign: TextAlign.end,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
                                     ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 8.0),
-                                    child: match.homeTeamCrest != null
-                                        ? AppNetworkImage(
-                                            url: match.homeTeamCrest!,
-                                            width: 20,
-                                            height: 20,
-                                            errorWidget: const Icon(
+                                    Padding(
+                                      padding: const EdgeInsets.only(left: 8.0),
+                                      child: match.homeTeamCrest != null
+                                          ? AppNetworkImage(
+                                              url: match.homeTeamCrest!,
+                                              width: 20,
+                                              height: 20,
+                                              errorWidget: const Icon(
+                                                Icons.sports_soccer,
+                                                size: 20,
+                                              ),
+                                            )
+                                          : const Icon(
                                               Icons.sports_soccer,
                                               size: 20,
                                             ),
-                                          )
-                                        : const Icon(
-                                            Icons.sports_soccer,
-                                            size: 20,
-                                          ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12.0,
+                                ),
+                                child: Text(
+                                  '${match.homeScore ?? '-'} x ${match.awayScore ?? '-'}',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
                                   ),
-                                ],
+                                ),
                               ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12.0,
+                              Expanded(
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.only(
+                                        right: 8.0,
+                                      ),
+                                      child: match.awayTeamCrest != null
+                                          ? AppNetworkImage(
+                                              url: match.awayTeamCrest!,
+                                              width: 20,
+                                              height: 20,
+                                              errorWidget: const Icon(
+                                                Icons.sports_soccer,
+                                                size: 20,
+                                              ),
+                                            )
+                                          : const Icon(
+                                              Icons.sports_soccer,
+                                              size: 20,
+                                            ),
+                                    ),
+                                    Flexible(
+                                      child: Text(
+                                        match.awayTeamName,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                              child: Text(
-                                '${match.homeScore ?? '-'} x ${match.awayScore ?? '-'}',
+                            ],
+                          ),
+                          subtitle: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Center(
+                                child: match.status == 'IN_PLAY'
+                                    ? const BlinkingLiveIndicator()
+                                    : Text(_translateStatus(match.status)),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(_translateStage(match.stage)),
+                              if (match.group != null)
+                                Text(match.group!.replaceAll('_', ' ')),
+                              const SizedBox(height: 4),
+                              Text(
+                                _formatMatchday(match.stage, match.matchday),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                            ),
-                            Expanded(
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.only(right: 8.0),
-                                    child: match.awayTeamCrest != null
-                                        ? AppNetworkImage(
-                                            url: match.awayTeamCrest!,
-                                            width: 20,
-                                            height: 20,
-                                            errorWidget: const Icon(
-                                              Icons.sports_soccer,
-                                              size: 20,
-                                            ),
-                                          )
-                                        : const Icon(
-                                            Icons.sports_soccer,
-                                            size: 20,
-                                          ),
-                                  ),
-                                  Flexible(
-                                    child: Text(
-                                      match.awayTeamName,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                ],
+                              const SizedBox(height: 4),
+                              Text(
+                                _formatDate(match.utcDate),
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey,
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                        subtitle: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Center(
-                              child: match.status == 'IN_PLAY'
-                                  ? const BlinkingLiveIndicator()
-                                  : Text(_translateStatus(match.status)),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(_translateStage(match.stage)),
-                            if (match.group != null)
-                              Text(match.group!.replaceAll('_', ' ')),
-                            const SizedBox(height: 4),
-                            Text(
-                              _formatMatchday(match.stage, match.matchday),
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              _formatDate(match.utcDate),
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     );

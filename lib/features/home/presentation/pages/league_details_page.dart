@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:football_predictions/core/presentation/widgets/app_network_image.dart';
 import 'package:football_predictions/core/presentation/widgets/blinking_live_indicator.dart';
 import 'package:football_predictions/core/presentation/widgets/loading_widget.dart';
+import 'package:football_predictions/core/presentation/widgets/web_constrained_box.dart';
 import 'package:football_predictions/features/auth/data/repositories/auth_repository.dart';
 import 'package:football_predictions/features/home/data/models/league_details_model.dart';
 import 'package:football_predictions/features/home/data/models/league_ranking_model.dart';
@@ -780,99 +781,113 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
       } catch (_) {}
     }
 
-    return GlassCard(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          if (!league.isActive) ...[
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.amber.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.amber),
-              ),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.emoji_events, color: Colors.amber),
-                  SizedBox(width: 8),
-                  Text(
-                    "LIGA FINALIZADA",
-                    style: TextStyle(
-                      color: Colors.amber,
-                      fontWeight: FontWeight.bold,
+    return WebConstrainedBox(
+      child: GlassCard(
+        margin: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            if (!league.isActive) ...[
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.amber),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.emoji_events, color: Colors.amber),
+                    SizedBox(width: 8),
+                    Text(
+                      "LIGA FINALIZADA",
+                      style: TextStyle(
+                        color: Colors.amber,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-            if (champion != null) ...[
-              const Text(
-                "🏆 CAMPEÃO 🏆",
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.amber,
-                  fontSize: 18,
+                  ],
                 ),
               ),
-              const SizedBox(height: 16),
-              GestureDetector(
-                onTap: champion.photoUrl != null
-                    ? () {
-                        showDialog(
-                          context: context,
-                          builder: (context) => Dialog(
-                            backgroundColor: Colors.black.withValues(
-                              alpha: 0.9,
-                            ),
-                            insetPadding: EdgeInsets.zero,
-                            child: Stack(
-                              children: [
-                                InteractiveViewer(
-                                  child: Center(
-                                    child: AppNetworkImage(
-                                      url: champion!.photoUrl!,
-                                      fit: BoxFit.contain,
-                                    ),
-                                  ),
-                                ),
-                                Positioned(
-                                  top: 16,
-                                  right: 16,
-                                  child: SafeArea(
-                                    child: IconButton(
-                                      icon: const Icon(
-                                        Icons.close,
-                                        color: Colors.white,
-                                      ),
-                                      onPressed: () =>
-                                          Navigator.of(context).pop(),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      }
-                    : null,
-                child: Container(
-                  width: 120,
-                  height: 120,
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.amber, width: 4),
+              const SizedBox(height: 24),
+              if (champion != null) ...[
+                const Text(
+                  "🏆 CAMPEÃO 🏆",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.amber,
+                    fontSize: 18,
                   ),
-                  child: ClipOval(
-                    child: champion.photoUrl != null
-                        ? AppNetworkImage(
-                            url: champion.photoUrl!,
-                            fit: BoxFit.cover,
-                            errorWidget: CircleAvatar(
+                ),
+                const SizedBox(height: 16),
+                GestureDetector(
+                  onTap: champion.photoUrl != null
+                      ? () {
+                          showDialog(
+                            context: context,
+                            builder: (context) => Dialog(
+                              backgroundColor: Colors.black.withValues(
+                                alpha: 0.9,
+                              ),
+                              insetPadding: EdgeInsets.zero,
+                              child: Stack(
+                                children: [
+                                  InteractiveViewer(
+                                    child: Center(
+                                      child: AppNetworkImage(
+                                        url: champion!.photoUrl!,
+                                        fit: BoxFit.contain,
+                                      ),
+                                    ),
+                                  ),
+                                  Positioned(
+                                    top: 16,
+                                    right: 16,
+                                    child: SafeArea(
+                                      child: IconButton(
+                                        icon: const Icon(
+                                          Icons.close,
+                                          color: Colors.white,
+                                        ),
+                                        onPressed: () =>
+                                            Navigator.of(context).pop(),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }
+                      : null,
+                  child: Container(
+                    width: 120,
+                    height: 120,
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.amber, width: 4),
+                    ),
+                    child: ClipOval(
+                      child: champion.photoUrl != null
+                          ? AppNetworkImage(
+                              url: champion.photoUrl!,
+                              fit: BoxFit.cover,
+                              errorWidget: CircleAvatar(
+                                radius: 60,
+                                child: Text(
+                                  champion.name.isNotEmpty
+                                      ? champion.name[0].toUpperCase()
+                                      : '?',
+                                  style: const TextStyle(fontSize: 48),
+                                ),
+                              ),
+                            )
+                          : CircleAvatar(
                               radius: 60,
                               child: Text(
                                 champion.name.isNotEmpty
@@ -881,268 +896,230 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                                 style: const TextStyle(fontSize: 48),
                               ),
                             ),
-                          )
-                        : CircleAvatar(
-                            radius: 60,
-                            child: Text(
-                              champion.name.isNotEmpty
-                                  ? champion.name[0].toUpperCase()
-                                  : '?',
-                              style: const TextStyle(fontSize: 48),
-                            ),
-                          ),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                champion.name,
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
+                const SizedBox(height: 12),
+                Text(
+                  champion.name,
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                textAlign: TextAlign.center,
-              ),
-              Text(
-                '${champion.points} pts',
-                style: const TextStyle(fontSize: 14),
-              ),
-              if (viceChampion != null || thirdPlace != null) ...[
+                Text(
+                  '${champion.points} pts',
+                  style: const TextStyle(fontSize: 14),
+                ),
+                if (viceChampion != null || thirdPlace != null) ...[
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (viceChampion != null)
+                        Expanded(child: _buildPodiumItem(viceChampion, 2)),
+                      if (thirdPlace != null)
+                        Expanded(child: _buildPodiumItem(thirdPlace, 3)),
+                    ],
+                  ),
+                ],
                 const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (viceChampion != null)
-                      Expanded(child: _buildPodiumItem(viceChampion, 2)),
-                    if (thirdPlace != null)
-                      Expanded(child: _buildPodiumItem(thirdPlace, 3)),
-                  ],
-                ),
+                const Divider(),
+                const SizedBox(height: 24),
               ],
-              const SizedBox(height: 24),
-              const Divider(),
-              const SizedBox(height: 24),
             ],
-          ],
-          SizedBox(
-            width: 110,
-            height: 110,
-            child: ClipOval(
-              child: league.avatar != null
-                  ? AppNetworkImage(
-                      url: league.avatar!,
-                      fit: BoxFit.cover,
-                      errorWidget: CircleAvatar(
+            SizedBox(
+              width: 110,
+              height: 110,
+              child: ClipOval(
+                child: league.avatar != null
+                    ? AppNetworkImage(
+                        url: league.avatar!,
+                        fit: BoxFit.cover,
+                        errorWidget: CircleAvatar(
+                          radius: 55,
+                          child: Text(
+                            league.name[0].toUpperCase(),
+                            style: const TextStyle(fontSize: 48),
+                          ),
+                        ),
+                      )
+                    : CircleAvatar(
                         radius: 55,
                         child: Text(
                           league.name[0].toUpperCase(),
                           style: const TextStyle(fontSize: 48),
                         ),
                       ),
-                    )
-                  : CircleAvatar(
-                      radius: 55,
-                      child: Text(
-                        league.name[0].toUpperCase(),
-                        style: const TextStyle(fontSize: 48),
-                      ),
-                    ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            league.name,
-            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 8),
-          Text(league.description, textAlign: TextAlign.center),
-          const SizedBox(height: 16),
-          if (league.isActive)
-            Container(
-              margin: const EdgeInsets.only(bottom: 16),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.deepPurple.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.deepPurpleAccent),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.style, color: Colors.deepPurpleAccent),
-                  const SizedBox(width: 8),
-                  Text(
-                    '${league.myPowerups} Coringas disponíveis',
-                    style: const TextStyle(
-                      color: Colors.deepPurpleAccent,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
               ),
             ),
-          GlassCard(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            const SizedBox(height: 16),
+            Text(
+              league.name,
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(league.description, textAlign: TextAlign.center),
+            const SizedBox(height: 16),
+            if (league.isActive)
+              Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.deepPurple.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.deepPurpleAccent),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Competição (Esquerda)
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Competição',
-                            style: TextStyle(fontSize: 10, color: Colors.grey),
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              if (league.competition.emblem != null) ...[
-                                ClipOval(
-                                  child: AppNetworkImage(
-                                    url: league.competition.emblem!,
-                                    width: 24,
-                                    height: 24,
-                                    errorWidget: const Icon(
-                                      Icons.sports_soccer,
-                                      size: 24,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                              ],
-                              Flexible(
-                                child: Text(
-                                  league.competition.name,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 12,
-                                  ),
-                                  //overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    // Criador (Direita)
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          const Text(
-                            'Criador',
-                            style: TextStyle(fontSize: 10, color: Colors.grey),
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              Flexible(
-                                child: Text(
-                                  league.owner.name,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 12,
-                                  ),
-                                  //overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              ClipOval(
-                                child: league.owner.photoUrl != null
-                                    ? AppNetworkImage(
-                                        url: league.owner.photoUrl!,
-                                        width: 24,
-                                        height: 24,
-                                        errorWidget: const Icon(
-                                          Icons.person,
-                                          size: 24,
-                                        ),
-                                      )
-                                    : const Icon(Icons.person, size: 24),
-                              ),
-                            ],
-                          ),
-                        ],
+                    const Icon(Icons.style, color: Colors.deepPurpleAccent),
+                    const SizedBox(width: 8),
+                    Text(
+                      '${league.myPowerups} Coringas disponíveis',
+                      style: const TextStyle(
+                        color: Colors.deepPurpleAccent,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ],
                 ),
-                if (league.isActive) ...[
-                  const SizedBox(height: 16),
-                  ScaleTransition(
-                    scale: Tween<double>(begin: 1.0, end: 1.05).animate(
-                      CurvedAnimation(
-                        parent: _pulseController,
-                        curve: Curves.easeInOut,
-                      ),
-                    ),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Theme.of(context).colorScheme.primary,
-                          width: 1,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: InkWell(
-                              onTap: () {
-                                Clipboard.setData(
-                                  ClipboardData(text: league.code),
-                                );
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      'Código copiado para a área de transferência!',
-                                    ),
-                                  ),
-                                );
-                              },
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    Icons.vpn_key,
-                                    size: 18,
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.primary,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    league.code,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                      letterSpacing: 1,
-                                    ),
-                                  ),
-                                ],
+              ),
+            GlassCard(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Competição (Esquerda)
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Competição',
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: Colors.grey,
                               ),
                             ),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                if (league.competition.emblem != null) ...[
+                                  ClipOval(
+                                    child: AppNetworkImage(
+                                      url: league.competition.emblem!,
+                                      width: 24,
+                                      height: 24,
+                                      errorWidget: const Icon(
+                                        Icons.sports_soccer,
+                                        size: 24,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                ],
+                                Flexible(
+                                  child: Text(
+                                    league.competition.name,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                    ),
+                                    //overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      // Criador (Direita)
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            const Text(
+                              'Criador',
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: Colors.grey,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    league.owner.name,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                    ),
+                                    //overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                ClipOval(
+                                  child: league.owner.photoUrl != null
+                                      ? AppNetworkImage(
+                                          url: league.owner.photoUrl!,
+                                          width: 24,
+                                          height: 24,
+                                          errorWidget: const Icon(
+                                            Icons.person,
+                                            size: 24,
+                                          ),
+                                        )
+                                      : const Icon(Icons.person, size: 24),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (league.isActive) ...[
+                    const SizedBox(height: 16),
+                    ScaleTransition(
+                      scale: Tween<double>(begin: 1.0, end: 1.05).animate(
+                        CurvedAnimation(
+                          parent: _pulseController,
+                          curve: Curves.easeInOut,
+                        ),
+                      ),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.primary,
+                            width: 1,
                           ),
-                          Row(
-                            children: [
-                              InkWell(
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: InkWell(
                                 onTap: () {
                                   Clipboard.setData(
                                     ClipboardData(text: league.code),
@@ -1155,84 +1132,122 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                                     ),
                                   );
                                 },
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 8,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.primary,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Text(
-                                        'COPIAR',
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold,
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.vpn_key,
+                                      size: 18,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      league.code,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                        letterSpacing: 1,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            Row(
+                              children: [
+                                InkWell(
+                                  onTap: () {
+                                    Clipboard.setData(
+                                      ClipboardData(text: league.code),
+                                    );
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Código copiado para a área de transferência!',
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 8,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Text(
+                                          'COPIAR',
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.onPrimary,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Icon(
+                                          Icons.copy,
+                                          size: 14,
                                           color: Theme.of(
                                             context,
                                           ).colorScheme.onPrimary,
                                         ),
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Icon(
-                                        Icons.copy,
-                                        size: 14,
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.onPrimary,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              InkWell(
-                                onTap: () {
-                                  // TODO: Substituir pelo domínio real do seu app
-                                  const String domain =
-                                      'https://palpitesfutebol-b0f33.web.app';
-                                  final String link =
-                                      '$domain/?code=${league.code}';
-                                  SharePlus.instance.share(
-                                    ShareParams(
-                                      text:
-                                          'Venha participar da minha liga "${league.name}" no Palpites Futebol!\n\nEntre com o código: ${league.code}\nOu clique no link: $link',
+                                      ],
                                     ),
-                                  );
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.secondary,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Icon(
-                                    Icons.share,
-                                    size: 16,
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onSecondary,
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ],
+                                const SizedBox(width: 8),
+                                InkWell(
+                                  onTap: () {
+                                    // TODO: Substituir pelo domínio real do seu app
+                                    const String domain =
+                                        'https://palpitesfutebol-b0f33.web.app';
+                                    final String link =
+                                        '$domain/?code=${league.code}';
+                                    SharePlus.instance.share(
+                                      ShareParams(
+                                        text:
+                                            'Venha participar da minha liga "${league.name}" no Palpites Futebol!\n\nEntre com o código: ${league.code}\nOu clique no link: $link',
+                                      ),
+                                    );
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.secondary,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Icon(
+                                      Icons.share,
+                                      size: 16,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSecondary,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                 ],
-              ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -1344,7 +1359,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
           physics: const AlwaysScrollableScrollPhysics(),
           child: ConstrainedBox(
             constraints: BoxConstraints(minHeight: constraints.maxHeight),
-            child: Center(child: child),
+            child: Center(child: WebConstrainedBox(child: child)),
           ),
         );
       },
@@ -1382,7 +1397,7 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
         padding: const EdgeInsets.all(16),
         physics: const AlwaysScrollableScrollPhysics(),
         children: [
-          Center(
+          WebConstrainedBox(
             child: GlassCard(
               margin: EdgeInsets.zero,
               child: SingleChildScrollView(
@@ -1606,171 +1621,176 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
           final badge = item.badge;
           final match = item.match;
 
-          return TweenAnimationBuilder<double>(
-            key: ValueKey('feed_${item.id}'),
-            tween: Tween<double>(begin: 0.0, end: 1.0),
-            duration: const Duration(milliseconds: 500),
-            curve: Curves.easeOutQuad,
-            builder: (context, value, child) {
-              return Opacity(
-                opacity: value,
-                child: Transform.translate(
-                  offset: Offset(0, 20 * (1 - value)),
-                  child: child,
-                ),
-              );
-            },
-            child: GlassCard(
-              margin: const EdgeInsets.symmetric(vertical: 4),
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      GestureDetector(
-                        onTap: () => context.go(
-                          '/ligas/${widget.leagueId}/usuario/${user.id}',
-                        ),
-                        child: ClipOval(
-                          child: user.photoUrl != null
-                              ? AppNetworkImage(
-                                  url: user.photoUrl!,
-                                  width: 32,
-                                  height: 32,
-                                  fit: BoxFit.cover,
-                                )
-                              : CircleAvatar(
-                                  radius: 16,
-                                  child: Text(
-                                    user.name.isNotEmpty
-                                        ? user.name[0].toUpperCase()
-                                        : '?',
-                                    style: const TextStyle(fontSize: 14),
+          return WebConstrainedBox(
+            child: TweenAnimationBuilder<double>(
+              key: ValueKey('feed_${item.id}'),
+              tween: Tween<double>(begin: 0.0, end: 1.0),
+              duration: const Duration(milliseconds: 500),
+              curve: Curves.easeOutQuad,
+              builder: (context, value, child) {
+                return Opacity(
+                  opacity: value,
+                  child: Transform.translate(
+                    offset: Offset(0, 20 * (1 - value)),
+                    child: child,
+                  ),
+                );
+              },
+              child: GlassCard(
+                margin: const EdgeInsets.symmetric(vertical: 4),
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () => context.go(
+                            '/ligas/${widget.leagueId}/usuario/${user.id}',
+                          ),
+                          child: ClipOval(
+                            child: user.photoUrl != null
+                                ? AppNetworkImage(
+                                    url: user.photoUrl!,
+                                    width: 32,
+                                    height: 32,
+                                    fit: BoxFit.cover,
+                                  )
+                                : CircleAvatar(
+                                    radius: 16,
+                                    child: Text(
+                                      user.name.isNotEmpty
+                                          ? user.name[0].toUpperCase()
+                                          : '?',
+                                      style: const TextStyle(fontSize: 14),
+                                    ),
                                   ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              RichText(
+                                text: TextSpan(
+                                  style: DefaultTextStyle.of(context).style,
+                                  children: [
+                                    TextSpan(
+                                      text: user.name,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const TextSpan(
+                                      text: ' conquistou a medalha ',
+                                    ),
+                                    TextSpan(
+                                      text: badge.name,
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color:
+                                            Theme.of(context).brightness ==
+                                                Brightness.dark
+                                            ? Colors.amber
+                                            : Colors.amber.shade900,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            RichText(
-                              text: TextSpan(
-                                style: DefaultTextStyle.of(context).style,
-                                children: [
-                                  TextSpan(
-                                    text: user.name,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const TextSpan(
-                                    text: ' conquistou a medalha ',
-                                  ),
-                                  TextSpan(
-                                    text: badge.name,
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color:
-                                          Theme.of(context).brightness ==
-                                              Brightness.dark
-                                          ? Colors.amber
-                                          : Colors.amber.shade900,
-                                    ),
-                                  ),
-                                ],
                               ),
-                            ),
-                            Text(
-                              _formatRelativeTime(item.createdAt),
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurface.withOpacity(0.6),
+                              Text(
+                                _formatRelativeTime(item.createdAt),
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface.withOpacity(0.6),
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 8.0),
-                    child: Divider(height: 1),
-                  ),
-                  Row(
-                    children: [
-                      SizedBox(
-                        width: 40,
-                        height: 40,
-                        child: badge.iconUrl != null
-                            ? AppNetworkImage(
-                                url: badge.iconUrl!,
-                                errorWidget: const Icon(
+                      ],
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 8.0),
+                      child: Divider(height: 1),
+                    ),
+                    Row(
+                      children: [
+                        SizedBox(
+                          width: 40,
+                          height: 40,
+                          child: badge.iconUrl != null
+                              ? AppNetworkImage(
+                                  url: badge.iconUrl!,
+                                  errorWidget: const Icon(
+                                    Icons.military_tech,
+                                    size: 32,
+                                    color: Colors.amber,
+                                  ),
+                                )
+                              : const Icon(
                                   Icons.military_tech,
                                   size: 32,
                                   color: Colors.amber,
                                 ),
-                              )
-                            : const Icon(
-                                Icons.military_tech,
-                                size: 32,
-                                color: Colors.amber,
-                              ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.surface.withOpacity(0.3),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: match != null
-                              ? Column(
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        _buildTeamLogo(match.homeTeamCrest),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          '${match.homeScore ?? '-'} x ${match.awayScore ?? '-'}',
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 16,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        _buildTeamLogo(match.awayTeamCrest),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      '${match.homeTeamName} vs ${match.awayTeamName}',
-                                      style: const TextStyle(fontSize: 10),
-                                      textAlign: TextAlign.center,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ],
-                                )
-                              : Text(
-                                  badge.description.replaceAll('em uma', 'na'),
-                                  style: const TextStyle(fontSize: 12),
-                                  textAlign: TextAlign.center,
-                                ),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.surface.withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: match != null
+                                ? Column(
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          _buildTeamLogo(match.homeTeamCrest),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            '${match.homeScore ?? '-'} x ${match.awayScore ?? '-'}',
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 16,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          _buildTeamLogo(match.awayTeamCrest),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        '${match.homeTeamName} vs ${match.awayTeamName}',
+                                        style: const TextStyle(fontSize: 10),
+                                        textAlign: TextAlign.center,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  )
+                                : Text(
+                                    badge.description.replaceAll(
+                                      'em uma',
+                                      'na',
+                                    ),
+                                    style: const TextStyle(fontSize: 12),
+                                    textAlign: TextAlign.center,
+                                  ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           );
@@ -1808,185 +1828,191 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
           itemCount: matches.length,
           itemBuilder: (context, index) {
             final match = matches[index];
-            return TweenAnimationBuilder<double>(
-              key: ValueKey(match.id),
-              tween: Tween<double>(begin: 0.0, end: 1.0),
-              duration: const Duration(milliseconds: 600),
-              curve: Curves.easeOutBack,
-              builder: (context, value, child) {
-                return Opacity(
-                  opacity: value.clamp(0.0, 1.0),
-                  child: Transform(
-                    alignment: Alignment.center,
-                    transform: Matrix4.identity()
-                      ..setEntry(3, 2, 0.001)
-                      ..rotateX(math.pi / 2 * (1 - value)),
-                    child: child,
-                  ),
-                );
-              },
-              child: GlassCard(
-                margin: const EdgeInsets.symmetric(vertical: 4),
-                padding: EdgeInsets.zero,
-                child: InkWell(
-                  onTap: () async {
-                    final leaguesRepo = context.read<LeaguesRepository>();
-                    final result = await context.pushNamed(
-                      'Prediction',
-                      pathParameters: {
-                        'id': widget.leagueId,
-                        'matchId': match.id.toString(),
-                      },
-                    );
-                    if (result == true && mounted) {
-                      setState(() {
-                        _detailsFuture = leaguesRepo.getLeagueDetails(
-                          widget.leagueId,
-                        );
-                      });
-                    }
-                  },
-                  child: Column(
-                    children: [
-                      // Header: Rodada e Data
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              '${_translateStage(match.stage)} • ${_formatMatchday(match.stage, match.matchday)}',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
+            return WebConstrainedBox(
+              child: TweenAnimationBuilder<double>(
+                key: ValueKey(match.id),
+                tween: Tween<double>(begin: 0.0, end: 1.0),
+                duration: const Duration(milliseconds: 600),
+                curve: Curves.easeOutBack,
+                builder: (context, value, child) {
+                  return Opacity(
+                    opacity: value.clamp(0.0, 1.0),
+                    child: Transform(
+                      alignment: Alignment.center,
+                      transform: Matrix4.identity()
+                        ..setEntry(3, 2, 0.001)
+                        ..rotateX(math.pi / 2 * (1 - value)),
+                      child: child,
+                    ),
+                  );
+                },
+                child: GlassCard(
+                  margin: const EdgeInsets.symmetric(vertical: 4),
+                  padding: EdgeInsets.zero,
+                  child: InkWell(
+                    onTap: () async {
+                      final leaguesRepo = context.read<LeaguesRepository>();
+                      final result = await context.pushNamed(
+                        'Prediction',
+                        pathParameters: {
+                          'id': widget.leagueId,
+                          'matchId': match.id.toString(),
+                        },
+                      );
+                      if (result == true && mounted) {
+                        setState(() {
+                          _detailsFuture = leaguesRepo.getLeagueDetails(
+                            widget.leagueId,
+                          );
+                        });
+                      }
+                    },
+                    child: Column(
+                      children: [
+                        // Header: Rodada e Data
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                '${_translateStage(match.stage)} • ${_formatMatchday(match.stage, match.matchday)}',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
-                            Text(
-                              _formatDate(match.utcDate),
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurface.withOpacity(0.7),
+                              Text(
+                                _formatDate(match.utcDate),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface.withOpacity(0.7),
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Divider(height: 1, color: Theme.of(context).dividerColor),
-                      // Corpo: Times e Placar
-                      Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Mandante
-                            Expanded(
-                              child: Column(
-                                children: [
-                                  _buildTeamLogo(match.homeTeamCrest),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    match.homeTeamName,
-                                    textAlign: TextAlign.center,
-                                    style: const TextStyle(fontSize: 12),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            // Placar e Status
-                            Expanded(
-                              child: Column(
-                                children: [
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    '${match.homeScore ?? '-'} - ${match.awayScore ?? '-'}',
-                                    style: const TextStyle(
-                                      fontSize: 28,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  if (match.scoreDuration != 'REGULAR' &&
-                                      match.homeScoreExtraTime != null &&
-                                      match.awayScoreExtraTime != null)
-                                    Text(
-                                      'Prorrogação: ${match.homeScoreExtraTime} - ${match.awayScoreExtraTime}',
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSurface
-                                            .withOpacity(0.7),
-                                      ),
-                                    ),
-                                  if (match.scoreDuration != 'REGULAR' &&
-                                      match.homeScorePenalties != null &&
-                                      match.awayScorePenalties != null)
-                                    Text(
-                                      'Pênaltis: ${match.homeScorePenalties} - ${match.awayScorePenalties}',
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSurface
-                                            .withOpacity(0.7),
-                                      ),
-                                    ),
-                                  const SizedBox(height: 4),
-                                  match.status == 'IN_PLAY'
-                                      ? const BlinkingLiveIndicator()
-                                      : Text(
-                                          _translateStatus(match.status),
-                                          style: TextStyle(
-                                            fontSize: 10,
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .onSurface
-                                                .withOpacity(0.7),
-                                          ),
-                                        ),
-                                ],
-                              ),
-                            ),
-                            // Visitante
-                            Expanded(
-                              child: Column(
-                                children: [
-                                  _buildTeamLogo(match.awayTeamCrest),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    match.awayTeamName,
-                                    textAlign: TextAlign.center,
-                                    style: const TextStyle(fontSize: 12),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      // Footer: Palpitar (Opcional, ou apenas espaço)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 12.0),
-                        child: Text(
-                          "Toque para palpitar",
-                          style: TextStyle(
-                            fontSize: 10,
-                            color:
-                                Theme.of(context).brightness == Brightness.dark
-                                ? Colors.greenAccent
-                                : const Color(0xFF1B5E20),
+                            ],
                           ),
                         ),
-                      ),
-                    ],
+                        Divider(
+                          height: 1,
+                          color: Theme.of(context).dividerColor,
+                        ),
+                        // Corpo: Times e Placar
+                        Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Mandante
+                              Expanded(
+                                child: Column(
+                                  children: [
+                                    _buildTeamLogo(match.homeTeamCrest),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      match.homeTeamName,
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(fontSize: 12),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              // Placar e Status
+                              Expanded(
+                                child: Column(
+                                  children: [
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      '${match.homeScore ?? '-'} - ${match.awayScore ?? '-'}',
+                                      style: const TextStyle(
+                                        fontSize: 28,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    if (match.scoreDuration != 'REGULAR' &&
+                                        match.homeScoreExtraTime != null &&
+                                        match.awayScoreExtraTime != null)
+                                      Text(
+                                        'Prorrogação: ${match.homeScoreExtraTime} - ${match.awayScoreExtraTime}',
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface
+                                              .withOpacity(0.7),
+                                        ),
+                                      ),
+                                    if (match.scoreDuration != 'REGULAR' &&
+                                        match.homeScorePenalties != null &&
+                                        match.awayScorePenalties != null)
+                                      Text(
+                                        'Pênaltis: ${match.homeScorePenalties} - ${match.awayScorePenalties}',
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface
+                                              .withOpacity(0.7),
+                                        ),
+                                      ),
+                                    const SizedBox(height: 4),
+                                    match.status == 'IN_PLAY'
+                                        ? const BlinkingLiveIndicator()
+                                        : Text(
+                                            _translateStatus(match.status),
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurface
+                                                  .withOpacity(0.7),
+                                            ),
+                                          ),
+                                  ],
+                                ),
+                              ),
+                              // Visitante
+                              Expanded(
+                                child: Column(
+                                  children: [
+                                    _buildTeamLogo(match.awayTeamCrest),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      match.awayTeamName,
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(fontSize: 12),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Footer: Palpitar (Opcional, ou apenas espaço)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 12.0),
+                          child: Text(
+                            "Toque para palpitar",
+                            style: TextStyle(
+                              fontSize: 10,
+                              color:
+                                  Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.greenAccent
+                                  : const Color(0xFF1B5E20),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -2051,221 +2077,8 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
           final prediction = _historyPredictions[index];
           final match = prediction.match;
 
-          return TweenAnimationBuilder<double>(
-            key: ValueKey(prediction.id),
-            tween: Tween<double>(begin: 0.0, end: 1.0),
-            duration: const Duration(milliseconds: 600),
-            curve: Curves.easeOutBack,
-            builder: (context, value, child) {
-              return Opacity(
-                opacity: value.clamp(0.0, 1.0),
-                child: Transform(
-                  alignment: Alignment.center,
-                  transform: Matrix4.identity()
-                    ..setEntry(3, 2, 0.001)
-                    ..rotateX(math.pi / 2 * (1 - value)),
-                  child: child,
-                ),
-              );
-            },
-            child: GlassCard(
-              margin: const EdgeInsets.symmetric(vertical: 4),
-              padding: EdgeInsets.zero,
-              child: InkWell(
-                onTap: () async {
-                  final leaguesRepo = context.read<LeaguesRepository>();
-                  final result = await context.pushNamed(
-                    'Prediction',
-                    pathParameters: {
-                      'id': widget.leagueId,
-                      'matchId': match.id.toString(),
-                    },
-                    queryParameters: {'predictionId': prediction.id.toString()},
-                  );
-                  if (result == true && mounted) {
-                    _loadHistoryPredictions(refresh: true);
-                    setState(() {
-                      _detailsFuture = leaguesRepo.getLeagueDetails(
-                        widget.leagueId,
-                      );
-                    });
-                  }
-                },
-                child: Column(
-                  children: [
-                    // Header: Rodada e Data
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            '${_translateStage(match.stage)} • ${_formatMatchday(match.stage, match.matchday)}',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text(
-                            _formatDate(match.utcDate),
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onSurface.withOpacity(0.7),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Divider(height: 1, color: Theme.of(context).dividerColor),
-                    // Corpo: Times e Placar
-                    Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              children: [
-                                _buildTeamLogo(match.homeTeamCrest),
-                                const SizedBox(height: 8),
-                                Text(
-                                  match.homeTeamName,
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(fontSize: 12),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
-                            ),
-                          ),
-                          Expanded(
-                            child: Column(
-                              children: [
-                                const SizedBox(height: 8),
-                                Text(
-                                  '${match.homeScore ?? '-'} - ${match.awayScore ?? '-'}',
-                                  style: const TextStyle(
-                                    fontSize: 28,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                if (match.scoreDuration != 'REGULAR' &&
-                                    match.homeScoreExtraTime != null &&
-                                    match.awayScoreExtraTime != null)
-                                  Text(
-                                    'Prorrogação: ${match.homeScoreExtraTime} - ${match.awayScoreExtraTime}',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.onSurface.withOpacity(0.7),
-                                    ),
-                                  ),
-                                if (match.scoreDuration != 'REGULAR' &&
-                                    match.homeScorePenalties != null &&
-                                    match.awayScorePenalties != null)
-                                  Text(
-                                    'Pênaltis: ${match.homeScorePenalties} - ${match.awayScorePenalties}',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.onSurface.withOpacity(0.7),
-                                    ),
-                                  ),
-                                const SizedBox(height: 4),
-                                match.status == 'IN_PLAY'
-                                    ? const BlinkingLiveIndicator()
-                                    : Text(
-                                        _translateStatus(match.status),
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .onSurface
-                                              .withOpacity(0.7),
-                                        ),
-                                      ),
-                              ],
-                            ),
-                          ),
-                          Expanded(
-                            child: Column(
-                              children: [
-                                _buildTeamLogo(match.awayTeamCrest),
-                                const SizedBox(height: 8),
-                                Text(
-                                  match.awayTeamName,
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(fontSize: 12),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Footer: Palpite
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-                      child: _buildPredictionCard(
-                        prediction,
-                        'Seu palpite',
-                        Colors.greenAccent,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildPredictionsList(Future<List<PredictionModel>> future) {
-    return FutureBuilder<List<PredictionModel>>(
-      future: future,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const LoadingWidget();
-        } else if (snapshot.hasError) {
-          return _buildScrollablePlaceholder(
-            Text(
-              'Erro ao carregar palpites:\n${snapshot.error.toString().replaceAll('Exception: ', '')}',
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.red),
-            ),
-          );
-        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return _buildScrollablePlaceholder(
-            const Text('Nenhum palpite encontrado.'),
-          );
-        }
-
-        final predictions = snapshot.data!;
-        return ListView.builder(
-          padding: const EdgeInsets.all(8),
-          physics: const AlwaysScrollableScrollPhysics(),
-          itemCount: predictions.length,
-          itemBuilder: (context, index) {
-            final prediction = predictions[index];
-            final match = prediction.match;
-            final matchDate = DateTime.parse(match.utcDate);
-            final hasStarted = DateTime.now().isAfter(matchDate);
-            final isEditable =
-                (match.status == 'SCHEDULED' || match.status == 'TIMED') &&
-                !hasStarted;
-
-            return TweenAnimationBuilder<double>(
+          return WebConstrainedBox(
+            child: TweenAnimationBuilder<double>(
               key: ValueKey(prediction.id),
               tween: Tween<double>(begin: 0.0, end: 1.0),
               duration: const Duration(milliseconds: 600),
@@ -2286,28 +2099,27 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                 margin: const EdgeInsets.symmetric(vertical: 4),
                 padding: EdgeInsets.zero,
                 child: InkWell(
-                  onTap: isEditable
-                      ? () async {
-                          final leaguesRepo = context.read<LeaguesRepository>();
-                          final result = await context.pushNamed(
-                            'Prediction',
-                            pathParameters: {
-                              'id': widget.leagueId,
-                              'matchId': match.id.toString(),
-                            },
-                            queryParameters: {
-                              'predictionId': prediction.id.toString(),
-                            },
-                          );
-                          if (result == true && mounted) {
-                            setState(() {
-                              _detailsFuture = leaguesRepo.getLeagueDetails(
-                                widget.leagueId,
-                              );
-                            });
-                          }
-                        }
-                      : null,
+                  onTap: () async {
+                    final leaguesRepo = context.read<LeaguesRepository>();
+                    final result = await context.pushNamed(
+                      'Prediction',
+                      pathParameters: {
+                        'id': widget.leagueId,
+                        'matchId': match.id.toString(),
+                      },
+                      queryParameters: {
+                        'predictionId': prediction.id.toString(),
+                      },
+                    );
+                    if (result == true && mounted) {
+                      _loadHistoryPredictions(refresh: true);
+                      setState(() {
+                        _detailsFuture = leaguesRepo.getLeagueDetails(
+                          widget.leagueId,
+                        );
+                      });
+                    }
+                  },
                   child: Column(
                     children: [
                       // Header: Rodada e Data
@@ -2441,6 +2253,232 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                         ),
                       ),
                     ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildPredictionsList(Future<List<PredictionModel>> future) {
+    return FutureBuilder<List<PredictionModel>>(
+      future: future,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const LoadingWidget();
+        } else if (snapshot.hasError) {
+          return _buildScrollablePlaceholder(
+            Text(
+              'Erro ao carregar palpites:\n${snapshot.error.toString().replaceAll('Exception: ', '')}',
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.red),
+            ),
+          );
+        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return _buildScrollablePlaceholder(
+            const Text('Nenhum palpite encontrado.'),
+          );
+        }
+
+        final predictions = snapshot.data!;
+        return ListView.builder(
+          padding: const EdgeInsets.all(8),
+          physics: const AlwaysScrollableScrollPhysics(),
+          itemCount: predictions.length,
+          itemBuilder: (context, index) {
+            final prediction = predictions[index];
+            final match = prediction.match;
+            final matchDate = DateTime.parse(match.utcDate);
+            final hasStarted = DateTime.now().isAfter(matchDate);
+            final isEditable =
+                (match.status == 'SCHEDULED' || match.status == 'TIMED') &&
+                !hasStarted;
+
+            return WebConstrainedBox(
+              child: TweenAnimationBuilder<double>(
+                key: ValueKey(prediction.id),
+                tween: Tween<double>(begin: 0.0, end: 1.0),
+                duration: const Duration(milliseconds: 600),
+                curve: Curves.easeOutBack,
+                builder: (context, value, child) {
+                  return Opacity(
+                    opacity: value.clamp(0.0, 1.0),
+                    child: Transform(
+                      alignment: Alignment.center,
+                      transform: Matrix4.identity()
+                        ..setEntry(3, 2, 0.001)
+                        ..rotateX(math.pi / 2 * (1 - value)),
+                      child: child,
+                    ),
+                  );
+                },
+                child: GlassCard(
+                  margin: const EdgeInsets.symmetric(vertical: 4),
+                  padding: EdgeInsets.zero,
+                  child: InkWell(
+                    onTap: isEditable
+                        ? () async {
+                            final leaguesRepo = context
+                                .read<LeaguesRepository>();
+                            final result = await context.pushNamed(
+                              'Prediction',
+                              pathParameters: {
+                                'id': widget.leagueId,
+                                'matchId': match.id.toString(),
+                              },
+                              queryParameters: {
+                                'predictionId': prediction.id.toString(),
+                              },
+                            );
+                            if (result == true && mounted) {
+                              setState(() {
+                                _detailsFuture = leaguesRepo.getLeagueDetails(
+                                  widget.leagueId,
+                                );
+                              });
+                            }
+                          }
+                        : null,
+                    child: Column(
+                      children: [
+                        // Header: Rodada e Data
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                '${_translateStage(match.stage)} • ${_formatMatchday(match.stage, match.matchday)}',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                _formatDate(match.utcDate),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface.withOpacity(0.7),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Divider(
+                          height: 1,
+                          color: Theme.of(context).dividerColor,
+                        ),
+                        // Corpo: Times e Placar
+                        Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  children: [
+                                    _buildTeamLogo(match.homeTeamCrest),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      match.homeTeamName,
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(fontSize: 12),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Expanded(
+                                child: Column(
+                                  children: [
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      '${match.homeScore ?? '-'} - ${match.awayScore ?? '-'}',
+                                      style: const TextStyle(
+                                        fontSize: 28,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    if (match.scoreDuration != 'REGULAR' &&
+                                        match.homeScoreExtraTime != null &&
+                                        match.awayScoreExtraTime != null)
+                                      Text(
+                                        'Prorrogação: ${match.homeScoreExtraTime} - ${match.awayScoreExtraTime}',
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface
+                                              .withOpacity(0.7),
+                                        ),
+                                      ),
+                                    if (match.scoreDuration != 'REGULAR' &&
+                                        match.homeScorePenalties != null &&
+                                        match.awayScorePenalties != null)
+                                      Text(
+                                        'Pênaltis: ${match.homeScorePenalties} - ${match.awayScorePenalties}',
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface
+                                              .withOpacity(0.7),
+                                        ),
+                                      ),
+                                    const SizedBox(height: 4),
+                                    match.status == 'IN_PLAY'
+                                        ? const BlinkingLiveIndicator()
+                                        : Text(
+                                            _translateStatus(match.status),
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurface
+                                                  .withOpacity(0.7),
+                                            ),
+                                          ),
+                                  ],
+                                ),
+                              ),
+                              Expanded(
+                                child: Column(
+                                  children: [
+                                    _buildTeamLogo(match.awayTeamCrest),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      match.awayTeamName,
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(fontSize: 12),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Footer: Palpite
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                          child: _buildPredictionCard(
+                            prediction,
+                            'Seu palpite',
+                            Colors.greenAccent,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -2670,185 +2708,205 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
           physics: const AlwaysScrollableScrollPhysics(),
           children: [
             if (rules.scoring.isNotEmpty)
-              GlassCard(
-                margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '🏆 Sistema de Pontuação',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'Ganhe pontos acertando os resultados dos jogos! Veja como funciona:',
-                    ),
-                    const SizedBox(height: 16),
-                    ...rules.scoring.map(
-                      (rule) => Column(
-                        children: [
-                          ListTile(
-                            contentPadding: EdgeInsets.zero,
-                            leading: CircleAvatar(
-                              backgroundColor: Theme.of(
-                                context,
-                              ).colorScheme.primary,
-                              foregroundColor: Theme.of(
-                                context,
-                              ).colorScheme.onPrimary,
-                              child: Text('${rule.points}'),
-                            ),
-                            title: Text(
-                              rule.title,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
+              WebConstrainedBox(
+                child: GlassCard(
+                  margin: const EdgeInsets.symmetric(
+                    vertical: 8,
+                    horizontal: 4,
+                  ),
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '🏆 Sistema de Pontuação',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        'Ganhe pontos acertando os resultados dos jogos! Veja como funciona:',
+                      ),
+                      const SizedBox(height: 16),
+                      ...rules.scoring.map(
+                        (rule) => Column(
+                          children: [
+                            ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              leading: CircleAvatar(
+                                backgroundColor: Theme.of(
+                                  context,
+                                ).colorScheme.primary,
+                                foregroundColor: Theme.of(
+                                  context,
+                                ).colorScheme.onPrimary,
+                                child: Text('${rule.points}'),
+                              ),
+                              title: Text(
+                                rule.title,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(rule.description),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Exemplo: ${rule.example}',
+                                    style: const TextStyle(
+                                      fontStyle: FontStyle.italic,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(rule.description),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Exemplo: ${rule.example}',
-                                  style: const TextStyle(
-                                    fontStyle: FontStyle.italic,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          if (rule != rules.scoring.last) const Divider(),
-                        ],
+                            if (rule != rules.scoring.last) const Divider(),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             if (rules.tieBreakers.isNotEmpty)
-              GlassCard(
-                margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Critérios de Desempate',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 16),
-                    ...rules.tieBreakers.map(
-                      (tb) => Column(
-                        children: [
-                          ListTile(
-                            contentPadding: EdgeInsets.zero,
-                            leading: CircleAvatar(
-                              backgroundColor: Theme.of(
-                                context,
-                              ).colorScheme.secondary,
-                              foregroundColor: Theme.of(
-                                context,
-                              ).colorScheme.onSecondary,
-                              child: Text('${tb.order}'),
-                            ),
-                            title: Text(
-                              tb.title,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            subtitle: Text(tb.description),
-                          ),
-                          if (tb != rules.tieBreakers.last) const Divider(),
-                        ],
+              WebConstrainedBox(
+                child: GlassCard(
+                  margin: const EdgeInsets.symmetric(
+                    vertical: 8,
+                    horizontal: 4,
+                  ),
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Critérios de Desempate',
+                        style: Theme.of(context).textTheme.titleLarge,
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 16),
+                      ...rules.tieBreakers.map(
+                        (tb) => Column(
+                          children: [
+                            ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              leading: CircleAvatar(
+                                backgroundColor: Theme.of(
+                                  context,
+                                ).colorScheme.secondary,
+                                foregroundColor: Theme.of(
+                                  context,
+                                ).colorScheme.onSecondary,
+                                child: Text('${tb.order}'),
+                              ),
+                              title: Text(
+                                tb.title,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              subtitle: Text(tb.description),
+                            ),
+                            if (tb != rules.tieBreakers.last) const Divider(),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             if (rules.powerups.isNotEmpty)
-              GlassCard(
-                margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '⚡ Powerups',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 16),
-                    ...rules.powerups.map(
-                      (powerup) => Column(
-                        children: [
-                          ListTile(
-                            contentPadding: EdgeInsets.zero,
-                            leading: CircleAvatar(
-                              backgroundColor: Colors.deepPurpleAccent,
-                              foregroundColor: Colors.white,
-                              child: const Icon(Icons.style, size: 20),
-                            ),
-                            title: Text(
-                              powerup.name,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            subtitle: Text(powerup.description),
-                          ),
-                          if (powerup != rules.powerups.last) const Divider(),
-                        ],
+              WebConstrainedBox(
+                child: GlassCard(
+                  margin: const EdgeInsets.symmetric(
+                    vertical: 8,
+                    horizontal: 4,
+                  ),
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '⚡ Powerups',
+                        style: Theme.of(context).textTheme.titleLarge,
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 16),
+                      ...rules.powerups.map(
+                        (powerup) => Column(
+                          children: [
+                            ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              leading: CircleAvatar(
+                                backgroundColor: Colors.deepPurpleAccent,
+                                foregroundColor: Colors.white,
+                                child: const Icon(Icons.style, size: 20),
+                              ),
+                              title: Text(
+                                powerup.name,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              subtitle: Text(powerup.description),
+                            ),
+                            if (powerup != rules.powerups.last) const Divider(),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             if (rules.badges.isNotEmpty)
-              GlassCard(
-                margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '🏅 Medalhas e Conquistas',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 16),
-                    ...rules.badges.map(
-                      (badge) => Column(
-                        children: [
-                          ListTile(
-                            contentPadding: EdgeInsets.zero,
-                            leading: SizedBox(
-                              width: 48,
-                              height: 48,
-                              child: badge.iconUrl != null
-                                  ? AppNetworkImage(
-                                      url: badge.iconUrl!,
-                                      fit: BoxFit.contain,
-                                    )
-                                  : const Icon(
-                                      Icons.military_tech,
-                                      size: 32,
-                                      color: Colors.amber,
-                                    ),
-                            ),
-                            title: Text(
-                              badge.name,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            subtitle: Text(badge.description),
-                          ),
-                          if (badge != rules.badges.last) const Divider(),
-                        ],
+              WebConstrainedBox(
+                child: GlassCard(
+                  margin: const EdgeInsets.symmetric(
+                    vertical: 8,
+                    horizontal: 4,
+                  ),
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '🏅 Medalhas e Conquistas',
+                        style: Theme.of(context).textTheme.titleLarge,
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 16),
+                      ...rules.badges.map(
+                        (badge) => Column(
+                          children: [
+                            ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              leading: SizedBox(
+                                width: 48,
+                                height: 48,
+                                child: badge.iconUrl != null
+                                    ? AppNetworkImage(
+                                        url: badge.iconUrl!,
+                                        fit: BoxFit.contain,
+                                      )
+                                    : const Icon(
+                                        Icons.military_tech,
+                                        size: 32,
+                                        color: Colors.amber,
+                                      ),
+                              ),
+                              title: Text(
+                                badge.name,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              subtitle: Text(badge.description),
+                            ),
+                            if (badge != rules.badges.last) const Divider(),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
           ],
@@ -2876,7 +2934,7 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
   ) {
     return Container(
       color: const Color(0xFF1B5E20).withValues(alpha: 0.95),
-      child: _tabBar,
+      child: Center(child: WebConstrainedBox(child: _tabBar)),
     );
   }
 

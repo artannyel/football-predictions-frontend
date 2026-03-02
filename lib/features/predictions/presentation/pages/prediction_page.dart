@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:football_predictions/core/presentation/widgets/app_network_image.dart';
 import 'package:football_predictions/core/presentation/widgets/loading_widget.dart';
+import 'package:football_predictions/core/presentation/widgets/web_constrained_box.dart';
 import 'package:football_predictions/features/matches/data/models/match_model.dart';
 import 'package:football_predictions/features/matches/data/models/match_stats_model.dart';
 import 'package:football_predictions/features/home/data/repositories/leagues_repository.dart';
@@ -234,31 +235,39 @@ class _PredictionPageState extends State<PredictionPage> {
 
     if (_errorMessage != null) {
       return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Card(
-            elevation: 4,
+        child: SingleChildScrollView(
+          child: WebConstrainedBox(
             child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.error_outline, color: Colors.red, size: 48),
-                  const SizedBox(height: 16),
-                  Text(
-                    _errorMessage!,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 16),
+              padding: const EdgeInsets.all(16.0),
+              child: Card(
+                elevation: 4,
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.error_outline,
+                        color: Colors.red,
+                        size: 48,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        _errorMessage!,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                      const SizedBox(height: 24),
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: const Text('VOLTAR'),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('VOLTAR'),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           ),
@@ -276,52 +285,64 @@ class _PredictionPageState extends State<PredictionPage> {
         hasStarted ||
         (_match!.status != 'SCHEDULED' && _match!.status != 'TIMED');
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        children: [
-          Text(
-            'Rodada ${_match!.matchday}',
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            _formatDate(_match!.utcDate),
-            style: const TextStyle(fontSize: 16),
-          ),
-          const SizedBox(height: 24),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildTeamColumn(_match!.homeTeamName, _match!.homeTeamCrest),
-              Expanded(child: _buildMatchInfo()),
-              _buildTeamColumn(_match!.awayTeamName, _match!.awayTeamCrest),
-            ],
-          ),
-          _buildFormSection(),
-          _buildHeadToHeadSection(),
-          _buildStats(),
-          const SizedBox(height: 32),
-          _buildPredictionSection(isLocked),
-          const SizedBox(height: 48),
-          SizedBox(
-            width: double.infinity,
-            height: 48,
-            child: FilledButton(
-              onPressed: _isLoading || isLocked ? null : _savePrediction,
-              child: _isLoading
-                  ? const CircularProgressIndicator(color: Colors.white)
-                  : Text(
-                      _match!.status == 'FINISHED'
-                          ? 'PARTIDA ENCERRADA'
-                          : (isLocked
-                                ? 'PARTIDA JÁ INICIOU'
-                                : 'SALVAR PALPITE'),
+    return Center(
+      child: SingleChildScrollView(
+        child: WebConstrainedBox(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                Text(
+                  'Rodada ${_match!.matchday}',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _formatDate(_match!.utcDate),
+                  style: const TextStyle(fontSize: 16),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildTeamColumn(
+                      _match!.homeTeamName,
+                      _match!.homeTeamCrest,
                     ),
+                    Expanded(child: _buildMatchInfo()),
+                    _buildTeamColumn(
+                      _match!.awayTeamName,
+                      _match!.awayTeamCrest,
+                    ),
+                  ],
+                ),
+                _buildFormSection(),
+                _buildHeadToHeadSection(),
+                _buildStats(),
+                const SizedBox(height: 32),
+                _buildPredictionSection(isLocked),
+                const SizedBox(height: 48),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: FilledButton(
+                    onPressed: _isLoading || isLocked ? null : _savePrediction,
+                    child: _isLoading
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : Text(
+                            _match!.status == 'FINISHED'
+                                ? 'PARTIDA ENCERRADA'
+                                : (isLocked
+                                      ? 'PARTIDA JÁ INICIOU'
+                                      : 'SALVAR PALPITE'),
+                          ),
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }

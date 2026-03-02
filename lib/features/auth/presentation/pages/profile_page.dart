@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:football_predictions/core/presentation/widgets/app_network_image.dart';
 import 'package:football_predictions/core/presentation/widgets/loading_widget.dart';
 import 'package:football_predictions/core/presentation/widgets/radar_chart.dart';
+import 'package:football_predictions/core/presentation/widgets/web_constrained_box.dart';
 import 'package:football_predictions/features/auth/data/models/user_model.dart';
 import 'package:football_predictions/features/auth/data/repositories/auth_repository.dart';
 import 'package:football_predictions/features/home/presentation/widgets/glass_card.dart';
@@ -109,18 +110,24 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                   );
                 },
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      _buildUserInfo(context, _profile!.user),
-                      const SizedBox(height: 16),
-                      _buildCareerStats(context, _profile!.career),
-                      const SizedBox(height: 16),
-                      _buildHallOfFame(context, _profile!.hallOfFame),
-                      const SizedBox(height: 16),
-                      _buildBadgesSection(context, _profile!.user.badges),
-                    ],
+                child: Center(
+                  child: SingleChildScrollView(
+                    child: WebConstrainedBox(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          children: [
+                            _buildUserInfo(context, _profile!.user),
+                            const SizedBox(height: 16),
+                            _buildCareerStats(context, _profile!.career),
+                            const SizedBox(height: 16),
+                            _buildHallOfFame(context, _profile!.hallOfFame),
+                            const SizedBox(height: 16),
+                            _buildBadgesSection(context, _profile!.user.badges),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),

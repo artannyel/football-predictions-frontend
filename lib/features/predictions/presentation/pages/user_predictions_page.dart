@@ -4,6 +4,7 @@ import 'package:football_predictions/core/auth/auth_notifier.dart';
 import 'package:football_predictions/core/presentation/widgets/app_network_image.dart';
 import 'package:football_predictions/core/presentation/widgets/blinking_live_indicator.dart';
 import 'package:football_predictions/core/presentation/widgets/loading_widget.dart';
+import 'package:football_predictions/core/presentation/widgets/web_constrained_box.dart';
 import 'package:football_predictions/features/auth/data/models/user_model.dart';
 import 'package:football_predictions/features/home/data/models/league_ranking_model.dart';
 import 'package:football_predictions/features/home/presentation/widgets/glass_card.dart';
@@ -265,9 +266,11 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
               if (_meStats != null &&
                   _meHistory != null &&
                   _meHistory!.id != _userHistory!.id) {
-                return _buildRadarComparison();
+                return WebConstrainedBox(child: _buildRadarComparison());
               }
-              return _buildStatsHeader(_userStats!, _userHistory);
+              return WebConstrainedBox(
+                child: _buildStatsHeader(_userStats!, _userHistory),
+              );
             }
 
             // Ajusta o índice considerando o header
@@ -276,28 +279,34 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
             // 2. Estado sem palpites (abaixo do header)
             if (!hasPredictions) {
               if (_isLoading) {
-                return const Padding(
-                  padding: EdgeInsets.only(top: 32.0),
-                  child: Center(child: LoadingWidget()),
+                return const WebConstrainedBox(
+                  child: Padding(
+                    padding: EdgeInsets.only(top: 32.0),
+                    child: Center(child: LoadingWidget()),
+                  ),
                 );
               }
               if (_error != null) {
-                return Padding(
-                  padding: const EdgeInsets.only(top: 32.0),
-                  child: Center(
-                    child: Text(
-                      _error!,
-                      style: const TextStyle(color: Colors.white),
+                return WebConstrainedBox(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 32.0),
+                    child: Center(
+                      child: Text(
+                        _error!,
+                        style: const TextStyle(color: Colors.white),
+                      ),
                     ),
                   ),
                 );
               }
-              return const Padding(
-                padding: EdgeInsets.only(top: 32.0),
-                child: Center(
-                  child: Text(
-                    'Nenhum palpite encontrado.',
-                    style: TextStyle(color: Colors.white),
+              return const WebConstrainedBox(
+                child: Padding(
+                  padding: EdgeInsets.only(top: 32.0),
+                  child: Center(
+                    child: Text(
+                      'Nenhum palpite encontrado.',
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ),
                 ),
               );
@@ -305,9 +314,11 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
 
             // 3. Loader do Scroll Infinito
             if (contentIndex == _predictions.length) {
-              return const Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Center(child: LoadingWidget(size: 30)),
+              return const WebConstrainedBox(
+                child: Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Center(child: LoadingWidget(size: 30)),
+                ),
               );
             }
 
@@ -321,167 +332,181 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
                 _meHistory != null &&
                 _userHistory!.id != _meHistory!.id;
 
-            return TweenAnimationBuilder<double>(
-              key: ValueKey(prediction.id),
-              tween: Tween<double>(begin: 0.0, end: 1.0),
-              duration: const Duration(milliseconds: 600),
-              curve: Curves.easeOutBack,
-              builder: (context, value, child) {
-                return Opacity(
-                  opacity: value.clamp(0.0, 1.0),
-                  child: Transform(
-                    alignment: Alignment.center,
-                    transform: Matrix4.identity()
-                      ..setEntry(3, 2, 0.001)
-                      ..rotateX(math.pi / 2 * (1 - value)),
-                    child: child,
-                  ),
-                );
-              },
-              child: GlassCard(
-                margin: const EdgeInsets.symmetric(vertical: 4),
-                padding: EdgeInsets.zero,
-                child: Column(
-                  children: [
-                    // Header: Rodada e Data
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            '${_translateStage(match.stage)} • ${_formatMatchday(match.stage, match.matchday)}',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text(
-                            _formatDate(match.utcDate),
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                            ),
-                          ),
-                        ],
-                      ),
+            return WebConstrainedBox(
+              child: TweenAnimationBuilder<double>(
+                key: ValueKey(prediction.id),
+                tween: Tween<double>(begin: 0.0, end: 1.0),
+                duration: const Duration(milliseconds: 600),
+                curve: Curves.easeOutBack,
+                builder: (context, value, child) {
+                  return Opacity(
+                    opacity: value.clamp(0.0, 1.0),
+                    child: Transform(
+                      alignment: Alignment.center,
+                      transform: Matrix4.identity()
+                        ..setEntry(3, 2, 0.001)
+                        ..rotateX(math.pi / 2 * (1 - value)),
+                      child: child,
                     ),
-                    Divider(height: 1, color: Theme.of(context).dividerColor),
-                    // Corpo: Times e Placar
-                    Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Mandante
-                          Expanded(
-                            child: Column(
-                              children: [
-                                _buildTeamLogo(match.homeTeamCrest),
-                                const SizedBox(height: 8),
-                                Text(
-                                  match.homeTeamName,
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(fontSize: 12),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
+                  );
+                },
+                child: GlassCard(
+                  margin: const EdgeInsets.symmetric(vertical: 4),
+                  padding: EdgeInsets.zero,
+                  child: Column(
+                    children: [
+                      // Header: Rodada e Data
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              '${_translateStage(match.stage)} • ${_formatMatchday(match.stage, match.matchday)}',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
-                          // Placar e Status
-                          Expanded(
-                            child: Column(
-                              children: [
-                                const SizedBox(height: 8),
-                                Text(
-                                  '${match.homeScore ?? '-'} - ${match.awayScore ?? '-'}',
-                                  style: const TextStyle(
-                                    fontSize: 28,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                if (match.scoreDuration != 'REGULAR' &&
-                                    match.homeScoreExtraTime != null &&
-                                    match.awayScoreExtraTime != null)
-                                  Text(
-                                    'Prorrogação: ${match.homeScoreExtraTime} - ${match.awayScoreExtraTime}',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                                    ),
-                                  ),
-                                if (match.scoreDuration != 'REGULAR' &&
-                                    match.homeScorePenalties != null &&
-                                    match.awayScorePenalties != null)
-                                  Text(
-                                    'Pênaltis: ${match.homeScorePenalties} - ${match.awayScorePenalties}',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                                    ),
-                                  ),
-                                const SizedBox(height: 4),
-                                match.status == 'IN_PLAY'
-                                    ? const BlinkingLiveIndicator()
-                                    : Text(
-                                        _translateStatus(match.status),
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                                        ),
-                                      ),
-                              ],
-                            ),
-                          ),
-                          // Visitante
-                          Expanded(
-                            child: Column(
-                              children: [
-                                _buildTeamLogo(match.awayTeamCrest),
-                                const SizedBox(height: 8),
-                                Text(
-                                  match.awayTeamName,
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(fontSize: 12),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Footer: Palpites
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: _buildPredictionCard(
-                              prediction,
-                              _userHistory?.name.split(' ').first ?? 'Usuário',
-                              cyanColor,
-                            ),
-                          ),
-                          if (isComparing) ...[
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: _buildPredictionCard(
-                                myPrediction,
-                                'Seu palpite',
-                                amberColor,
+                            Text(
+                              _formatDate(match.utcDate),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withOpacity(0.7),
                               ),
                             ),
                           ],
-                        ],
+                        ),
                       ),
-                    ),
-                  ],
+                      Divider(height: 1, color: Theme.of(context).dividerColor),
+                      // Corpo: Times e Placar
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Mandante
+                            Expanded(
+                              child: Column(
+                                children: [
+                                  _buildTeamLogo(match.homeTeamCrest),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    match.homeTeamName,
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(fontSize: 12),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            // Placar e Status
+                            Expanded(
+                              child: Column(
+                                children: [
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    '${match.homeScore ?? '-'} - ${match.awayScore ?? '-'}',
+                                    style: const TextStyle(
+                                      fontSize: 28,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  if (match.scoreDuration != 'REGULAR' &&
+                                      match.homeScoreExtraTime != null &&
+                                      match.awayScoreExtraTime != null)
+                                    Text(
+                                      'Prorrogação: ${match.homeScoreExtraTime} - ${match.awayScoreExtraTime}',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withOpacity(0.7),
+                                      ),
+                                    ),
+                                  if (match.scoreDuration != 'REGULAR' &&
+                                      match.homeScorePenalties != null &&
+                                      match.awayScorePenalties != null)
+                                    Text(
+                                      'Pênaltis: ${match.homeScorePenalties} - ${match.awayScorePenalties}',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withOpacity(0.7),
+                                      ),
+                                    ),
+                                  const SizedBox(height: 4),
+                                  match.status == 'IN_PLAY'
+                                      ? const BlinkingLiveIndicator()
+                                      : Text(
+                                          _translateStatus(match.status),
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onSurface
+                                                .withOpacity(0.7),
+                                          ),
+                                        ),
+                                ],
+                              ),
+                            ),
+                            // Visitante
+                            Expanded(
+                              child: Column(
+                                children: [
+                                  _buildTeamLogo(match.awayTeamCrest),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    match.awayTeamName,
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(fontSize: 12),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      // Footer: Palpites
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: _buildPredictionCard(
+                                prediction,
+                                _userHistory?.name.split(' ').first ??
+                                    'Usuário',
+                                cyanColor,
+                              ),
+                            ),
+                            if (isComparing) ...[
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: _buildPredictionCard(
+                                  myPrediction,
+                                  'Seu palpite',
+                                  amberColor,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );
@@ -677,7 +702,9 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
               Text(
                 'Comparativo de desempenho',
                 style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.7),
                   fontSize: 12,
                 ),
               ),
@@ -713,7 +740,12 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
             ],
           ),
         ),
-        _buildBadgesComparison(_userHistory!.badges, _meHistory!.badges, cyanColor, amberColor),
+        _buildBadgesComparison(
+          _userHistory!.badges,
+          _meHistory!.badges,
+          cyanColor,
+          amberColor,
+        ),
       ],
     );
   }
@@ -760,7 +792,12 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
                 children: [
                   Text(
                     title,
-                    style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7), fontSize: 12),
+                    style: TextStyle(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withOpacity(0.7),
+                      fontSize: 12,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(width: 4),
@@ -778,7 +815,12 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
             else
               Text(
                 title,
-                style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7), fontSize: 12),
+                style: TextStyle(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withOpacity(0.7),
+                  fontSize: 12,
+                ),
                 textAlign: TextAlign.center,
               ),
             const SizedBox(height: 8),
@@ -934,11 +976,7 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
                 height: 48,
                 child: badge.iconUrl != null
                     ? AppNetworkImage(url: badge.iconUrl!, fit: BoxFit.contain)
-                    : Icon(
-                        Icons.military_tech,
-                        size: 32,
-                        color: color,
-                      ),
+                    : Icon(Icons.military_tech, size: 32, color: color),
               ),
             ),
             if (badge.count > 1)
@@ -1083,7 +1121,9 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
           label,
           style: TextStyle(
             fontSize: 12,
-            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+            color: Theme.of(
+              context,
+            ).colorScheme.onSurface.withValues(alpha: 0.7),
           ),
         ),
       ],
@@ -1115,9 +1155,16 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
       return Container(
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.05),
+          color: Theme.of(
+            context,
+          ).colorScheme.onSurface.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1), width: 1),
+          border: Border.all(
+            color: Theme.of(
+              context,
+            ).colorScheme.onSurface.withValues(alpha: 0.1),
+            width: 1,
+          ),
         ),
         child: Column(
           children: [
@@ -1125,7 +1172,9 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
               label,
               style: TextStyle(
                 fontSize: 10,
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.7),
               ),
             ),
             const SizedBox(height: 4),
@@ -1134,7 +1183,9 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 18,
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.5),
               ),
             ),
           ],
@@ -1156,7 +1207,9 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
             : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isWin ? color.withValues(alpha: 0.6) : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1),
+          color: isWin
+              ? color.withValues(alpha: 0.6)
+              : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1),
           width: 1,
         ),
       ),
@@ -1166,7 +1219,9 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
             label,
             style: TextStyle(
               fontSize: 10,
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.7),
             ),
           ),
           const SizedBox(height: 4),
@@ -1251,7 +1306,7 @@ class _UserPredictionsPageState extends State<UserPredictionsPage> {
                         BoxShadow(
                           color: Colors.black.withValues(alpha: 0.1),
                           blurRadius: 2,
-                        )
+                        ),
                       ],
                     ),
                     padding: const EdgeInsets.all(2),

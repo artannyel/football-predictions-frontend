@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:football_predictions/core/auth/auth_notifier.dart';
 import 'package:football_predictions/core/presentation/widgets/app_network_image.dart';
 import 'package:football_predictions/core/presentation/widgets/loading_widget.dart';
+import 'package:football_predictions/core/presentation/widgets/web_constrained_box.dart';
 import 'package:football_predictions/features/home/presentation/widgets/glass_card.dart';
 import 'package:football_predictions/features/ranking/data/models/global_ranking_model.dart';
 import 'package:football_predictions/features/ranking/data/models/global_rules_model.dart';
@@ -240,41 +241,43 @@ class _RankingListTabState extends State<_RankingListTab>
         color: Colors.black.withValues(alpha: 0.3),
         border: const Border(bottom: BorderSide(color: Colors.white10)),
       ),
-      child: Row(
-        children: [
-          const Icon(Icons.calendar_month, color: Colors.white70),
-          const SizedBox(width: 16),
-          Expanded(
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                value: _selectedPeriod,
-                dropdownColor: const Color(0xFF1B5E20),
-                style: const TextStyle(color: Colors.white, fontSize: 16),
-                icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
-                isExpanded: true,
-                items: widget.type == _RankingType.annual
-                    ? _availableYears.map((year) {
-                        return DropdownMenuItem(
-                          value: year,
-                          child: Text('Temporada $year'),
-                        );
-                      }).toList()
-                    : _availableMonths.map((month) {
-                        return DropdownMenuItem(
-                          value: month['value'],
-                          child: Text(month['label']!),
-                        );
-                      }).toList(),
-                onChanged: (value) {
-                  if (value != null && value != _selectedPeriod) {
-                    setState(() => _selectedPeriod = value);
-                    _loadRanking();
-                  }
-                },
+      child: WebConstrainedBox(
+        child: Row(
+          children: [
+            const Icon(Icons.calendar_month, color: Colors.white70),
+            const SizedBox(width: 16),
+            Expanded(
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  value: _selectedPeriod,
+                  dropdownColor: const Color(0xFF1B5E20),
+                  style: const TextStyle(color: Colors.white, fontSize: 16),
+                  icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
+                  isExpanded: true,
+                  items: widget.type == _RankingType.annual
+                      ? _availableYears.map((year) {
+                          return DropdownMenuItem(
+                            value: year,
+                            child: Text('Temporada $year'),
+                          );
+                        }).toList()
+                      : _availableMonths.map((month) {
+                          return DropdownMenuItem(
+                            value: month['value'],
+                            child: Text(month['label']!),
+                          );
+                        }).toList(),
+                  onChanged: (value) {
+                    if (value != null && value != _selectedPeriod) {
+                      setState(() => _selectedPeriod = value);
+                      _loadRanking();
+                    }
+                  },
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -287,65 +290,67 @@ class _RankingListTabState extends State<_RankingListTab>
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _buildMyRankCard(),
+          WebConstrainedBox(child: _buildMyRankCard()),
           const SizedBox(height: 24),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Flexible(
-                child: GlassCard(
-                  padding: EdgeInsets.zero,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Padding(
-                        padding: EdgeInsets.all(16.0),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.emoji_events,
-                              color:
-                                  Theme.of(context).brightness ==
-                                      Brightness.dark
-                                  ? Colors.amber
-                                  : Colors.amber.shade600,
-                            ),
-                            SizedBox(width: 8),
-                            Text(
-                              'TOP 10 JOGADORES',
-                              style: TextStyle(
-                                color: Theme.of(context).colorScheme.onSurface,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 1.2,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (_rankingData!.topList.isEmpty)
+          WebConstrainedBox(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Flexible(
+                  child: GlassCard(
+                    padding: EdgeInsets.zero,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
                         Padding(
-                          padding: const EdgeInsets.all(32.0),
-                          child: Center(
-                            child: Text(
-                              'Nenhum jogador pontuou neste período ainda.',
-                              style: TextStyle(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurface.withOpacity(0.6),
+                          padding: EdgeInsets.all(16.0),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.emoji_events,
+                                color:
+                                    Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Colors.amber
+                                    : Colors.amber.shade600,
                               ),
-                              textAlign: TextAlign.center,
-                            ),
+                              SizedBox(width: 8),
+                              Text(
+                                'TOP 10 JOGADORES',
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.onSurface,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 1.2,
+                                ),
+                              ),
+                            ],
                           ),
-                        )
-                      else
-                        _buildRankingTable(),
-                    ],
+                        ),
+                        if (_rankingData!.topList.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.all(32.0),
+                            child: Center(
+                              child: Text(
+                                'Nenhum jogador pontuou neste período ainda.',
+                                style: TextStyle(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface.withOpacity(0.6),
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          )
+                        else
+                          _buildRankingTable(),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
@@ -693,34 +698,36 @@ class _RankingRulesTab extends StatelessWidget {
         return ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            GlassCard(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  const Icon(
-                    Icons.public,
-                    size: 48,
-                    color: Colors.lightBlueAccent,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    rules.title,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
+            WebConstrainedBox(
+              child: GlassCard(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    const Icon(
+                      Icons.public,
+                      size: 48,
+                      color: Colors.lightBlueAccent,
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    rules.description,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: onSurface.withOpacity(0.7),
-                      height: 1.4,
+                    const SizedBox(height: 16),
+                    Text(
+                      rules.title,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 12),
+                    Text(
+                      rules.description,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: onSurface.withOpacity(0.7),
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 24),
@@ -734,47 +741,49 @@ class _RankingRulesTab extends StatelessWidget {
   Widget _buildRuleItem(BuildContext context, GlobalRuleItem rule) {
     final onSurface = Theme.of(context).colorScheme.onSurface;
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: GlassCard(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              margin: const EdgeInsets.only(top: 6),
-              width: 8,
-              height: 8,
-              decoration: const BoxDecoration(
-                color: Colors.greenAccent,
-                shape: BoxShape.circle,
+    return WebConstrainedBox(
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 16),
+        child: GlassCard(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                margin: const EdgeInsets.only(top: 6),
+                width: 8,
+                height: 8,
+                decoration: const BoxDecoration(
+                  color: Colors.greenAccent,
+                  shape: BoxShape.circle,
+                ),
               ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    rule.title,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: onSurface,
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      rule.title,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: onSurface,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    rule.description,
-                    style: TextStyle(
-                      color: onSurface.withOpacity(0.7),
-                      height: 1.3,
+                    const SizedBox(height: 4),
+                    Text(
+                      rule.description,
+                      style: TextStyle(
+                        color: onSurface.withOpacity(0.7),
+                        height: 1.3,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
