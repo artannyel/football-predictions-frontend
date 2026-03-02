@@ -1550,10 +1550,14 @@ class _LeagueDetailsPageState extends State<LeagueDetailsPage>
                                                         child: Text(
                                                           member.name.isNotEmpty
                                                               ? member.name[0]
+                                                                    .toUpperCase()
                                                               : '?',
                                                           style:
                                                               const TextStyle(
                                                                 fontSize: 10,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
                                                               ),
                                                         ),
                                                       ),

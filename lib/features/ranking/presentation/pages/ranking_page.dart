@@ -472,17 +472,15 @@ class _RankingListTabState extends State<_RankingListTab>
                                       url: user.photoUrl!,
                                       fit: BoxFit.cover,
                                     )
-                                  : Container(
-                                      color: Colors.grey,
-                                      child: Center(
-                                        child: Text(
-                                          user.name.isNotEmpty
-                                              ? user.name[0].toUpperCase()
-                                              : '?',
-                                          style: const TextStyle(
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.bold,
-                                          ),
+                                  : CircleAvatar(
+                                      radius: 10,
+                                      child: Text(
+                                        user.name.isNotEmpty
+                                            ? user.name[0].toUpperCase()
+                                            : '?',
+                                        style: const TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
                                         ),
                                       ),
                                     ),
